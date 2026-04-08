@@ -13,6 +13,8 @@ servers:
 tags:
   - name: User
     description: Operations related to users
+  - name: Case
+    description: Operation related do case analysis
 
 components:
   securitySchemes:
@@ -27,6 +29,9 @@ paths:
       tags:
         - User
       summary: Returns a list of users
+      security:
+        - bearerAuth: []
+      
       responses:
         "200":
           description: A JSON array of user infos
@@ -36,11 +41,18 @@ paths:
                 type: array
                 items:
                   type: string
+        "401":
+          description: Unauthorized access
+        "404":
+          description: User not found
+
 
     post:
       tags:
         - User
       summary: Creates a new user
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -49,18 +61,28 @@ paths:
               type: object
               required:
                 - name
+                - password
+                - confirmpassword
               properties:
                 name:
+                  type: string
+                password:
+                  type: string
+                confirmpassword:
                   type: string
       responses:
         "201":
           description: User created successfully
+        "403":
+          description: Unauthorized opeartion
 
   /user/{userId}:
     get:
       tags:
         - User
       summary: Returns a user by ID
+      security:
+        - bearerAuth: []
       parameters:
         - name: userId
           in: path
@@ -86,6 +108,8 @@ paths:
       tags:
         - User
       summary: Deletes a user by ID
+      security:
+        - bearerAuth: []
       parameters:
         - name: userId
           in: path
@@ -95,6 +119,8 @@ paths:
       responses:
         "200":
           description: User deleted successfully
+        "401":
+          description: Unauthorized access
         "404":
           description: User not found
 
@@ -129,7 +155,7 @@ paths:
                     type: string
                     example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         "401":
-          description: Unauthorized - Invalid credentials
+          description: Invalid credentials
 
   /user/token:
     get:
@@ -152,6 +178,8 @@ paths:
                     type: string
                   token:
                     type: string
+        "400":
+          description: No user currently logged in
         "401":
           description: Unauthorized
 
@@ -165,3 +193,148 @@ paths:
       responses:
         "200":
           description: User logged out successfully
+        "400":
+          description: No user currently logged in
+  /case:
+    get:
+      tags:
+        - Case
+      summary: Returns a list of cases
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: A JSON array of case infos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        "401":
+          description: Unauthorized access
+    post:
+      tags:
+        - Case
+      summary: Creates a new case
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userid
+                - caseInfo
+              properties:
+                userid:
+                  type: integer
+                caseInfo:
+                  type: object
+
+      responses:
+        "201":
+          description: Case created successfully
+        "400":
+          description: Invalid parameters were inserted
+
+  /case/{caseid}:
+    get:
+      tags:
+        - Case
+      summary: Returns case info by ID
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: A JSON object containing user info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+        "404":
+          description: Case not found
+        "401":
+          description: Case access not authorized
+    delete:
+      tags:
+        - Case
+      summary: Deletes a case by ID
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User deleted successfully
+        "404":
+          description: User not found
+    put:
+      tags:
+        - Case
+      summary: Add or remove info (evidences) from a case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - caseID
+              properties:
+                caseID:
+                  type: integer
+                infoToAdd:
+                  type: object
+      responses:
+        "200":
+          description: Case Updated Successfully
+        "401":
+          description: Unauthorized access
+        "404":
+          description: Case not found        
+
+  /case/{userid}:
+    get:
+      tags:
+        - Case
+      summary: Returns a list of cases handled by a specified User
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: A JSON array of a users cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        "401":
+          description: Unauthorized access
+        "404":
+          description: User or Case not found
+
