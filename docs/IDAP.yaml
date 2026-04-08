@@ -1,0 +1,167 @@
+openapi: 3.0.4
+info:
+  title: IDAP API
+  description: IDAP API Documentation
+  version: 0.1.9
+
+servers:
+  - url: https://api.example.com/v1
+    description: Main (production) server
+  - url: https://staging-api.example.com
+    description: Internal staging server for testing
+
+tags:
+  - name: User
+    description: Operations related to users
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /user:
+    get:
+      tags:
+        - User
+      summary: Returns a list of users
+      responses:
+        "200":
+          description: A JSON array of user infos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+    post:
+      tags:
+        - User
+      summary: Creates a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+      responses:
+        "201":
+          description: User created successfully
+
+  /user/{userId}:
+    get:
+      tags:
+        - User
+      summary: Returns a user by ID
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A JSON object containing user info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+        "404":
+          description: User not found
+
+    delete:
+      tags:
+        - User
+      summary: Deletes a user by ID
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User deleted successfully
+        "404":
+          description: User not found
+
+  /user/login:
+    post:
+      tags:
+        - User
+      summary: Logs in a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: User logged in successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        "401":
+          description: Unauthorized - Invalid credentials
+
+  /user/token:
+    get:
+      tags:
+        - User
+      summary: Returns current authenticated user token
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user info with token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  token:
+                    type: string
+        "401":
+          description: Unauthorized
+
+  /user/logout:
+    post:
+      tags:
+        - User
+      summary: Logs out a user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User logged out successfully
