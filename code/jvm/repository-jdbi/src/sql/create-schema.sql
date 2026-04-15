@@ -1,3 +1,5 @@
+-- Active: 1776256783353@@127.0.0.1@5432@idap
+
 -- USERS
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
@@ -175,19 +177,17 @@ CREATE TABLE report (
     FOREIGN KEY (analysis_id) REFERENCES analysis(analysis_id) ON DELETE CASCADE
 );
 -- Create indexes for better query performance
-CREATE INDEX idx_token_user ON TOKENS(user_id);
-CREATE INDEX idx_token_value ON TOKENS(token);
-CREATE INDEX idx_case_user ON AccidentCase(created_by);
-CREATE INDEX idx_case_weather ON AccidentCase(weather_id);
-CREATE INDEX idx_vehicle_case ON Vehicle(case_id);
-CREATE INDEX idx_damage_vehicle ON Damage(vehicle_id);
-CREATE INDEX idx_evidence_case ON Evidence(case_id);
-CREATE INDEX idx_evidence_uploaded_by ON Evidence(uploaded_by);
-CREATE INDEX idx_analysis_case ON Analysis(case_id);
-CREATE INDEX idx_analysis_analyst ON Analysis(analyst_id);
-CREATE INDEX idx_measurement_analysis ON Measurement(analysis_id);
-CREATE INDEX idx_measurement_evidence ON Measurement(evidence_id);
-CREATE INDEX idx_measurement_damage ON Measurement(damage_id);
-CREATE INDEX idx_comparison_analysis ON DamageComparison(analysis_id);
-CREATE INDEX idx_report_case ON Report(case_id);
-CREATE INDEX idx_report_analysis ON Report(analysis_id);
+CREATE INDEX idx_token_user ON tokens(user_id);
+CREATE INDEX idx_token_value ON tokens(token);
+CREATE INDEX idx_case_user ON accident_case(user_id);
+CREATE INDEX idx_vehicle_case ON vehicle(case_id);
+CREATE INDEX idx_damage_vehicle ON damage(vehicle_id);
+CREATE INDEX idx_evidence_case ON evidence(case_id);
+CREATE INDEX idx_evidence_uploaded_by ON evidence(uploaded_by);
+CREATE INDEX idx_analysis_case ON analysis(case_id);
+CREATE INDEX idx_analysis_analyst ON analysis(analyst_id);
+CREATE INDEX idx_measurement_analysis ON measurement(analysis_id);
+CREATE INDEX idx_measurement_evidence ON measurement(evidence_id);
+CREATE INDEX idx_measurement_damage ON measurement(damage_id);
+CREATE INDEX idx_comparison_analysis ON damage_comparison(analysis_id);
+CREATE INDEX idx_report_analysis ON report(analysis_id);
