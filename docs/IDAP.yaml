@@ -14,7 +14,7 @@ tags:
   - name: User
     description: Operations related to users
   - name: Case
-    description: Operation related do case analysis
+    description: Operation related to case analysis
 
 components:
   securitySchemes:
@@ -31,7 +31,6 @@ paths:
       summary: Returns a list of users
       security:
         - bearerAuth: []
-      
       responses:
         "200":
           description: A JSON array of user infos
@@ -40,12 +39,19 @@ paths:
               schema:
                 type: array
                 items:
-                  type: string
+                  type: object
+                  properties:
+                    user_id:
+                      type: integer
+                    name:
+                      type: string
+                    email:
+                      type: string
+                      format: email
         "401":
           description: Unauthorized access
         "404":
           description: User not found
-
 
     post:
       tags:
@@ -62,19 +68,25 @@ paths:
               required:
                 - name
                 - password
+                - email
                 - confirmpassword
               properties:
                 name:
                   type: string
+                email:
+                  type: string
+                  format: email
                 password:
                   type: string
+                  format: password
                 confirmpassword:
                   type: string
+                  format: password
       responses:
         "201":
           description: User created successfully
         "403":
-          description: Unauthorized opeartion
+          description: Unauthorized operation
 
   /user/{userId}:
     get:
@@ -88,7 +100,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
       responses:
         "200":
           description: A JSON object containing user info
@@ -98,7 +110,7 @@ paths:
                 type: object
                 properties:
                   id:
-                    type: string
+                    type: integer
                   name:
                     type: string
         "404":
@@ -115,7 +127,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
       responses:
         "200":
           description: User deleted successfully
@@ -136,13 +148,15 @@ paths:
             schema:
               type: object
               required:
-                - username
+                - email
                 - password
               properties:
-                username:
+                email:
                   type: string
+                  format: email
                 password:
                   type: string
+                  format: password
       responses:
         "200":
           description: User logged in successfully
@@ -173,7 +187,7 @@ paths:
                 type: object
                 properties:
                   id:
-                    type: string
+                    type: integer
                   name:
                     type: string
                   token:
@@ -195,6 +209,7 @@ paths:
           description: User logged out successfully
         "400":
           description: No user currently logged in
+
   /case:
     get:
       tags:
@@ -210,9 +225,18 @@ paths:
               schema:
                 type: array
                 items:
-                  type: string
+                  type: object
+                  properties:
+                    case_id:
+                      type: integer
+                    date:
+                      type: string
+                      format: date-time
+                    description:
+                      type: string
         "401":
           description: Unauthorized access
+
     post:
       tags:
         - Case
@@ -233,14 +257,13 @@ paths:
                   type: integer
                 caseInfo:
                   type: object
-
       responses:
         "201":
           description: Case created successfully
         "400":
           description: Invalid parameters were inserted
 
-  /case/{caseid}:
+  /case/{caseId}:
     get:
       tags:
         - Case
@@ -250,57 +273,70 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
       security:
         - bearerAuth: []
       responses:
         "200":
-          description: A JSON object containing user info
+          description: A JSON object containing case info
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  id:
+                  case_id:
+                    type: integer
+                  date:
                     type: string
-                  name:
+                    format: date-time
+                  description:
                     type: string
+                  created_by:
+                    type: integer
+                  weather_id:
+                    type: integer
         "404":
           description: Case not found
         "401":
           description: Case access not authorized
+
     delete:
       tags:
         - Case
       summary: Deletes a case by ID
       parameters:
-        - name: userId
+        - name: caseId
           in: path
           required: true
           schema:
-            type: string
+            type: integer
       security:
         - bearerAuth: []
       responses:
         "200":
-          description: User deleted successfully
+          description: Case deleted successfully
         "404":
-          description: User not found
+          description: Case not found
+
     put:
       tags:
         - Case
       summary: Add or remove info (evidences) from a case
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: integer
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - caseID
               properties:
-                caseID:
-                  type: integer
                 infoToAdd:
                   type: object
       responses:
@@ -309,9 +345,9 @@ paths:
         "401":
           description: Unauthorized access
         "404":
-          description: Case not found        
+          description: Case not found
 
-  /case/{userid}:
+  /case/user/{userId}:
     get:
       tags:
         - Case
@@ -321,20 +357,27 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
       security:
         - bearerAuth: []
       responses:
         "200":
-          description: A JSON array of a users cases
+          description: A JSON array of a user's cases
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  type: string
+                  type: object
+                  properties:
+                    case_id:
+                      type: integer
+                    date:
+                      type: string
+                      format: date-time
+                    description:
+                      type: string
         "401":
           description: Unauthorized access
         "404":
           description: User or Case not found
-

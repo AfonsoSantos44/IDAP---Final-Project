@@ -14,7 +14,7 @@ CREATE TABLE accident_case (
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     case_status VARCHAR(50) NOT NULL DEFAULT 'open',
     accident_description TEXT,
-    FOREIGN KEY (user_id) REFERENCES app_user(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- TOKENS
@@ -25,7 +25,7 @@ CREATE TABLE tokens (
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     expires_at TIMESTAMP NOT NULL,
     revoked BOOLEAN NOT NULL DEFAULT FALSE,
-    FOREIGN KEY (user_id) REFERENCES app_user(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- WEATHER
@@ -87,7 +87,7 @@ CREATE TABLE evidence (
     uploaded_by INT NOT NULL,
     uploaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (case_id) REFERENCES accident_case(case_id) ON DELETE CASCADE,
-    FOREIGN KEY (uploaded_by) REFERENCES app_user(user_id) ON DELETE RESTRICT
+    FOREIGN KEY (uploaded_by) REFERENCES users(user_id) ON DELETE NO ACTION
 );
 
 -- IMAGE EVIDENCE
@@ -108,7 +108,7 @@ CREATE TABLE analysis (
     analyst_id INT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     FOREIGN KEY (case_id) REFERENCES accident_case(case_id) ON DELETE CASCADE,
-    FOREIGN KEY (analyst_id) REFERENCES app_user(user_id) ON DELETE RESTRICT
+    FOREIGN KEY (analyst_id) REFERENCES users(user_id) ON DELETE NO ACTION
 );
 
 -- ANALYSIS IMAGE
