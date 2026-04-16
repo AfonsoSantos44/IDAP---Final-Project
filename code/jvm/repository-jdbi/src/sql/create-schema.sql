@@ -1,4 +1,3 @@
--- Active: 1776256783353@@127.0.0.1@5432@idap
 
 -- USERS
 CREATE TABLE users (
