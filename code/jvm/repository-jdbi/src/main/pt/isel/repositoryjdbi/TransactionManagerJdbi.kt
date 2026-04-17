@@ -1,8 +1,8 @@
 package pt.isel.repositoryjdbi
 
 import org.jdbi.v3.core.Jdbi
-import pt.isel.repository.Transaction
-import pt.isel.repository.TransactionManager
+
+
 
 class TransactionManagerJdbi(
     private val jdbi: Jdbi,

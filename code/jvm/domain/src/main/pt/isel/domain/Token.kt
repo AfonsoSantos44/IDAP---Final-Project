@@ -3,10 +3,10 @@ package pt.isel.domain
 import java.time.Instant
 
 data class Token(
-    val tokenId: Int,
-    val userId: Int,
+    val token_id: Int,
+    val user_id: Int,
     val token: String,
-    val createdAt: Instant,
-    val expiresAt: Instant,
+    val created_at: Instant,
+    val expires_at: Instant,
     val revoked: Boolean
 )

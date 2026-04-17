@@ -1,7 +1,13 @@
 package pt.isel.repositoryjdbi
 
+import pt.isel.domain.Token
+import pt.isel.domain.User
+import java.time.Instant
+
+
+
 data class UserAndTokenModel(
-    val userId: Int,
+    val user_id: Int,
     val username: String,
     val email: String,
     val password_hash: String,
@@ -14,12 +20,12 @@ data class UserAndTokenModel(
     val userAndToken: Pair<User, Token>
         get() =
             Pair(
-                User(userId, username, email, password_hash),
+                User(user_id, username, email, password_hash),
                 Token(
                     token_id,
                     user_id,
                     token,
-                    Instant.ofEpochSecond(createdAt),
+                    Instant.ofEpochSecond(created_at),
                     Instant.ofEpochSecond(expires_at),
                     revoked
                 ),
