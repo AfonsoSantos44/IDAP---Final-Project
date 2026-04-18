@@ -1,0 +1,6 @@
+[90mC:\Users\reiaf\Documents\Final project\IDAP---Final-Project\code\jvm\repository-jdbi\src\main\kotlin\pt\isel\repositoryjdbi\[0mRepositoryUserJdbi.kt[90m:[0m10[90m:1:[0m Class body should not start with blank line [90m(standard:no-empty-first-line-in-class-body)[0m
+[90mC:\Users\reiaf\Documents\Final project\IDAP---Final-Project\code\jvm\repository-jdbi\src\main\kotlin\pt\isel\repositoryjdbi\[0mTransactionManagerJdbi.kt[90m:[0m3[90m:1:[0m Imports must be ordered in lexicographic order without any empty lines in-between with "java", "javax", "kotlin" and aliases in the end [90m(standard:import-ordering)[0m
+
+Summary error count (descending) by rule:
+  standard:import-ordering: 1
+  standard:no-empty-first-line-in-class-body: 1

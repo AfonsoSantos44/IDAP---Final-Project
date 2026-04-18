@@ -19,9 +19,8 @@ CREATE TABLE accident_case (
 
 -- TOKENS
 CREATE TABLE tokens (
-    token_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
-    token VARCHAR(512) NOT NULL UNIQUE,
+    token_hash VARCHAR(255) NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     expires_at TIMESTAMP NOT NULL,
     revoked BOOLEAN NOT NULL DEFAULT FALSE,

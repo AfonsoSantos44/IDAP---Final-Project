@@ -4,14 +4,14 @@ include(
     "app",
     "domain",
     "http",
-    "repository",
+    "repository", 
     "repository-jdbi",
     "services"
 )
 
 project(":app").projectDir = file("code/jvm/app")
-project(":repository").projectDir = file("code/jvm/repository")
 project(":domain").projectDir = file("code/jvm/domain")
 project(":http").projectDir = file("code/jvm/http")
+project(":repository").projectDir = file("code/jvm/repository") 
 project(":repository-jdbi").projectDir = file("code/jvm/repository-jdbi")
 project(":services").projectDir = file("code/jvm/services")

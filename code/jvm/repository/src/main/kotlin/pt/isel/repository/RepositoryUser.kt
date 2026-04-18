@@ -14,6 +14,8 @@ interface RepositoryUser : Repository<User> {
         password_hash: String,
     ): User
 
+    fun getUserByEmail(email: String): User?
+
     fun getUserByUsername(username: String): User?
 
     fun createToken(
@@ -21,9 +23,14 @@ interface RepositoryUser : Repository<User> {
         maxTokens: Int,
     )
 
+    fun getTokenByHash(token_hash: String): Token?
+
+    fun getUserByToken(token_hash: String): User?
+
     fun updateTokenLastUsed(
         token: Token,
         now: Instant,
     ): Int
 
+    fun deleteTokenByHash(token_hash: String): Int
 }
