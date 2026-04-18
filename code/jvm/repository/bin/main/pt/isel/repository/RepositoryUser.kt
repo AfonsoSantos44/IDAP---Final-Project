@@ -10,6 +10,7 @@ import java.time.Instant
  */
 interface RepositoryUser : Repository<User> {
     fun createUser(
+        username: String,
         email: String,
         password_hash: String,
     ): User
@@ -25,11 +26,10 @@ interface RepositoryUser : Repository<User> {
 
     fun getTokenByHash(token_hash: String): Token?
 
-    fun getUserByToken(token_hash: String): User?
-
     fun updateTokenLastUsed(
         token: Token,
         now: Instant,
     ): Int
 
     fun deleteTokenByHash(token_hash: String): Int
+}
