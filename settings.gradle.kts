@@ -1,5 +1,17 @@
 rootProject.name = "idap-project"
 
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+    plugins {
+        kotlin("jvm") version "1.9.25"
+        kotlin("plugin.spring") version "1.9.25"
+        kotlin("plugin.serialization") version "1.9.25"
+    }
+}
+
 include(
     "app",
     "domain",

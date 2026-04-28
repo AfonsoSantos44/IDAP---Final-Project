@@ -1,3 +1,32 @@
+plugins {
+    kotlin("jvm")
+    kotlin("plugin.spring")
+    id("io.spring.dependency-management") version "1.1.6"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+}
+
+repositories {
+    mavenCentral()
+}
+
 dependencies {
-    // Add module-specific dependencies here
+    api(project(":repository"))
+    api(project(":domain"))
+
+    implementation("org.springframework:spring-context")
+
+    // For dependency injection
+    implementation("jakarta.inject:jakarta.inject-api:2.0.1")
+
+    // To get password encode
+    api("org.springframework.security:spring-security-core:6.5.5")
+
+    // SLF4J for logging
+    implementation("org.slf4j:slf4j-api:2.0.9")
+
+    testImplementation(platform("org.junit:junit-bom:5.12.0"))
+    testImplementation("org.springframework:spring-test:6.2.11")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("org.mockito:mockito-core:5.11.0")
 }

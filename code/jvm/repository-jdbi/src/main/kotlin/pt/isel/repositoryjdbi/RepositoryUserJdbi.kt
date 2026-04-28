@@ -21,7 +21,7 @@ class RepositoryUserJdbi(private val handle: Handle) : RepositoryUser {
                 .bind("password_hash", password_hash)
                 .executeAndReturnGeneratedKeys().mapTo(Int::class.java)
                 .one()
-        return User(id,username, email, password_hash)
+        return User(id, username, email, password_hash)
     }
 
     override fun getUserByEmail(email: String): User? =
@@ -59,7 +59,6 @@ class RepositoryUserJdbi(private val handle: Handle) : RepositoryUser {
             .mapTo<Token>()
             .singleOrNull()
 
-
     override fun updateTokenLastUsed(
         token: Token,
         now: Instant,
@@ -86,7 +85,9 @@ class RepositoryUserJdbi(private val handle: Handle) : RepositoryUser {
             .list()
 
     override fun save(entity: User) {
-        handle.createUpdate("insert into users (user_id, username, email, password_hash) values (:user_id, :username, :email, :password_hash)")
+        handle.createUpdate(
+            "insert into users (user_id, username, email, password_hash) values (:user_id, :username, :email, :password_hash)",
+        )
             .bind("user_id", entity.user_id)
             .bind("username", entity.username)
             .bind("email", entity.email)
