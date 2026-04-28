@@ -1,18 +1,20 @@
 package pt.isel.http
 
-import org.springframework.http.ResponseEntity
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.domain.User
 import pt.isel.http.dto.CreateUserRequestDto
-import pt.isel.http.dto.UserOutputDto
+import pt.isel.http.dto.Problem
 import pt.isel.repository.TransactionManager
 import pt.isel.services.Either
+import pt.isel.services.Failure
+import pt.isel.services.Success
+import pt.isel.services.UserAuthService
 import pt.isel.services.UserError
-import Uris
 
 // Controller for user-related endpoints
 
@@ -20,6 +22,7 @@ import Uris
 @RequestMapping("/users")
 class UserController(
     private val transactionManager: TransactionManager,
+    private val userService: UserAuthService,
 ) {
     companion object {
         private const val TOKEN_COOKIE_NAME = "token"
@@ -30,7 +33,7 @@ class UserController(
     @PostMapping(Uris.Users.CREATE)
     fun createUser(
         @RequestBody userRequest: CreateUserRequestDto,
-    ): ResponseEntity<UserOutputDto> {
+    ): ResponseEntity<*> {
         val result: Either<UserError, User> =
             userService.createUser(userRequest.username, userRequest.email, userRequest.password)
 
@@ -38,8 +41,8 @@ class UserController(
             is Success ->
                 ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .header("Location", "/api/users/${result.value.id}")
-                    .build()
+                    .header("Location", "/api/users/${result.value.userId}")
+                    .build<Unit>()
 
             is Failure ->
                 when (result.value) {

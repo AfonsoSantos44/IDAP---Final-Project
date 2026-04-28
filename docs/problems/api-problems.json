@@ -1,0 +1,32 @@
+{
+  "problems": [
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems",
+      "title": "Insecure Password",
+      "status": 400,
+      "detail": "The provided password does not meet the minimum security requirements. Password must be at least 5 characters long.",
+      "endpoint": "/api/users"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems",
+      "title": "Email Already Exists",
+      "status": 400,
+      "detail": "An account with this email already exists.",
+      "endpoint": "/api/users"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems",
+      "title": "Username Already Exists",
+      "status": 400,
+      "detail": "This username is already taken. Please choose another one.",
+      "endpoint": "/api/users"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems",
+      "title": "Invalid Email",
+      "status": 400,
+      "detail": "The provided email is not in a valid format.",
+      "endpoint": "/api/users"
+    }
+  ]
+}

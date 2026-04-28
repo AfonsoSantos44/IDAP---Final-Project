@@ -1,22 +1,12 @@
-[90mC:\Users\reiaf\Documents\Final project\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mUris.kt[90m:[0m1[90m:1:[0m File 'Uris.kt' should not be empty [90m(standard:no-empty-file)[0m
-[90mC:\Users\reiaf\Documents\Final project\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mUserController.kt[90m:[0m1[90m:1:[0m File must end with a newline (\n) [90m(standard:final-newline)[0m
+[90mC:\Users\reiaf\Documents\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\dto\[0mProblem.kt[90m:[0m1[90m:1:[0m File must end with a newline (\n) [90m(standard:final-newline)[0m
+[90mC:\Users\reiaf\Documents\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\dto\[0mProblem.kt[90m:[0m7[90m:1:[0m Needless blank line(s) [90m(standard:no-consecutive-blank-lines)[0m
+[90mC:\Users\reiaf\Documents\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\dto\[0mProblem.kt[90m:[0m13[90m:4:[0m Class body should not start with blank line [90m(standard:no-empty-first-line-in-class-body)[0m
+[90mC:\Users\reiaf\Documents\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mUris.kt[90m:[0m1[90m:1:[0m File must end with a newline (\n) [90m(standard:final-newline)[0m
+[90mC:\Users\reiaf\Documents\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mUserController.kt[90m:[0m3[90m:1:[0m Imports must be ordered in lexicographic order without any empty lines in-between with "java", "javax", "kotlin" and aliases in the end [90m(standard:import-ordering)[0m
 [90mC:\Users\reiaf\Documents\Final project\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mUserController.kt[90m:[0m3[90m:1:[0m Imports must be ordered in lexicographic order without any empty lines in-between with "java", "javax", "kotlin" and aliases in the end [90m(standard:import-ordering)[0m
-[90mC:\Users\reiaf\Documents\Final project\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mUserController.kt[90m:[0m3[90m:48:[0m Unused import [90m(standard:no-unused-imports)[0m
-[90mC:\Users\reiaf\Documents\Final project\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mUserController.kt[90m:[0m14[90m:8:[0m Replace the block comment with an EOL comment [90m(standard:no-single-line-block-comment)[0m
-[90mC:\Users\reiaf\Documents\Final project\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mUserController.kt[90m:[0m16[90m:1:[0m Needless blank line(s) [90m(standard:no-consecutive-blank-lines)[0m
-[90mC:\Users\reiaf\Documents\Final project\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mUserController.kt[90m:[0m26[90m:2:[0m Missing spacing before "{" [90m(standard:curly-spacing)[0m
-[90mC:\Users\reiaf\Documents\Final project\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mUserController.kt[90m:[0m30[90m:73:[0m Trailing space(s) [90m(standard:no-trailing-spaces)[0m
-[90mC:\Users\reiaf\Documents\Final project\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mUserController.kt[90m:[0m36[90m:21:[0m Unexpected indentation (8) (should be 12) [90m(standard:indent)[0m
-[90mC:\Users\reiaf\Documents\Final project\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mUserController.kt[90m:[0m63[90m:1:[0m Unexpected blank line(s) before "}" [90m(standard:no-blank-line-before-rbrace)[0m
 
 Summary error count (descending) by rule:
-  standard:curly-spacing: 1
-  standard:final-newline: 1
-  standard:import-ordering: 1
-  standard:indent: 1
-  standard:no-blank-line-before-rbrace: 1
+  standard:final-newline: 2
+  standard:import-ordering: 2
   standard:no-consecutive-blank-lines: 1
-  standard:no-empty-file: 1
-  standard:no-single-line-block-comment: 1
-  standard:no-trailing-spaces: 1
-  standard:no-unused-imports: 1
+  standard:no-empty-first-line-in-class-body: 1

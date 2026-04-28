@@ -1,3 +1,5 @@
+package pt.isel.http
+
 object Uris {
     const val PREFIX = "/api"
     const val HOME = PREFIX

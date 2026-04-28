@@ -4,7 +4,7 @@ CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     username VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL
 );
 
 -- ACCIDENT CASE
@@ -175,7 +175,6 @@ CREATE TABLE report (
 );
 -- Create indexes for better query performance
 CREATE INDEX idx_token_user ON tokens(user_id);
-CREATE INDEX idx_token_value ON tokens(token);
 CREATE INDEX idx_case_user ON accident_case(user_id);
 CREATE INDEX idx_vehicle_case ON vehicle(case_id);
 CREATE INDEX idx_damage_vehicle ON damage(vehicle_id);

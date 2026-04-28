@@ -5,29 +5,29 @@ import pt.isel.domain.User
 import java.time.Instant
 
 data class UserAndTokenModel(
-    val user_id: Int,
+    val userId: Int,
     val username: String,
     val email: String,
-    val password_hash: String,
+    val passwordHash: String,
     val token: String,
-    val created_at: Long,
-    val expires_at: Long,
+    val createdAt: Long,
+    val expiresAt: Long,
     val revoked: Boolean,
 ) {
     val userAndToken: Pair<User, Token>
         get() =
             Pair(
                 User(
-                    user_id,
+                    userId,
                     username,
                     email,
-                    password_hash,
+                    passwordHash,
                 ),
                 Token(
-                    user_id,
+                    userId,
                     token,
-                    Instant.ofEpochSecond(created_at),
-                    Instant.ofEpochSecond(expires_at),
+                    Instant.ofEpochSecond(createdAt),
+                    Instant.ofEpochSecond(expiresAt),
                     revoked,
                 ),
             )

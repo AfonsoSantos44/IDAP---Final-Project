@@ -1,8 +1,8 @@
 package pt.isel.domain
 
 data class User(
-    val user_id: Int,
+    val userId: Int,
     val username: String,
     val email: String,
-    val password_hash: String,
+    val passwordHash: String,
 )

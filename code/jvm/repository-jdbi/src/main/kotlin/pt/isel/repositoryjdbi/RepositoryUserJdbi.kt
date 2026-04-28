@@ -12,26 +12,26 @@ class RepositoryUserJdbi(private val handle: Handle) : RepositoryUser {
     override fun createUser(
         username: String,
         email: String,
-        password_hash: String,
+        passwordHash: String,
     ): User {
         val id =
-            handle.createUpdate("INSERT INTO dbo.users (username, email, password_hash) VALUES (:username, :email, :password_hash)")
+            handle.createUpdate("INSERT INTO users (username, email, password_hash) VALUES (:username, :email, :password_hash)")
                 .bind("username", username)
                 .bind("email", email)
-                .bind("password_hash", password_hash)
+                .bind("password_hash", passwordHash)
                 .executeAndReturnGeneratedKeys().mapTo(Int::class.java)
                 .one()
-        return User(id, username, email, password_hash)
+        return User(id, username, email, passwordHash)
     }
 
     override fun getUserByEmail(email: String): User? =
-        handle.createQuery("select * from users where email = :email")
+        handle.createQuery("SELECT * FROM users WHERE email = :email")
             .bind("email", email)
             .mapTo<User>()
             .singleOrNull()
 
     override fun getUserByUsername(username: String): User? =
-        handle.createQuery("select * from users where username = :username")
+        handle.createQuery("SELECT * FROM users WHERE username = :username")
             .bind("username", username)
             .mapTo<User>()
             .singleOrNull()
@@ -42,8 +42,8 @@ class RepositoryUserJdbi(private val handle: Handle) : RepositoryUser {
     ) {
         handle.createUpdate(
             """
-            insert into tokens (user_id, token_hash, created_at, expires_at)
-            values (:user_id, :token_hash, :created_at, :expires_at)
+            INSERT INTO tokens (user_id, token_hash, created_at, expires_at)
+            VALUES (:user_id, :token_hash, :created_at, :expires_at)
             """,
         )
             .bind("user_id", token.user_id)
@@ -53,56 +53,48 @@ class RepositoryUserJdbi(private val handle: Handle) : RepositoryUser {
             .execute()
     }
 
-    override fun getTokenByHash(token_hash: String): Token? =
-        handle.createQuery("select * from tokens where token_hash = :token_hash")
-            .bind("token_hash", token_hash)
+    override fun getTokenByHash(tokenHash: String): Token? =
+        handle.createQuery("SELECT * FROM tokens WHERE token_hash = :token_hash")
+            .bind("token_hash", tokenHash)
             .mapTo<Token>()
             .singleOrNull()
 
-    override fun updateTokenLastUsed(
-        token: Token,
-        now: Instant,
-    ): Int =
-        handle.createUpdate("update tokens set last_used_at = :last_used_at where token_hash = :token_hash")
-            .bind("last_used_at", now)
-            .bind("token_hash", token.token_hash)
-            .execute()
 
-    override fun deleteTokenByHash(token_hash: String): Int =
-        handle.createUpdate("delete from tokens where token_hash = :token_hash")
-            .bind("token_hash", token_hash)
+    override fun deleteTokenByHash(tokenHash: String): Int =
+        handle.createUpdate("DELETE FROM tokens WHERE token_hash = :token_hash")
+            .bind("token_hash", tokenHash)
             .execute()
 
     override fun findById(id: Int): User? =
-        handle.createQuery("select * from users where user_id = :user_id")
+        handle.createQuery("SELECT * FROM users WHERE user_id = :user_id")
             .bind("user_id", id)
             .mapTo<User>()
             .singleOrNull()
 
     override fun findAll(): List<User> =
-        handle.createQuery("select * from users")
+        handle.createQuery("SELECT * FROM users")
             .map(UserMapper())
             .list()
 
     override fun save(entity: User) {
         handle.createUpdate(
-            "insert into users (user_id, username, email, password_hash) values (:user_id, :username, :email, :password_hash)",
+            "INSERT INTO users (user_id, username, email, password_hash) VALUES (:user_id, :username, :email, :password_hash)",
         )
-            .bind("user_id", entity.user_id)
+            .bind("user_id", entity.userId)
             .bind("username", entity.username)
             .bind("email", entity.email)
-            .bind("password_hash", entity.password_hash)
+            .bind("password_hash", entity.passwordHash)
             .execute()
     }
 
     override fun deleteById(id: Int) {
-        handle.createUpdate("delete from users where user_id = :user_id")
+        handle.createUpdate("DELETE FROM users WHERE user_id = :user_id")
             .bind("user_id", id)
             .execute()
     }
 
     override fun clear() {
-        handle.createUpdate("delete from users")
+        handle.createUpdate("DELETE FROM users")
             .execute()
     }
 }

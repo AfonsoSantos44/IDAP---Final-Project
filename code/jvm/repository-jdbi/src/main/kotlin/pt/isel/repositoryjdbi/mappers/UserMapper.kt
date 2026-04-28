@@ -11,9 +11,9 @@ class UserMapper : RowMapper<User> {
         ctx: StatementContext,
     ): User =
         User(
-            user_id = rs.getInt("user_id"),
+            userId = rs.getInt("user_id"),
             username = rs.getString("username"),
             email = rs.getString("email"),
-            password_hash = rs.getString("password_hash"),
+            passwordHash = rs.getString("password_hash"),
         )
 }
