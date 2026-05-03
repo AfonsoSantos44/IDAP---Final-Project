@@ -1,32 +1,34 @@
+import org.springframework.boot.gradle.plugin.SpringBootPlugin
+
 plugins {
     kotlin("jvm")
     kotlin("plugin.spring")
-    id("io.spring.dependency-management") version "1.1.6"
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+    id("io.spring.dependency-management")
+    id("org.jlleitschuh.gradle.ktlint")
 }
+
+group = "pt.isel"
+version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
 }
 
+dependencyManagement {
+    imports {
+        mavenBom(SpringBootPlugin.BOM_COORDINATES)
+    }
+}
+
 dependencies {
-    api(project(":repository"))
-    api(project(":domain"))
+    implementation(project(":repository"))
+    implementation(project(":domain"))
 
     implementation("org.springframework:spring-context")
+    implementation("org.springframework.security:spring-security-core")
 
-    // For dependency injection
-    implementation("jakarta.inject:jakarta.inject-api:2.0.1")
+    implementation("org.slf4j:slf4j-api:2.0.16")
 
-    // To get password encode
-    api("org.springframework.security:spring-security-core:6.5.5")
-
-    // SLF4J for logging
-    implementation("org.slf4j:slf4j-api:2.0.9")
-
-    testImplementation(platform("org.junit:junit-bom:5.12.0"))
-    testImplementation("org.springframework:spring-test:6.2.11")
+    testImplementation("org.springframework:spring-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("org.mockito:mockito-core:5.11.0")
 }

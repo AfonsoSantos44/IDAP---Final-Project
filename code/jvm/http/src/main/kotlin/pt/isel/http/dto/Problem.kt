@@ -9,6 +9,7 @@ private const val PROBLEM_URI_PATH = "https://github.com/AfonsoSantos44/IDAP---F
 
 sealed class Problem(
     typeUri: URI,
+    val title: String,
 ) {
     @Suppress("unused")
     val type = typeUri.toString()
@@ -19,11 +20,48 @@ sealed class Problem(
             .header("Content-Type", MEDIA_TYPE)
             .body(this)
 
-    data object InsecurePassword : Problem(URI("$PROBLEM_URI_PATH/insecure-password"))
+    data object InvalidUsername : Problem(
+        URI("$PROBLEM_URI_PATH/invalid-username"),
+        "Invalid username",
+    )
 
-    data object EmailAlreadyExists : Problem(URI("$PROBLEM_URI_PATH/email-already-exists"))
+    data object InsecurePassword : Problem(
+        URI("$PROBLEM_URI_PATH/insecure-password"),
+        "Insecure password",
+    )
 
-    data object UsernameAlreadyExists : Problem(URI("$PROBLEM_URI_PATH/username-already-exists"))
+    data object EmailAlreadyExists : Problem(
+        URI("$PROBLEM_URI_PATH/email-already-exists"),
+        "Email already exists",
+    )
 
-    data object InvalidEmail : Problem(URI("$PROBLEM_URI_PATH/invalid-email"))
+    data object UsernameAlreadyExists : Problem(
+        URI("$PROBLEM_URI_PATH/username-already-exists"),
+        "Username already exists",
+    )
+
+    data object InvalidEmail : Problem(
+        URI("$PROBLEM_URI_PATH/invalid-email"),
+        "Invalid email",
+    )
+
+    data object UserNotFound : Problem(
+        URI("$PROBLEM_URI_PATH/user-not-found"),
+        "User not found",
+    )
+
+    data object InvalidCredentials : Problem(
+        URI("$PROBLEM_URI_PATH/invalid-credentials"),
+        "Invalid credentials",
+    )
+
+    data object InvalidToken : Problem(
+        URI("$PROBLEM_URI_PATH/invalid-token"),
+        "Invalid token",
+    )
+
+    data object ExpiredToken : Problem(
+        URI("$PROBLEM_URI_PATH/expired-token"),
+        "Expired token",
+    )
 }

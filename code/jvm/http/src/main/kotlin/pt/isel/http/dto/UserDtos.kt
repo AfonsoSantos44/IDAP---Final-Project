@@ -1,7 +1,7 @@
 package pt.isel.http.dto
 
 data class UserOutputDto(
-    val user_id: Int,
+    val userId: Int,
     val username: String,
     val email: String,
 )
@@ -22,7 +22,8 @@ data class LoginResponseDto(
 )
 
 data class CurrentUserTokenDto(
-    val id: Int,
+    val userId: Int,
     val username: String,
+    val email: String,
     val token: String,
 )

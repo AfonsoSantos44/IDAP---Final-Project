@@ -27,4 +27,6 @@ interface RepositoryUser : Repository<User> {
     fun getTokenByHash(tokenHash: String): Token?
 
     fun deleteTokenByHash(tokenHash: String): Int
+
+    fun deleteAllTokensByUserId(userId: Int): Int
 }

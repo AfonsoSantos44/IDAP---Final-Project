@@ -5,8 +5,8 @@ import org.jdbi.v3.core.kotlin.mapTo
 import pt.isel.domain.Token
 import pt.isel.domain.User
 import pt.isel.repository.RepositoryUser
+import pt.isel.repositoryjdbi.mappers.TokenMapper
 import pt.isel.repositoryjdbi.mappers.UserMapper
-import java.time.Instant
 
 class RepositoryUserJdbi(private val handle: Handle) : RepositoryUser {
     override fun createUser(
@@ -15,7 +15,12 @@ class RepositoryUserJdbi(private val handle: Handle) : RepositoryUser {
         passwordHash: String,
     ): User {
         val id =
-            handle.createUpdate("INSERT INTO users (username, email, password_hash) VALUES (:username, :email, :password_hash)")
+            handle.createUpdate(
+                """
+                INSERT INTO users (username, email, password_hash)
+                VALUES (:username, :email, :password_hash)
+                """,
+            )
                 .bind("username", username)
                 .bind("email", email)
                 .bind("password_hash", passwordHash)
@@ -42,27 +47,47 @@ class RepositoryUserJdbi(private val handle: Handle) : RepositoryUser {
     ) {
         handle.createUpdate(
             """
+            DELETE FROM tokens
+            WHERE token_hash IN (
+                SELECT token_hash
+                FROM tokens
+                WHERE user_id = :user_id
+                ORDER BY created_at DESC
+                OFFSET :tokens_to_keep
+            )
+            """,
+        )
+            .bind("user_id", token.userId)
+            .bind("tokens_to_keep", (maxTokens - 1).coerceAtLeast(0))
+            .execute()
+
+        handle.createUpdate(
+            """
             INSERT INTO tokens (user_id, token_hash, created_at, expires_at)
             VALUES (:user_id, :token_hash, :created_at, :expires_at)
             """,
         )
-            .bind("user_id", token.user_id)
-            .bind("token_hash", token.token_hash)
-            .bind("created_at", token.created_at)
-            .bind("expires_at", token.expires_at)
+            .bind("user_id", token.userId)
+            .bind("token_hash", token.tokenHash)
+            .bind("created_at", token.createdAt)
+            .bind("expires_at", token.expiresAt)
             .execute()
     }
 
     override fun getTokenByHash(tokenHash: String): Token? =
         handle.createQuery("SELECT * FROM tokens WHERE token_hash = :token_hash")
             .bind("token_hash", tokenHash)
-            .mapTo<Token>()
+            .map(TokenMapper())
             .singleOrNull()
-
 
     override fun deleteTokenByHash(tokenHash: String): Int =
         handle.createUpdate("DELETE FROM tokens WHERE token_hash = :token_hash")
             .bind("token_hash", tokenHash)
+            .execute()
+
+    override fun deleteAllTokensByUserId(userId: Int): Int =
+        handle.createUpdate("DELETE FROM tokens WHERE user_id = :user_id")
+            .bind("user_id", userId)
             .execute()
 
     override fun findById(id: Int): User? =
