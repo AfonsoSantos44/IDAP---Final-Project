@@ -36,6 +36,11 @@ sealed class TokenError {
     data object ExpiredToken : TokenError()
 }
 
+data class UserSession(
+    val user: User,
+    val token: String,
+)
+
 @Service
 class UserAuthService(
     private val transactionManager: TransactionManager,
@@ -100,7 +105,7 @@ class UserAuthService(
     fun createToken(
         email: String,
         password: String,
-    ): Either<TokenCreationError, String> {
+    ): Either<TokenCreationError, UserSession> {
         val normalizedEmail = email.trim().lowercase()
 
         return transactionManager.run {
@@ -124,7 +129,7 @@ class UserAuthService(
                 ),
                 MAX_TOKENS_PER_USER,
             )
-            success(rawToken)
+            success(UserSession(user, rawToken))
         }
     }
 
@@ -152,9 +157,9 @@ class UserAuthService(
 
     private fun isSecurePassword(password: String): Boolean =
         password.length >= 8 &&
-            password.any { it.isUpperCase() } &&
-            password.any { it.isLowerCase() } &&
-            password.any { it.isDigit() }
+                password.any { it.isUpperCase() } &&
+                password.any { it.isLowerCase() } &&
+                password.any { it.isDigit() }
 
     private fun generateRawToken(): String {
         val bytes = ByteArray(RAW_TOKEN_BYTES)

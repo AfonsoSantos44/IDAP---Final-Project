@@ -1,32 +1,74 @@
 {
   "problems": [
     {
-      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems",
-      "title": "Insecure Password",
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/invalid-username",
+      "title": "Invalid username",
       "status": 400,
-      "detail": "The provided password does not meet the minimum security requirements. Password must be at least 5 characters long.",
+      "detail": "The provided username is not valid. Use 3 to 100 characters containing only letters, digits, underscores, hyphens, or dots.",
       "endpoint": "/api/users"
     },
     {
-      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems",
-      "title": "Email Already Exists",
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/insecure-password",
+      "title": "Insecure password",
       "status": 400,
-      "detail": "An account with this email already exists.",
+      "detail": "The provided password does not meet the security requirements. Password must be at least 8 characters long and include uppercase, lowercase, and numeric characters.",
       "endpoint": "/api/users"
     },
     {
-      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems",
-      "title": "Username Already Exists",
-      "status": 400,
-      "detail": "This username is already taken. Please choose another one.",
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/email-already-exists",
+      "title": "Email already exists",
+      "status": 409,
+      "detail": "The provided email address is already associated with an existing account.",
       "endpoint": "/api/users"
     },
     {
-      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems",
-      "title": "Invalid Email",
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/username-already-exists",
+      "title": "Username already exists",
+      "status": 409,
+      "detail": "The provided username is already in use.",
+      "endpoint": "/api/users"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/invalid-email",
+      "title": "Invalid email",
       "status": 400,
       "detail": "The provided email is not in a valid format.",
       "endpoint": "/api/users"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/user-not-found",
+      "title": "User not found",
+      "status": 404,
+      "detail": "No user exists with the provided identifier.",
+      "endpoint": "/api/users/{id}"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/invalid-credentials",
+      "title": "Invalid credentials",
+      "status": 401,
+      "detail": "The provided email or password is incorrect.",
+      "endpoint": "/api/users/login"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/invalid-token",
+      "title": "Invalid token",
+      "status": 401,
+      "detail": "The provided session cookie is invalid or no longer exists.",
+      "endpoint": "/api/users/me, /api/users/logout"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/expired-token",
+      "title": "Expired token",
+      "status": 401,
+      "detail": "The provided session cookie has expired.",
+      "endpoint": "/api/users/me"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/no-user-logged-in",
+      "title": "No user currently logged in",
+      "status": 400,
+      "detail": "No session cookie was provided with the request.",
+      "endpoint": "/api/users/me, /api/users/logout"
     }
   ]
 }

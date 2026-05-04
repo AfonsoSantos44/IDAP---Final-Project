@@ -64,4 +64,9 @@ sealed class Problem(
         URI("$PROBLEM_URI_PATH/expired-token"),
         "Expired token",
     )
+
+    data object NoUserLoggedIn : Problem(
+        URI("$PROBLEM_URI_PATH/no-user-logged-in"),
+        "No user currently logged in",
+    )
 }

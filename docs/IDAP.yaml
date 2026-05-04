@@ -22,6 +22,10 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: idap_session
 
 paths:
   /api/users:
@@ -158,15 +162,25 @@ paths:
                   format: password
       responses:
         "200":
-          description: User logged in successfully
+          description: User logged in successfully. The session is returned in an HttpOnly idap_session cookie.
+          headers:
+            Set-Cookie:
+              description: HttpOnly session cookie.
+              schema:
+                type: string
+                example: idap_session=abc123; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  token:
+                  userId:
+                    type: integer
+                  username:
                     type: string
-                    example: "uL0nXHMPv1nG9kqUul5r5I-2s5LQyyp5Mezt3PlF_lk"
+                  email:
+                    type: string
+                    format: email
         "401":
           description: Invalid credentials
 
@@ -176,7 +190,7 @@ paths:
         - User
       summary: Returns the current authenticated user
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       responses:
         "200":
           description: Current authenticated user info
@@ -203,10 +217,10 @@ paths:
         - User
       summary: Logs out a user
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       responses:
         "204":
-          description: User logged out successfully
+          description: User logged out successfully. The session cookie is expired.
         "400":
           description: No user currently logged in
 
