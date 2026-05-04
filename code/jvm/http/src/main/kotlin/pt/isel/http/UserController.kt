@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.domain.User
 import pt.isel.http.dto.CreateUserRequestDto
-import pt.isel.http.dto.CurrentUserTokenDto
+import pt.isel.http.dto.CurrentUserDto
 import pt.isel.http.dto.LoginRequestDto
 import pt.isel.http.dto.LoginResponseDto
 import pt.isel.http.dto.Problem
@@ -100,7 +100,7 @@ class UserController(
                 }
         }
 
-    @GetMapping(Uris.Users.TOKEN)
+    @GetMapping(Uris.Users.ME)
     fun getCurrentUser(
         @RequestHeader(HttpHeaders.AUTHORIZATION, required = false) authorization: String?,
     ): ResponseEntity<*> {
@@ -111,7 +111,7 @@ class UserController(
         return when (val result = userService.getUserByToken(rawToken)) {
             is Success ->
                 ResponseEntity.ok(
-                    CurrentUserTokenDto(
+                    CurrentUserDto(
                         userId = result.value.userId,
                         username = result.value.username,
                         email = result.value.email,

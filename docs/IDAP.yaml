@@ -1,4 +1,4 @@
-openapi: 3.1.0
+openapi: 3.0.4
 info:
   title: IDAP API
   description: IDAP API Documentation
@@ -170,16 +170,16 @@ paths:
         "401":
           description: Invalid credentials
 
-  /api/users/token:
+  /api/users/me:
     get:
       tags:
         - User
-      summary: Returns current authenticated user token
+      summary: Returns the current authenticated user
       security:
         - bearerAuth: []
       responses:
         "200":
-          description: Current user info with token
+          description: Current authenticated user info
           content:
             application/json:
               schema:
@@ -192,8 +192,6 @@ paths:
                   email:
                     type: string
                     format: email
-                  token:
-                    type: string
         "400":
           description: No user currently logged in
         "401":

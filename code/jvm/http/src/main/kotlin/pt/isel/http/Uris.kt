@@ -8,7 +8,7 @@ object Uris {
         const val CREATE = "$PREFIX/users"
         const val LIST = "$PREFIX/users"
         const val LOGIN = "$PREFIX/users/login"
-        const val TOKEN = "$PREFIX/users/token"
+        const val ME = "$PREFIX/users/me"
         const val LOGOUT = "$PREFIX/users/logout"
         const val GET_BY_ID = "$PREFIX/users/{id}"
         const val DELETE_BY_ID = "$PREFIX/users/{id}"

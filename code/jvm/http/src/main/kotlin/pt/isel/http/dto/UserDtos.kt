@@ -21,7 +21,7 @@ data class LoginResponseDto(
     val token: String,
 )
 
-data class CurrentUserTokenDto(
+data class CurrentUserDto(
     val userId: Int,
     val username: String,
     val email: String,
