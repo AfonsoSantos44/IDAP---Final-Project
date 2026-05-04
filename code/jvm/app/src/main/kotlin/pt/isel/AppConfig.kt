@@ -8,6 +8,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import pt.isel.repository.TransactionManager
 import pt.isel.repositoryjdbi.TransactionManagerJdbi
+import pt.isel.repositoryjdbi.mappers.AccidentCaseMapper
 import pt.isel.repositoryjdbi.mappers.TokenMapper
 import pt.isel.repositoryjdbi.mappers.UserMapper
 import java.time.Clock
@@ -21,6 +22,7 @@ class AppConfig {
             .installPlugin(KotlinPlugin())
             .registerRowMapper(UserMapper())
             .registerRowMapper(TokenMapper())
+            .registerRowMapper(AccidentCaseMapper())
 
     @Bean
     fun idapTransactionManager(jdbi: Jdbi): TransactionManager =

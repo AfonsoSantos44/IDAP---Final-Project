@@ -69,6 +69,27 @@
       "status": 400,
       "detail": "No session cookie was provided with the request.",
       "endpoint": "/api/users/me, /api/users/logout"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/case-not-found",
+      "title": "Case not found",
+      "status": 404,
+      "detail": "No case exists with the provided identifier.",
+      "endpoint": "/api/cases/{id}"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/invalid-case-status",
+      "title": "Invalid case status",
+      "status": 400,
+      "detail": "The provided case status must be non-empty and at most 50 characters.",
+      "endpoint": "/api/cases, /api/cases/{id}"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/invalid-case-description",
+      "title": "Invalid case description",
+      "status": 400,
+      "detail": "The provided case description must be at most 5000 characters.",
+      "endpoint": "/api/cases, /api/cases/{id}"
     }
   ]
 }

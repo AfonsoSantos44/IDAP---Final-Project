@@ -69,4 +69,19 @@ sealed class Problem(
         URI("$PROBLEM_URI_PATH/no-user-logged-in"),
         "No user currently logged in",
     )
+
+    data object CaseNotFound : Problem(
+        URI("$PROBLEM_URI_PATH/case-not-found"),
+        "Case not found",
+    )
+
+    data object InvalidCaseStatus : Problem(
+        URI("$PROBLEM_URI_PATH/invalid-case-status"),
+        "Invalid case status",
+    )
+
+    data object InvalidCaseDescription : Problem(
+        URI("$PROBLEM_URI_PATH/invalid-case-description"),
+        "Invalid case description",
+    )
 }
