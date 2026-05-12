@@ -1,0 +1,4 @@
+[90mC:\Users\reiaf\Documents\IDAP---Final-Project\code\jvm\repository-jdbi\src\main\kotlin\pt\isel\repositoryjdbi\mappers\[0mAccidentCaseMapper.kt[90m:[0m1[90m:1:[0m File must end with a newline (\n) [90m(standard:final-newline)[0m
+
+Summary error count (descending) by rule:
+  standard:final-newline: 1

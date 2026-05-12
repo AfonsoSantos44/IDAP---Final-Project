@@ -1,0 +1,9 @@
+[90mC:\Users\reiaf\Documents\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mCaseController.kt[90m:[0m1[90m:1:[0m File must end with a newline (\n) [90m(standard:final-newline)[0m
+[90mC:\Users\reiaf\Documents\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mCaseController.kt[90m:[0m26[90m:17:[0m Unexpected spacing after "(" [90m(standard:paren-spacing)[0m
+[90mC:\Users\reiaf\Documents\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mCaseController.kt[90m:[0m27[90m:57:[0m First line of body expression fits on same line as function signature [90m(standard:function-signature)[0m
+[90mC:\Users\reiaf\Documents\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\dto\[0mCaseDtos.kt[90m:[0m1[90m:1:[0m File must end with a newline (\n) [90m(standard:final-newline)[0m
+
+Summary error count (descending) by rule:
+  standard:final-newline: 2
+  standard:function-signature: 1
+  standard:paren-spacing: 1

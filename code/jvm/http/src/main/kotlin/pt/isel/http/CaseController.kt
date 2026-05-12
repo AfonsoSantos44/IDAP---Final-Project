@@ -23,9 +23,8 @@ import pt.isel.services.Success
 class CaseController(
     private val caseService: CaseService,
 ) {
-    @GetMapping( Uris.Cases.LIST)
-    fun getCases(): ResponseEntity<List<CaseOutputDto>> =
-        ResponseEntity.ok(caseService.getCases().map { it.toOutputDto() })
+    @GetMapping(Uris.Cases.LIST)
+    fun getCases(): ResponseEntity<List<CaseOutputDto>> = ResponseEntity.ok(caseService.getCases().map { it.toOutputDto() })
 
     @PostMapping(Uris.Cases.CREATE)
     fun createCase(

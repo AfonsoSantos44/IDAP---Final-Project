@@ -157,9 +157,9 @@ class UserAuthService(
 
     private fun isSecurePassword(password: String): Boolean =
         password.length >= 8 &&
-                password.any { it.isUpperCase() } &&
-                password.any { it.isLowerCase() } &&
-                password.any { it.isDigit() }
+            password.any { it.isUpperCase() } &&
+            password.any { it.isLowerCase() } &&
+            password.any { it.isDigit() }
 
     private fun generateRawToken(): String {
         val bytes = ByteArray(RAW_TOKEN_BYTES)

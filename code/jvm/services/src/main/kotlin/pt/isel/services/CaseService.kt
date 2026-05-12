@@ -100,8 +100,7 @@ class CaseService(
             success(Unit)
         }
 
-    private fun normalizeStatus(status: String?): String? =
-        status?.trim()?.lowercase()
+    private fun normalizeStatus(status: String?): String? = status?.trim()?.lowercase()
 
     private fun isValidStatus(status: String?): Boolean {
         if (status == null) return true
@@ -110,8 +109,7 @@ class CaseService(
         return normalizedStatus.isNotEmpty() && normalizedStatus.length <= MAX_CASE_STATUS_LENGTH
     }
 
-    private fun normalizeDescription(description: String?): String? =
-        description?.trim()?.ifEmpty { null }
+    private fun normalizeDescription(description: String?): String? = description?.trim()?.ifEmpty { null }
 
     private fun isValidDescription(description: String?): Boolean =
         description == null || description.trim().length <= MAX_DESCRIPTION_LENGTH
