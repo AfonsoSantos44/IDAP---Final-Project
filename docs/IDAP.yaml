@@ -229,6 +229,10 @@ paths:
       tags:
         - Case
       summary: Returns a list of cases
+      description: >
+        Without a session cookie, returns all cases. With a valid session cookie,
+        regular users receive only their own cases and system administrators receive
+        all cases. Invalid or expired session cookies are rejected.
       responses:
         "200":
           description: A JSON array of case infos
@@ -251,6 +255,8 @@ paths:
                     description:
                       type: string
                       nullable: true
+        "401":
+          description: Invalid or expired session cookie
 
     post:
       tags:
@@ -307,6 +313,7 @@ paths:
       tags:
         - Case
       summary: Returns case info by ID
+      description: Regular users can access only their own cases. System administrators can access any case.
       parameters:
         - name: id
           in: path
@@ -333,6 +340,12 @@ paths:
                   description:
                     type: string
                     nullable: true
+        "400":
+          description: No user currently logged in
+        "401":
+          description: Invalid or expired session cookie
+        "403":
+          description: Case access denied
         "404":
           description: Case not found
 
@@ -340,6 +353,7 @@ paths:
       tags:
         - Case
       summary: Deletes a case by ID
+      description: Regular users can delete only their own cases. System administrators can delete any case.
       parameters:
         - name: id
           in: path
@@ -349,6 +363,12 @@ paths:
       responses:
         "204":
           description: Case deleted successfully
+        "400":
+          description: No user currently logged in
+        "401":
+          description: Invalid or expired session cookie
+        "403":
+          description: Case access denied
         "404":
           description: Case not found
 
@@ -356,6 +376,7 @@ paths:
       tags:
         - Case
       summary: Updates a case
+      description: Regular users can update only their own cases. System administrators can update any case.
       parameters:
         - name: id
           in: path
@@ -395,7 +416,11 @@ paths:
                     type: string
                     nullable: true
         "400":
-          description: Invalid case status or description
+          description: Invalid case status, invalid case description, or no user currently logged in
+        "401":
+          description: Invalid or expired session cookie
+        "403":
+          description: Case access denied
         "404":
           description: Case not found
 
@@ -404,6 +429,7 @@ paths:
       tags:
         - Case
       summary: Returns a list of cases created by a specified user
+      description: Regular users can list only their own cases. System administrators can list any user's cases.
       parameters:
         - name: userId
           in: path
@@ -432,5 +458,11 @@ paths:
                     description:
                       type: string
                       nullable: true
+        "400":
+          description: No user currently logged in
+        "401":
+          description: Invalid or expired session cookie
+        "403":
+          description: Case access denied
         "404":
           description: User not found

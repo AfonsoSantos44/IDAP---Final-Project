@@ -54,21 +54,21 @@
       "title": "Invalid token",
       "status": 401,
       "detail": "The provided session cookie is invalid or no longer exists.",
-      "endpoint": "/api/users/me, /api/users/logout"
+      "endpoint": "/api/users/me, /api/users/logout, /api/cases/{id}, /api/users/{userId}/cases"
     },
     {
       "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/expired-token",
       "title": "Expired token",
       "status": 401,
       "detail": "The provided session cookie has expired.",
-      "endpoint": "/api/users/me"
+      "endpoint": "/api/users/me, /api/cases/{id}, /api/users/{userId}/cases"
     },
     {
       "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/no-user-logged-in",
       "title": "No user currently logged in",
       "status": 400,
       "detail": "No session cookie was provided with the request.",
-      "endpoint": "/api/users/me, /api/users/logout"
+      "endpoint": "/api/users/me, /api/users/logout, /api/cases/{id}, /api/users/{userId}/cases"
     },
     {
       "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/case-not-found",
@@ -76,6 +76,13 @@
       "status": 404,
       "detail": "No case exists with the provided identifier.",
       "endpoint": "/api/cases/{id}"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/case-access-denied",
+      "title": "Case access denied",
+      "status": 403,
+      "detail": "The authenticated user does not have permission to access this case.",
+      "endpoint": "/api/cases/{id}, /api/users/{userId}/cases"
     },
     {
       "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/invalid-case-status",

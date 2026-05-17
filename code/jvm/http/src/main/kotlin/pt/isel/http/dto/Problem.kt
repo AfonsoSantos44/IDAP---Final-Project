@@ -75,6 +75,11 @@ sealed class Problem(
         "Case not found",
     )
 
+    data object CaseAccessDenied : Problem(
+        URI("$PROBLEM_URI_PATH/case-access-denied"),
+        "Case access denied",
+    )
+
     data object InvalidCaseStatus : Problem(
         URI("$PROBLEM_URI_PATH/invalid-case-status"),
         "Invalid case status",

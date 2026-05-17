@@ -24,21 +24,23 @@ class RepositoryUserJdbi(private val handle: Handle) : RepositoryUser {
                 .bind("username", username)
                 .bind("email", email)
                 .bind("password_hash", passwordHash)
-                .executeAndReturnGeneratedKeys().mapTo(Int::class.java)
+                .executeAndReturnGeneratedKeys()
+                .mapTo(Int::class.java)
                 .one()
+
         return User(id, username, email, passwordHash)
     }
 
     override fun getUserByEmail(email: String): User? =
         handle.createQuery("SELECT * FROM users WHERE email = :email")
             .bind("email", email)
-            .mapTo<User>()
+            .map(UserMapper())
             .singleOrNull()
 
     override fun getUserByUsername(username: String): User? =
         handle.createQuery("SELECT * FROM users WHERE username = :username")
             .bind("username", username)
-            .mapTo<User>()
+            .map(UserMapper())
             .singleOrNull()
 
     override fun createToken(
@@ -93,7 +95,7 @@ class RepositoryUserJdbi(private val handle: Handle) : RepositoryUser {
     override fun findById(id: Int): User? =
         handle.createQuery("SELECT * FROM users WHERE user_id = :user_id")
             .bind("user_id", id)
-            .mapTo<User>()
+            .map(UserMapper())
             .singleOrNull()
 
     override fun findAll(): List<User> =
@@ -103,12 +105,16 @@ class RepositoryUserJdbi(private val handle: Handle) : RepositoryUser {
 
     override fun save(entity: User) {
         handle.createUpdate(
-            "INSERT INTO users (user_id, username, email, password_hash) VALUES (:user_id, :username, :email, :password_hash)",
+            """
+            INSERT INTO users (user_id, username, email, password_hash, role)
+            VALUES (:user_id, :username, :email, :password_hash, :role)
+            """,
         )
             .bind("user_id", entity.userId)
             .bind("username", entity.username)
             .bind("email", entity.email)
             .bind("password_hash", entity.passwordHash)
+            .bind("role", entity.role.dbValue)
             .execute()
     }
 
