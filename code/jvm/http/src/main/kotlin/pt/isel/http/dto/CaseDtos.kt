@@ -1,11 +1,9 @@
 package pt.isel.http.dto
 
-import java.time.Instant
-
 data class CaseOutputDto(
     val caseId: Int,
     val userId: Int,
-    val createdAt: Instant,
+    val createdAt: String,
     val status: String,
     val description: String?,
 )

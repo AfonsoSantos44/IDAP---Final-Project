@@ -245,7 +245,7 @@ paths:
                       type: integer
                     createdAt:
                       type: string
-                      format: date-time
+                      example: "2026-05-17 16:42:10"
                     status:
                       type: string
                     description:
@@ -255,18 +255,17 @@ paths:
     post:
       tags:
         - Case
-      summary: Creates a new case
+      summary: Creates a new case, associating it with the logged-in user when a valid session cookie is present
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - userId
               properties:
                 userId:
                   type: integer
+                  description: Required when no valid session cookie is present. Ignored when a valid session cookie is present.
                 description:
                   type: string
                   nullable: true
@@ -292,14 +291,14 @@ paths:
                     type: integer
                   createdAt:
                     type: string
-                    format: date-time
+                    example: "2026-05-17 16:42:10"
                   status:
                     type: string
                   description:
                     type: string
                     nullable: true
         "400":
-          description: Invalid case status or description
+          description: Invalid case status, invalid case description, or missing user id when no valid session cookie is present
         "404":
           description: User not found
 
@@ -328,7 +327,7 @@ paths:
                     type: integer
                   createdAt:
                     type: string
-                    format: date-time
+                    example: "2026-05-17 16:42:10"
                   status:
                     type: string
                   description:
@@ -389,7 +388,7 @@ paths:
                     type: integer
                   createdAt:
                     type: string
-                    format: date-time
+                    example: "2026-05-17 16:42:10"
                   status:
                     type: string
                   description:
@@ -427,7 +426,7 @@ paths:
                       type: integer
                     createdAt:
                       type: string
-                      format: date-time
+                      example: "2026-05-17 16:42:10"
                     status:
                       type: string
                     description:
