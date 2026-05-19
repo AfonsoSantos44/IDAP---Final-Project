@@ -5,6 +5,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.CookieValue
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
+import pt.isel.domain.SecurityPrincipal
 import pt.isel.domain.User
 import pt.isel.http.dto.CreateUserRequestDto
 import pt.isel.http.dto.CurrentUserDto
@@ -22,7 +24,6 @@ import pt.isel.services.Either
 import pt.isel.services.Failure
 import pt.isel.services.Success
 import pt.isel.services.TokenCreationError
-import pt.isel.services.TokenError
 import pt.isel.services.UserAuthService
 import pt.isel.services.UserError
 
@@ -75,25 +76,42 @@ class UserController(
     }
 
     @GetMapping(Uris.Users.LIST)
-    fun getUsers(): ResponseEntity<List<UserOutputDto>> = ResponseEntity.ok(userService.getUsers().map { it.toOutputDto() })
+    fun getUsers(
+        @AuthenticationPrincipal currentUser: SecurityPrincipal?,
+    ): ResponseEntity<*> {
+        currentUser.requireAdmin()?.let { return it }
+
+        return ResponseEntity.ok(userService.getUsers().map { it.toOutputDto() })
+    }
 
     @GetMapping(Uris.Users.GET_BY_ID)
     fun getUserById(
+        @AuthenticationPrincipal currentUser: SecurityPrincipal?,
         @PathVariable id: Int,
-    ): ResponseEntity<*> =
-        when (val result = userService.getUserById(id)) {
+    ): ResponseEntity<*> {
+        val authenticatedUser = currentUser ?: return Problem.NoUserLoggedIn.response(HttpStatus.UNAUTHORIZED)
+        if (!authenticatedUser.canAccessUser(id)) {
+            return Problem.AccessDenied.response(HttpStatus.FORBIDDEN)
+        }
+
+        return when (val result = userService.getUserById(id)) {
             is Success -> ResponseEntity.ok(result.value.toOutputDto())
             is Failure -> Problem.UserNotFound.response(HttpStatus.NOT_FOUND)
         }
+    }
 
     @DeleteMapping(Uris.Users.DELETE_BY_ID)
     fun deleteUserById(
+        @AuthenticationPrincipal currentUser: SecurityPrincipal?,
         @PathVariable id: Int,
-    ): ResponseEntity<*> =
-        when (userService.deleteUser(id)) {
+    ): ResponseEntity<*> {
+        currentUser.requireAdmin()?.let { return it }
+
+        return when (userService.deleteUser(id)) {
             is Success -> ResponseEntity.noContent().build<Unit>()
             is Failure -> Problem.UserNotFound.response(HttpStatus.NOT_FOUND)
         }
+    }
 
     @PostMapping(Uris.Users.LOGIN)
     fun login(
@@ -115,24 +133,20 @@ class UserController(
 
     @GetMapping(Uris.Users.ME)
     fun getCurrentUser(
-        @CookieValue(name = SESSION_COOKIE_NAME, required = false) rawToken: String?,
+        @AuthenticationPrincipal currentUser: SecurityPrincipal?,
     ): ResponseEntity<*> {
-        if (rawToken.isNullOrBlank()) {
-            return Problem.NoUserLoggedIn.response(HttpStatus.BAD_REQUEST)
-        }
+        val authenticatedUser = currentUser ?: return Problem.NoUserLoggedIn.response(HttpStatus.UNAUTHORIZED)
 
-        return when (val result = userService.getUserByToken(rawToken)) {
-            is Success -> ResponseEntity.ok(result.value.toCurrentUserDto())
-            is Failure -> result.value.toProblemResponse()
-        }
+        return ResponseEntity.ok(authenticatedUser.toCurrentUserDto())
     }
 
     @PostMapping(Uris.Users.LOGOUT)
     fun logout(
+        @AuthenticationPrincipal currentUser: SecurityPrincipal?,
         @CookieValue(name = SESSION_COOKIE_NAME, required = false) rawToken: String?,
     ): ResponseEntity<*> {
-        if (rawToken.isNullOrBlank()) {
-            return Problem.NoUserLoggedIn.response(HttpStatus.BAD_REQUEST)
+        if (currentUser == null || rawToken.isNullOrBlank()) {
+            return Problem.NoUserLoggedIn.response(HttpStatus.UNAUTHORIZED)
         }
 
         return if (userService.deleteToken(rawToken)) {
@@ -159,6 +173,13 @@ class UserController(
             email = email,
         )
 
+    private fun SecurityPrincipal.toCurrentUserDto() =
+        CurrentUserDto(
+            userId = userId,
+            username = username,
+            email = email,
+        )
+
     private fun createSessionCookie(rawToken: String): ResponseCookie =
         ResponseCookie
             .from(SESSION_COOKIE_NAME, rawToken)
@@ -179,9 +200,12 @@ class UserController(
             .maxAge(0)
             .build()
 
-    private fun TokenError.toProblemResponse(): ResponseEntity<Any> =
-        when (this) {
-            is TokenError.InvalidToken -> Problem.InvalidToken.response(HttpStatus.UNAUTHORIZED)
-            is TokenError.ExpiredToken -> Problem.ExpiredToken.response(HttpStatus.UNAUTHORIZED)
+    private fun SecurityPrincipal.canAccessUser(userId: Int): Boolean = isAdmin() || this.userId == userId
+
+    private fun SecurityPrincipal?.requireAdmin(): ResponseEntity<Any>? =
+        when {
+            this == null -> Problem.NoUserLoggedIn.response(HttpStatus.UNAUTHORIZED)
+            !isAdmin() -> Problem.AccessDenied.response(HttpStatus.FORBIDDEN)
+            else -> null
         }
 }

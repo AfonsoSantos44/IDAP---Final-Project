@@ -2,7 +2,7 @@ package pt.isel.http
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.CookieValue
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -11,8 +11,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.domain.AccidentCase
-import pt.isel.domain.User
-import pt.isel.domain.UserRole
+import pt.isel.domain.SecurityPrincipal
 import pt.isel.http.dto.CaseOutputDto
 import pt.isel.http.dto.CreateCaseRequestDto
 import pt.isel.http.dto.Problem
@@ -21,8 +20,6 @@ import pt.isel.services.CaseError
 import pt.isel.services.CaseService
 import pt.isel.services.Failure
 import pt.isel.services.Success
-import pt.isel.services.TokenError
-import pt.isel.services.UserAuthService
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -30,11 +27,8 @@ import java.time.format.DateTimeFormatter
 @RestController
 class CaseController(
     private val caseService: CaseService,
-    private val userAuthService: UserAuthService,
 ) {
     companion object {
-        private const val SESSION_COOKIE_NAME = "idap_session"
-
         private val createdAtFormatter: DateTimeFormatter =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                 .withZone(ZoneId.systemDefault())
@@ -42,39 +36,35 @@ class CaseController(
 
     @GetMapping(Uris.Cases.LIST)
     fun getCases(
-        @CookieValue(name = SESSION_COOKIE_NAME, required = false) rawToken: String?,
+        @AuthenticationPrincipal currentUser: SecurityPrincipal?,
     ): ResponseEntity<*> {
-        if (rawToken.isNullOrBlank()) {
-            return ResponseEntity.ok(caseService.getCases().map { it.toOutputDto() })
-        }
+        val authenticatedUser = currentUser ?: return Problem.NoUserLoggedIn.response(HttpStatus.UNAUTHORIZED)
 
-        return when (val currentUser = userAuthService.getUserByToken(rawToken)) {
-            is Success -> {
-                val cases =
-                    if (currentUser.value.isSystemAdmin()) {
-                        caseService.getCases()
-                    } else {
-                        when (val result = caseService.getCasesByUserId(currentUser.value.userId)) {
-                            is Success -> result.value
-                            is Failure -> return result.value.toProblemResponse()
-                        }
-                    }
-
-                ResponseEntity.ok(cases.map { it.toOutputDto() })
+        val cases =
+            if (authenticatedUser.isAdmin()) {
+                caseService.getCases()
+            } else {
+                when (val result = caseService.getCasesByUserId(authenticatedUser.userId)) {
+                    is Success -> result.value
+                    is Failure -> return result.value.toProblemResponse()
+                }
             }
 
-            is Failure -> currentUser.value.toProblemResponse()
-        }
+        return ResponseEntity.ok(cases.map { it.toOutputDto() })
     }
 
     @PostMapping(Uris.Cases.CREATE)
     fun createCase(
-        @CookieValue(name = SESSION_COOKIE_NAME, required = false) rawToken: String?,
+        @AuthenticationPrincipal currentUser: SecurityPrincipal?,
         @RequestBody request: CreateCaseRequestDto,
     ): ResponseEntity<*> {
+        val authenticatedUser = currentUser ?: return Problem.NoUserLoggedIn.response(HttpStatus.UNAUTHORIZED)
         val caseOwnerId =
-            resolveCaseOwner(rawToken) ?: request.userId
-                ?: return Problem.NoUserLoggedIn.response(HttpStatus.BAD_REQUEST)
+            if (authenticatedUser.isAdmin()) {
+                request.userId ?: authenticatedUser.userId
+            } else {
+                authenticatedUser.userId
+            }
 
         return when (
             val result =
@@ -96,26 +86,22 @@ class CaseController(
 
     @GetMapping(Uris.Cases.GET_BY_ID)
     fun getCaseById(
-        @CookieValue(name = SESSION_COOKIE_NAME, required = false) rawToken: String?,
+        @AuthenticationPrincipal currentUser: SecurityPrincipal?,
         @PathVariable id: Int,
     ): ResponseEntity<*> =
-        when (val result = getAuthorizedCase(rawToken, id)) {
+        when (val result = getAuthorizedCase(currentUser, id)) {
             is CaseAccessResult.Authorized -> ResponseEntity.ok(result.case.toOutputDto())
             is CaseAccessResult.Rejected -> result.response
         }
 
     @GetMapping(Uris.Cases.LIST_BY_USER_ID)
     fun getCasesByUserId(
-        @CookieValue(name = SESSION_COOKIE_NAME, required = false) rawToken: String?,
+        @AuthenticationPrincipal currentUser: SecurityPrincipal?,
         @PathVariable userId: Int,
     ): ResponseEntity<*> {
-        val currentUser =
-            when (val result = getAuthenticatedUser(rawToken)) {
-                is UserAccessResult.Authenticated -> result.user
-                is UserAccessResult.Rejected -> return result.response
-            }
+        val authenticatedUser = currentUser ?: return Problem.NoUserLoggedIn.response(HttpStatus.UNAUTHORIZED)
 
-        if (!currentUser.isSystemAdmin() && currentUser.userId != userId) {
+        if (!authenticatedUser.isAdmin() && authenticatedUser.userId != userId) {
             return Problem.CaseAccessDenied.response(HttpStatus.FORBIDDEN)
         }
 
@@ -127,11 +113,11 @@ class CaseController(
 
     @PutMapping(Uris.Cases.UPDATE_BY_ID)
     fun updateCase(
-        @CookieValue(name = SESSION_COOKIE_NAME, required = false) rawToken: String?,
+        @AuthenticationPrincipal currentUser: SecurityPrincipal?,
         @PathVariable id: Int,
         @RequestBody request: UpdateCaseRequestDto,
     ): ResponseEntity<*> {
-        when (val accessResult = getAuthorizedCase(rawToken, id)) {
+        when (val accessResult = getAuthorizedCase(currentUser, id)) {
             is CaseAccessResult.Authorized -> Unit
             is CaseAccessResult.Rejected -> return accessResult.response
         }
@@ -144,10 +130,10 @@ class CaseController(
 
     @DeleteMapping(Uris.Cases.DELETE_BY_ID)
     fun deleteCaseById(
-        @CookieValue(name = SESSION_COOKIE_NAME, required = false) rawToken: String?,
+        @AuthenticationPrincipal currentUser: SecurityPrincipal?,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
-        when (val accessResult = getAuthorizedCase(rawToken, id)) {
+        when (val accessResult = getAuthorizedCase(currentUser, id)) {
             is CaseAccessResult.Authorized -> Unit
             is CaseAccessResult.Rejected -> return accessResult.response
         }
@@ -169,19 +155,15 @@ class CaseController(
 
     private fun formatCreatedAt(createdAt: Instant): String = createdAtFormatter.format(createdAt)
 
-    private fun User.isSystemAdmin(): Boolean = role == UserRole.ADMIN
-
-    private fun User.canAccess(accidentCase: AccidentCase): Boolean = isSystemAdmin() || userId == accidentCase.userId
+    private fun SecurityPrincipal.canAccess(accidentCase: AccidentCase): Boolean = isAdmin() || userId == accidentCase.userId
 
     private fun getAuthorizedCase(
-        rawToken: String?,
+        currentUser: SecurityPrincipal?,
         caseId: Int,
     ): CaseAccessResult {
-        val currentUser =
-            when (val result = getAuthenticatedUser(rawToken)) {
-                is UserAccessResult.Authenticated -> result.user
-                is UserAccessResult.Rejected -> return CaseAccessResult.Rejected(result.response)
-            }
+        val authenticatedUser =
+            currentUser
+                ?: return CaseAccessResult.Rejected(Problem.NoUserLoggedIn.response(HttpStatus.UNAUTHORIZED))
 
         val accidentCase =
             when (val result = caseService.getCaseById(caseId)) {
@@ -189,31 +171,11 @@ class CaseController(
                 is Failure -> return CaseAccessResult.Rejected(result.value.toProblemResponse())
             }
 
-        if (!currentUser.canAccess(accidentCase)) {
+        if (!authenticatedUser.canAccess(accidentCase)) {
             return CaseAccessResult.Rejected(Problem.CaseAccessDenied.response(HttpStatus.FORBIDDEN))
         }
 
         return CaseAccessResult.Authorized(accidentCase)
-    }
-
-    private fun getAuthenticatedUser(rawToken: String?): UserAccessResult {
-        if (rawToken.isNullOrBlank()) {
-            return UserAccessResult.Rejected(Problem.NoUserLoggedIn.response(HttpStatus.BAD_REQUEST))
-        }
-
-        return when (val result = userAuthService.getUserByToken(rawToken)) {
-            is Success -> UserAccessResult.Authenticated(result.value)
-            is Failure -> UserAccessResult.Rejected(result.value.toProblemResponse())
-        }
-    }
-
-    private fun resolveCaseOwner(rawToken: String?): Int? {
-        if (rawToken.isNullOrBlank()) return null
-
-        return when (val result = userAuthService.getUserByToken(rawToken)) {
-            is Success -> result.value.userId
-            is Failure -> null
-        }
     }
 
     private fun CaseError.toProblemResponse(): ResponseEntity<Any> =
@@ -224,12 +186,6 @@ class CaseController(
             is CaseError.InvalidCaseDescription -> Problem.InvalidCaseDescription.response(HttpStatus.BAD_REQUEST)
         }
 
-    private fun TokenError.toProblemResponse(): ResponseEntity<Any> =
-        when (this) {
-            is TokenError.InvalidToken -> Problem.InvalidToken.response(HttpStatus.UNAUTHORIZED)
-            is TokenError.ExpiredToken -> Problem.ExpiredToken.response(HttpStatus.UNAUTHORIZED)
-        }
-
     private sealed class CaseAccessResult {
         data class Authorized(
             val case: AccidentCase,
@@ -238,15 +194,5 @@ class CaseController(
         data class Rejected(
             val response: ResponseEntity<Any>,
         ) : CaseAccessResult()
-    }
-
-    private sealed class UserAccessResult {
-        data class Authenticated(
-            val user: User,
-        ) : UserAccessResult()
-
-        data class Rejected(
-            val response: ResponseEntity<Any>,
-        ) : UserAccessResult()
     }
 }

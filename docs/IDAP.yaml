@@ -18,10 +18,6 @@ tags:
 
 components:
   securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
     cookieAuth:
       type: apiKey
       in: cookie
@@ -33,8 +29,9 @@ paths:
       tags:
         - User
       summary: Returns a list of users
+      description: System administrators only.
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       responses:
         "200":
           description: A JSON array of user infos
@@ -53,9 +50,9 @@ paths:
                       type: string
                       format: email
         "401":
-          description: Unauthorized access
-        "404":
-          description: User not found
+          description: Missing, invalid, or expired session cookie
+        "403":
+          description: Access denied
 
     post:
       tags:
@@ -88,15 +85,16 @@ paths:
         "409":
           description: Username or email already exists
 
-  /api/users/{userId}:
+  /api/users/{id}:
     get:
       tags:
         - User
       summary: Returns a user by ID
+      description: Users can read their own user profile. System administrators can read any user profile.
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       parameters:
-        - name: userId
+        - name: id
           in: path
           required: true
           schema:
@@ -116,6 +114,10 @@ paths:
                   email:
                     type: string
                     format: email
+        "401":
+          description: Missing, invalid, or expired session cookie
+        "403":
+          description: Access denied
         "404":
           description: User not found
 
@@ -123,10 +125,11 @@ paths:
       tags:
         - User
       summary: Deletes a user by ID
+      description: System administrators only.
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       parameters:
-        - name: userId
+        - name: id
           in: path
           required: true
           schema:
@@ -135,7 +138,9 @@ paths:
         "204":
           description: User deleted successfully
         "401":
-          description: Unauthorized access
+          description: Missing, invalid, or expired session cookie
+        "403":
+          description: Access denied
         "404":
           description: User not found
 
@@ -206,10 +211,8 @@ paths:
                   email:
                     type: string
                     format: email
-        "400":
-          description: No user currently logged in
         "401":
-          description: Unauthorized
+          description: Missing, invalid, or expired session cookie
 
   /api/users/logout:
     post:
@@ -221,8 +224,8 @@ paths:
       responses:
         "204":
           description: User logged out successfully. The session cookie is expired.
-        "400":
-          description: No user currently logged in
+        "401":
+          description: Missing, invalid, or expired session cookie
 
   /api/cases:
     get:
@@ -230,9 +233,11 @@ paths:
         - Case
       summary: Returns a list of cases
       description: >
-        Without a session cookie, returns all cases. With a valid session cookie,
-        regular users receive only their own cases and system administrators receive
-        all cases. Invalid or expired session cookies are rejected.
+        Requires a valid session cookie. Regular users receive only their own cases.
+        System administrators receive all cases. Missing, invalid, or expired session
+        cookies are rejected.
+      security:
+        - cookieAuth: []
       responses:
         "200":
           description: A JSON array of case infos
@@ -256,12 +261,17 @@ paths:
                       type: string
                       nullable: true
         "401":
-          description: Invalid or expired session cookie
+          description: Missing, invalid, or expired session cookie
 
     post:
       tags:
         - Case
-      summary: Creates a new case, associating it with the logged-in user when a valid session cookie is present
+      summary: Creates a new case
+      description: >
+        Requires a valid session cookie. Regular users always create cases for themselves.
+        System administrators may provide userId to create a case for another user.
+      security:
+        - cookieAuth: []
       requestBody:
         required: true
         content:
@@ -271,7 +281,7 @@ paths:
               properties:
                 userId:
                   type: integer
-                  description: Required when no valid session cookie is present. Ignored when a valid session cookie is present.
+                  description: Optional and only honored for system administrators.
                 description:
                   type: string
                   nullable: true
@@ -304,7 +314,9 @@ paths:
                     type: string
                     nullable: true
         "400":
-          description: Invalid case status, invalid case description, or missing user id when no valid session cookie is present
+          description: Invalid case status or invalid case description
+        "401":
+          description: Missing, invalid, or expired session cookie
         "404":
           description: User not found
 
@@ -314,6 +326,8 @@ paths:
         - Case
       summary: Returns case info by ID
       description: Regular users can access only their own cases. System administrators can access any case.
+      security:
+        - cookieAuth: []
       parameters:
         - name: id
           in: path
@@ -340,10 +354,8 @@ paths:
                   description:
                     type: string
                     nullable: true
-        "400":
-          description: No user currently logged in
         "401":
-          description: Invalid or expired session cookie
+          description: Missing, invalid, or expired session cookie
         "403":
           description: Case access denied
         "404":
@@ -354,6 +366,8 @@ paths:
         - Case
       summary: Deletes a case by ID
       description: Regular users can delete only their own cases. System administrators can delete any case.
+      security:
+        - cookieAuth: []
       parameters:
         - name: id
           in: path
@@ -363,10 +377,8 @@ paths:
       responses:
         "204":
           description: Case deleted successfully
-        "400":
-          description: No user currently logged in
         "401":
-          description: Invalid or expired session cookie
+          description: Missing, invalid, or expired session cookie
         "403":
           description: Case access denied
         "404":
@@ -377,6 +389,8 @@ paths:
         - Case
       summary: Updates a case
       description: Regular users can update only their own cases. System administrators can update any case.
+      security:
+        - cookieAuth: []
       parameters:
         - name: id
           in: path
@@ -416,9 +430,9 @@ paths:
                     type: string
                     nullable: true
         "400":
-          description: Invalid case status, invalid case description, or no user currently logged in
+          description: Invalid case status or invalid case description
         "401":
-          description: Invalid or expired session cookie
+          description: Missing, invalid, or expired session cookie
         "403":
           description: Case access denied
         "404":
@@ -430,6 +444,8 @@ paths:
         - Case
       summary: Returns a list of cases created by a specified user
       description: Regular users can list only their own cases. System administrators can list any user's cases.
+      security:
+        - cookieAuth: []
       parameters:
         - name: userId
           in: path
@@ -458,10 +474,8 @@ paths:
                     description:
                       type: string
                       nullable: true
-        "400":
-          description: No user currently logged in
         "401":
-          description: Invalid or expired session cookie
+          description: Missing, invalid, or expired session cookie
         "403":
           description: Case access denied
         "404":

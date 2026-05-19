@@ -9,7 +9,7 @@ data class CaseOutputDto(
 )
 
 data class CreateCaseRequestDto(
-    val userId: Int,
+    val userId: Int? = null,
     val description: String? = null,
     val status: String? = null,
 )

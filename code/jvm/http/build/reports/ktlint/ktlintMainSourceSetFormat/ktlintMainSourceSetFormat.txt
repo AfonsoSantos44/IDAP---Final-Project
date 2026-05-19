@@ -1,4 +1,0 @@
-[90mC:\Users\reiaf\Documents\IDAP---Final-Project\code\jvm\http\src\main\kotlin\pt\isel\http\[0mCaseController.kt[90m:[0m77[90m:1:[0m Unexpected indentation (12) (should be 16) [90m(standard:indent)[0m
-
-Summary error count (descending) by rule:
-  standard:indent: 1

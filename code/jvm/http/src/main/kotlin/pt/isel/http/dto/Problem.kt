@@ -80,6 +80,11 @@ sealed class Problem(
         "Case access denied",
     )
 
+    data object AccessDenied : Problem(
+        URI("$PROBLEM_URI_PATH/access-denied"),
+        "Access denied",
+    )
+
     data object InvalidCaseStatus : Problem(
         URI("$PROBLEM_URI_PATH/invalid-case-status"),
         "Invalid case status",

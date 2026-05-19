@@ -25,6 +25,7 @@ dependencies {
     implementation(project(":services"))
 
     implementation("org.springframework:spring-webmvc")
+    implementation("org.springframework.security:spring-security-core")
 
     implementation("org.slf4j:slf4j-api:2.0.16")
 
