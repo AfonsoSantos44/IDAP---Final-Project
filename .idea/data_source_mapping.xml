@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="DataSourcePerFileMappings">
-    <file url="file://$PROJECT_DIR$/code/jvm/repository-jdbi/src/sql/create-schema.sql" value="48d2109f-2500-4a84-b7e8-6a7b0cab5966" />
-    <file url="file://$PROJECT_DIR$/code/jvm/repository-jdbi/src/sql/drop-tables.sql" value="48d2109f-2500-4a84-b7e8-6a7b0cab5966" />
-    <file url="file://$PROJECT_DIR$/code/jvm/repository-jdbi/src/sql/set-admin.sql" value="48d2109f-2500-4a84-b7e8-6a7b0cab5966" />
-  </component>
-</project>
