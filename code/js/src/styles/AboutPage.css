@@ -1,0 +1,282 @@
+/* About Page */
+
+.about-wrapper {
+	min-height: 100vh;
+	background: #f7f8fa;
+	padding: 40px 24px;
+	box-sizing: border-box;
+
+	display: flex;
+	justify-content: center;
+}
+
+.about-container {
+	width: 100%;
+	max-width: 1200px;
+
+	display: flex;
+	flex-direction: column;
+	gap: 32px;
+}
+
+/* Header */
+
+.about-header {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	gap: 16px;
+}
+
+.icon-badge {
+	width: 72px;
+	height: 72px;
+
+	border-radius: 18px;
+	background: #ffffff;
+	border: 1px solid #e6edf3;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.about-title {
+	font-size: 2.2rem;
+	font-weight: 700;
+	color: #111827;
+	margin: 0;
+}
+
+.about-subtitle {
+	font-size: 1rem;
+	color: #475569;
+	max-width: 700px;
+	line-height: 1.6;
+	margin: 0;
+}
+
+/* Glass Cards */
+
+.glass-card {
+	background: #ffffff;
+	border: 1px solid #e6edf3;
+	border-radius: 16px;
+	padding: 28px;
+
+	box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+/* Project Section */
+
+.project-content {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.project-text {
+	font-size: 1rem;
+	line-height: 1.8;
+	color: #334155;
+	margin: 0;
+}
+
+/* Highlight Colors */
+
+.highlight-amber {
+	color: #d97706;
+	font-weight: 600;
+}
+
+.highlight-cyan {
+	color: #0891b2;
+	font-weight: 600;
+}
+
+.highlight-purple {
+	color: #7c3aed;
+	font-weight: 600;
+}
+
+.highlight-emerald {
+	color: #059669;
+	font-weight: 600;
+}
+
+/* Tech Stack */
+
+.tech-stack {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin-top: 20px;
+}
+
+.tech-chip {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+
+	padding: 10px 14px;
+	border-radius: 999px;
+
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+
+	font-size: 0.95rem;
+	font-weight: 600;
+}
+
+/* Team Section */
+
+.section-title-container {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 20px;
+}
+
+.team-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 24px;
+}
+
+.team-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	gap: 16px;
+
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.team-card:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 6px 18px rgba(13, 38, 59, 0.08);
+}
+
+/* Avatar */
+
+.avatar-wrapper {
+	width: 110px;
+	height: 110px;
+	border-radius: 999px;
+	overflow: hidden;
+
+	border: 4px solid #e2e8f0;
+}
+
+.avatar-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* Member */
+
+.member-name {
+	font-size: 1.2rem;
+	font-weight: 700;
+	color: #111827;
+	margin: 0;
+}
+
+.member-email {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+
+	color: #475569;
+	text-decoration: none;
+	font-size: 0.95rem;
+}
+
+.member-email:hover {
+	color: #2563eb;
+}
+
+/* GitHub Button */
+
+.github-btn {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+
+	background: #111827;
+	color: #ffffff;
+	text-decoration: none;
+
+	padding: 10px 18px;
+	border-radius: 10px;
+
+	font-weight: 600;
+
+	transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.github-btn:hover {
+	background: #1f2937;
+	transform: translateY(-2px);
+	opacity: 0.98;
+}
+
+/* Footer */
+
+.about-footer {
+	display: flex;
+	justify-content: center;
+	margin-top: 8px;
+}
+
+/* Home Button */
+
+.home-btn {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+
+	background: linear-gradient(135deg, #5c58ff 0%, #4e4bfa 100%);
+	border: none;
+	color: #ffffff;
+
+	padding: 14px 24px;
+	border-radius: 10px;
+
+	font-size: 1rem;
+	font-weight: 600;
+
+	cursor: pointer;
+
+	transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.home-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.98;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+	.about-wrapper {
+		padding: 24px 16px;
+	}
+
+	.about-title {
+		font-size: 1.8rem;
+	}
+
+	.glass-card {
+		padding: 22px;
+	}
+
+	.team-grid {
+		grid-template-columns: 1fr;
+	}
+}

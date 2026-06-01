@@ -8,6 +8,7 @@ import NotFoundPage from "./components/NotFoundPage";
 import CasesListPage from "./components/cases/CasesListPage";
 import CreateCasePage from "./components/cases/CreateCasePage";
 import CaseInfoPage from "./components/cases/CaseInfoPage";
+import AboutPage from "./components/AboutPage";
 
 const router = createBrowserRouter([
     {
@@ -39,6 +40,10 @@ const router = createBrowserRouter([
     {
         path: "/cases/:id",
         element: <CaseInfoPage/>,
+    },
+    {
+        path: "/about",
+        element:<AboutPage/>,
     },
     {
         path: "*",

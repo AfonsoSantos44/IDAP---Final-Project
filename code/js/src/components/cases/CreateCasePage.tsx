@@ -28,7 +28,7 @@ function CreateCasePage() {
             <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
                 <div className="form-group">
                     <label htmlFor="user">Averiguador:</label>
-                    <input
+                    <input //change to dropdown with users from api
                         type="number"
                         id="user"
                         placeholder="Enter user ID"
@@ -41,7 +41,7 @@ function CreateCasePage() {
                     <label htmlFor="description">Descrição:</label>
                     <textarea
                         id="description"
-                        placeholder="Enter case description"
+                        placeholder="Insere uma descrição do caso"
                         value={input.description}
                         onChange={(e) => handleInputChange('description', e.target.value)}
                     />

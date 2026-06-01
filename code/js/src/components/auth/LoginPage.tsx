@@ -16,17 +16,17 @@ return (
     <div className="auth-wrapper">
       <div className="auth-card">
         <h2>Bem-vindo</h2>
-        <p>Entrar na tua conta</p>
+        <p>Entra na tua conta</p>
         
         {state.error && <div className="auth-error">{state.error}</div>}
         
         <form className="auth-form">
           <div className="auth-form-group">
-            <label>Username</label>
+            <label>Nome de Utilizador</label>
             <input
               type="text"
               name="username"
-              placeholder="Introduz o teu username"
+              placeholder="Introduz o teu nome de utilizador"
               required
               autoComplete="username"
               onChange={(e) => setState({ ...state, username: e.target.value })}
@@ -34,11 +34,11 @@ return (
           </div>
           
           <div className="auth-form-group">
-            <label>Password</label>
+            <label>Palavra-passe</label>
             <input
               type="password"
               name="password"
-              placeholder="Introduz a tua password"
+              placeholder="Introduz a tua palavra-passe"
               required
               autoComplete="current-password"
               onChange={(e) => setState({ ...state, password: e.target.value })}
@@ -54,7 +54,7 @@ return (
         </form>
         
         <div className="auth-footer">
-          Não tens um conta? <Link to="/register">Regista-te</Link>
+          Não tens uma conta? <Link to="/register">Regista-te</Link>
         </div>
       </div>
     </div>

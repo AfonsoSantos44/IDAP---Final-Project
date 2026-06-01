@@ -22,10 +22,10 @@ function Register() {
         
         <form  className="auth-form">
           <div className="auth-form-group">
-            <label>Username</label>
+            <label>Nome de Utilizador</label>
             <input
               type="text"
-              placeholder="Escolhe um username"
+              placeholder="Escolhe um nome de utilizador"
               value={state.username}
               onChange={(e) => setState({ ...state, username: e.target.value })}
               required
@@ -33,10 +33,10 @@ function Register() {
           </div>
           
           <div className="auth-form-group">
-            <label>Password</label>
+            <label>Palavra-passe</label>
             <input
               type="password"
-              placeholder="Cria uma password forte"
+              placeholder="Cria uma palavra-passe forte"
               value={state.password}
               onChange={(e) => setState({ ...state, password: e.target.value })}
               required
@@ -47,7 +47,7 @@ function Register() {
             type="submit"
             className="auth-submit-btn"
           >
-            Register
+            Registar
           </button>
         </form>
         

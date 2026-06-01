@@ -27,7 +27,7 @@ function HomePage() {
                             className="homepage-btn register-btn"
                             onClick={() => navigate('/register')}
                         >
-                            Register
+                            Registar
                         </button>
                     </div>
                 </div>
