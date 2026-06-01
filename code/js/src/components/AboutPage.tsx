@@ -41,7 +41,7 @@ export default function AboutPage() {
                     </div>
                     <h1 className="about-title">Sobre o projeto</h1>
                     <p className="about-subtitle">
-                        Projeto desenvolvido para a cadeira de Projeto e Seminário no ISEL, com o objetivo de criar uma ferramenta de auxílio à comparação e análise de danos em sinistros automóveis.
+                        Projeto desenvolvido no âmbito da cadeira de Projeto e Seminário da LEIC no ISEL, com o objetivo de criar uma ferramenta de auxílio à comparação e análise de danos em sinistros automóveis.
                     </p>
                 </div>
 
