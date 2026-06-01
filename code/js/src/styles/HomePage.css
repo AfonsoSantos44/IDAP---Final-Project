@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&display=swap');
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: transparent;
+  overflow-x: hidden;
+}
+
+.homepage-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: radial-gradient(circle at top left, rgba(87, 77, 255, 0.14), transparent 35%),
+    linear-gradient(180deg, #f7f8ff 0%, #eef0fc 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+.homepage-overlay {
+  width: min(1280px, calc(100% - 4rem));
+  height: calc(100vh - 4rem);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border-radius: 36px;
+  box-shadow: 0 28px 60px rgba(51, 51, 93, 0.12);
+  padding: 4rem;
+}
+
+.homepage-content {
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
+}
+
+
+.homepage-title {
+  margin: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(4rem, 6vw, 6.5rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
+  color: #232b5d;
+}
+
+.homepage-subtitle {
+  margin: 1rem auto 0;
+  max-width: 620px;
+  color: #5e6689;
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.8;
+}
+
+.homepage-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 3rem;
+  flex-wrap: wrap;
+}
+
+.homepage-btn {
+  min-width: 160px;
+  padding: 1rem 1.8rem;
+  border-radius: 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  box-shadow: 0 18px 50px rgba(86, 81, 255, 0.18);
+}
+
+.homepage-btn:hover {
+  transform: translateY(-2px);
+}
+
+.login-btn {
+  background: linear-gradient(135deg, #5c58ff 0%, #4e4bfa 100%);
+  color: #ffffff;
+}
+
+.register-btn {
+  background: #ffffff;
+  color: #5c58ff;
+  border: 1px solid rgba(92, 88, 255, 0.35);
+  box-shadow: 0 16px 40px rgba(92, 88, 255, 0.12);
+}
+
+.register-btn:hover {
+  background: #f6f6ff;
+}
+
+@media (max-width: 640px) {
+  .homepage-overlay {
+    padding: 2rem;
+  }
+
+  .homepage-buttons {
+    flex-direction: column;
+  }
+
+  .homepage-btn {
+    width: 100%;
+  }
+}
