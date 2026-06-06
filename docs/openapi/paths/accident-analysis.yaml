@@ -1,0 +1,168 @@
+caseAnalyses:
+  get:
+    tags:
+      - Accident Analyses
+    summary: List analyses for a case
+    operationId: listCaseAnalyses
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/CaseId"
+    responses:
+      "200":
+        description: Analyses returned successfully.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../IDAP.yaml#/components/schemas/AnalysisOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  post:
+    tags:
+      - Accident Analyses
+    summary: Create an analysis for a case
+    operationId: createCaseAnalysis
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/CaseId"
+    responses:
+      "201":
+        description: Analysis created successfully.
+        headers:
+          Location:
+            schema:
+              type: string
+              example: /api/analyses/1
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/AnalysisOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+analysisById:
+  get:
+    tags:
+      - Accident Analyses
+    summary: Get analysis by id
+    operationId: getAnalysisById
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/AnalysisId"
+    responses:
+      "200":
+        description: Analysis returned successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/AnalysisOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  delete:
+    tags:
+      - Accident Analyses
+    summary: Delete analysis
+    operationId: deleteAnalysis
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/AnalysisId"
+    responses:
+      "204":
+        description: Analysis deleted successfully.
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+analysisImages:
+  get:
+    tags:
+      - Accident Analyses
+    summary: List images associated with an analysis
+    operationId: listAnalysisImages
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/AnalysisId"
+    responses:
+      "200":
+        description: Analysis images returned successfully.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../IDAP.yaml#/components/schemas/AnalysisImageOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  put:
+    tags:
+      - Accident Analyses
+    summary: Create or update an analysis-image association
+    operationId: upsertAnalysisImage
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/AnalysisId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../IDAP.yaml#/components/schemas/UpsertAnalysisImageRequest"
+    responses:
+      "200":
+        description: Analysis image association saved successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/AnalysisImageOutput"
+      "400":
+        $ref: "../../IDAP.yaml#/components/responses/BadRequestProblem"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+analysisImageByEvidenceId:
+  delete:
+    tags:
+      - Accident Analyses
+    summary: Delete an analysis-image association
+    operationId: deleteAnalysisImage
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/AnalysisId"
+      - $ref: "../../IDAP.yaml#/components/parameters/EvidenceId"
+    responses:
+      "204":
+        description: Analysis image association deleted successfully.
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"

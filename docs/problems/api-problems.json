@@ -104,6 +104,55 @@
       "status": 400,
       "detail": "The provided case description must be at most 5000 characters.",
       "endpoint": "/api/cases, /api/cases/{id}"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/accident-data-not-found",
+      "title": "Accident data not found",
+      "status": 404,
+      "detail": "No accident workflow resource exists with the provided identifier.",
+      "endpoint": "/api/cases/{caseId}/weather, /api/cases/{caseId}/scene, /api/vehicles/{vehicleId}, /api/damages/{damageId}, /api/evidence/{evidenceId}, /api/analyses/{analysisId}, /api/measurements/{measurementId}, /api/damage-comparisons/{comparisonId}, /api/reports/{reportId}"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/invalid-accident-data",
+      "title": "Invalid accident data",
+      "status": 400,
+      "detail": "The provided accident workflow data failed validation.",
+      "endpoint": "/api/cases/{caseId}/weather, /api/cases/{caseId}/scene, /api/cases/{caseId}/vehicles, /api/vehicles/{vehicleId}/damages, /api/cases/{caseId}/evidence, /api/evidence/{evidenceId}/image, /api/analyses/{analysisId}/measurements, /api/analyses/{analysisId}/damage-comparisons, /api/analyses/{analysisId}/conclusion, /api/analyses/{analysisId}/reports"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/measurement-processing-failed",
+      "title": "Measurement processing failed",
+      "status": 400,
+      "detail": "The measurement engine could not process the image evidence. Check that the Python script exists, the image paths are readable, Python dependencies are installed, and ruler tick marks are visible in the images.",
+      "endpoint": "/api/analyses/{analysisId}/measurements"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/report-generation-failed",
+      "title": "Report generation failed",
+      "status": 500,
+      "detail": "The backend could not generate the analysis report artifact from the stored case and analysis data.",
+      "endpoint": "/api/analyses/{analysisId}/reports"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/duplicate-vehicle",
+      "title": "Duplicate vehicle",
+      "status": 409,
+      "detail": "A vehicle with the provided license plate already exists in this case.",
+      "endpoint": "/api/cases/{caseId}/vehicles, /api/vehicles/{vehicleId}"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/related-resource-mismatch",
+      "title": "Related resource mismatch",
+      "status": 400,
+      "detail": "The provided related resources do not belong to the same accident case.",
+      "endpoint": "/api/analyses/{analysisId}/images, /api/analyses/{analysisId}/measurements, /api/analyses/{analysisId}/damage-comparisons"
+    },
+    {
+      "type": "https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/external-data-unavailable",
+      "title": "External data unavailable",
+      "status": 502,
+      "detail": "The external provider could not return weather or scene data.",
+      "endpoint": "/api/cases/{caseId}/weather, /api/cases/{caseId}/scene"
     }
   ]
 }

@@ -1,14 +1,12 @@
 # IDAP - Intelligent Damage Analysis Platform
 
-IDAP is a Kotlin/Spring Boot backend for managing accident damage analysis cases. It provides user registration, cookie-based authentication, role-based authorization, and case management endpoints backed by PostgreSQL through JDBI.
+IDAP is a Kotlin/Spring Boot backend for managing accident damage analysis cases. It provides user registration, cookie-based authentication, role-based authorization, case management, and accident workflow data endpoints backed by PostgreSQL through JDBI.
 
-This repository is organized as a multi-module Gradle project intended for a university final project. The current implementation focuses on backend API behavior, authentication, authorization, and persistence for users, session tokens, and accident cases.
+This repository is organized as a multi-module Gradle project intended for a university final project. The current implementation focuses on backend API behavior, authentication, authorization, and persistence for users, session tokens, accident cases, and accident investigation data.
 
 ## System Goal
 
-The goal of IDAP is to support accident investigation workflows by storing users and accident cases in a structured backend. The implemented API currently allows authenticated users to create and manage their own cases, while administrators can manage users and inspect cases globally.
-
-Planned domain areas such as evidence, images, analyses, measurements, and reports are represented in the SQL schema, but they are not yet exposed through HTTP endpoints.
+The goal of IDAP is to support accident investigation workflows by storing users, accident cases, context data, vehicles, damages, evidence, analyses, measurements, comparisons, conclusions, and reports in a structured backend. The implemented API allows authenticated users to create and manage their own cases and related workflow data, while administrators can manage users and inspect cases globally.
 
 ## Architecture Overview
 
@@ -151,6 +149,17 @@ The application reads the following environment variables through `application.p
 | `DB_USER` | `spring.datasource.username` | `postgres` | Database username |
 | `DB_PASSWORD` | `spring.datasource.password` | `postgres` | Database password |
 | `SESSION_COOKIE_SECURE` | `idap.session.cookie.secure` | `false` | Whether the session cookie is marked `Secure` |
+| `MEASUREMENT_PYTHON` | `idap.measurement.python-executable` | `python` | Python executable used by the image measurement engine |
+| `MEASUREMENT_SCRIPT` | `idap.measurement.script-path` | `Image_analysis/measurement_engine.py` | Python script used for ruler/damage image processing |
+| `MEASUREMENT_OUTPUT_DIR` | `idap.measurement.output-dir` | `build/idap-measurements` | Directory where annotated comparison images are generated |
+| `MEASUREMENT_TIMEOUT_SECONDS` | `idap.measurement.timeout-seconds` | `30` | Timeout for each image processing run |
+| `TESSERACT_CMD` | `idap.measurement.tesseract-executable` | empty | Optional path to the Tesseract executable used for automatic ruler-label OCR |
+| `WEATHERAPI_KEY` | `idap.weather.api-key` | empty | WeatherAPI key used to fetch current weather for a case |
+| `WEATHERAPI_BASE_URL` | `idap.weather.base-url` | `https://api.weatherapi.com/v1` | WeatherAPI base URL |
+| `GOOGLE_MAPS_API_KEY` | `idap.scene.google-api-key` | empty | Google Maps API key used for scene metadata |
+| `GOOGLE_STREET_VIEW_METADATA_URL` | `idap.scene.street-view-metadata-url` | `https://maps.googleapis.com/maps/api/streetview/metadata` | Google Street View metadata URL |
+| `GOOGLE_GEOCODING_URL` | `idap.scene.geocoding-url` | `https://maps.googleapis.com/maps/api/geocode/json` | Google reverse geocoding URL |
+| `GOOGLE_ELEVATION_URL` | `idap.scene.elevation-url` | `https://maps.googleapis.com/maps/api/elevation/json` | Google elevation URL used for rough slope estimation |
 
 For production-like HTTPS deployments, set `SESSION_COOKIE_SECURE=true`.
 
@@ -235,7 +244,131 @@ Authorization is role based:
 | `DELETE` | `/api/cases/{id}` | Case owner or admin | Delete a case |
 | `GET` | `/api/users/{userId}/cases` | Same user or admin | List cases for a specific user |
 
-The OpenAPI description is available in `docs/IDAP.yaml`.
+### Accident Workflow Data
+
+| Method | Path | Authentication | Description |
+| --- | --- | --- | --- |
+| `GET`, `PUT`, `DELETE` | `/api/cases/{caseId}/weather` | Case owner or admin | Read, refresh from WeatherAPI, or delete case weather conditions |
+| `GET`, `PUT`, `DELETE` | `/api/cases/{caseId}/scene` | Case owner or admin | Read, refresh from Google Maps metadata, or delete accident scene context |
+| `GET`, `POST` | `/api/cases/{caseId}/vehicles` | Case owner or admin | List or create vehicles involved in a case |
+| `GET`, `PUT`, `DELETE` | `/api/vehicles/{vehicleId}` | Case owner or admin | Read, update, or delete a vehicle |
+| `GET`, `POST` | `/api/vehicles/{vehicleId}/damages` | Case owner or admin | List or create damages for a vehicle |
+| `GET`, `PUT`, `DELETE` | `/api/damages/{damageId}` | Case owner or admin | Read, update, or delete a damage record |
+| `GET`, `POST` | `/api/cases/{caseId}/evidence` | Case owner or admin | List or create evidence for a case |
+| `GET`, `PUT`, `DELETE` | `/api/evidence/{evidenceId}` | Case owner or admin | Read, update, or delete evidence |
+| `GET`, `PUT`, `DELETE` | `/api/evidence/{evidenceId}/image` | Case owner or admin | Read, replace, or delete image evidence metadata |
+| `GET`, `POST` | `/api/cases/{caseId}/analyses` | Case owner or admin | List or create analyses for a case |
+| `GET`, `DELETE` | `/api/analyses/{analysisId}` | Case owner or admin | Read or delete an analysis |
+| `GET`, `PUT` | `/api/analyses/{analysisId}/images` | Case owner or admin | List or attach evidence images to an analysis |
+| `DELETE` | `/api/analyses/{analysisId}/images/{evidenceId}` | Case owner or admin | Detach evidence from an analysis |
+| `GET`, `POST` | `/api/analyses/{analysisId}/measurements` | Case owner or admin | List measurements or run the automatic image measurement pipeline |
+| `GET`, `DELETE` | `/api/measurements/{measurementId}` | Case owner or admin | Read or delete a generated measurement |
+| `GET`, `POST` | `/api/analyses/{analysisId}/damage-comparisons` | Case owner or admin | List or create damage comparisons |
+| `GET`, `PUT`, `DELETE` | `/api/damage-comparisons/{comparisonId}` | Case owner or admin | Read, update, or delete a damage comparison |
+| `GET`, `PUT`, `DELETE` | `/api/analyses/{analysisId}/conclusion` | Case owner or admin | Read, replace, or delete an analysis conclusion |
+| `GET`, `POST` | `/api/analyses/{analysisId}/reports` | Case owner or admin | List or create generated report records |
+| `GET`, `PUT`, `DELETE` | `/api/reports/{reportId}` | Case owner or admin | Read, update, or delete a report record |
+
+The OpenAPI description is available in `docs/IDAP.yaml`. It currently documents the user and case endpoints; the accident workflow endpoints should be added there as the next documentation pass.
+
+Weather and scene data are fetched from external providers. To create or refresh the scene, the client sends coordinates:
+
+```http
+PUT /api/cases/{caseId}/scene
+```
+
+```json
+{
+  "latitude": 38.736946,
+  "longitude": -9.142685
+}
+```
+
+The backend uses Google Street View metadata, reverse geocoding, and elevation data to fill the scene fields. Weather can then be refreshed with the stored scene coordinates:
+
+```http
+PUT /api/cases/{caseId}/weather
+```
+
+```json
+{}
+```
+
+The client may also provide explicit weather coordinates:
+
+```json
+{
+  "latitude": 38.736946,
+  "longitude": -9.142685
+}
+```
+
+Measurement creation is image-driven. The client registers evidence and image metadata first, then calls:
+
+```http
+POST /api/analyses/{analysisId}/measurements
+```
+
+with a body such as:
+
+```json
+{
+  "evidenceId": 12,
+  "damageId": 7,
+  "comparisonEvidenceId": 13,
+  "knownTickDistanceCm": 1.0,
+  "primarySelection": {
+    "x1": 370,
+    "y1": 515,
+    "x2": 1450,
+    "y2": 650
+  },
+  "primaryCalibration": {
+    "referencePoints": [
+      { "x": 320, "y": 493, "valueCm": 80 },
+      { "x": 320, "y": 959, "valueCm": 70 }
+    ]
+  },
+  "comparisonSelection": {
+    "x1": 290,
+    "y1": 380,
+    "x2": 1050,
+    "y2": 760
+  },
+  "comparisonCalibration": {
+    "referencePoints": [
+      { "x": 705, "y": 1100, "valueCm": 10 },
+      { "x": 705, "y": 870, "valueCm": 30 }
+    ]
+  }
+}
+```
+
+All coordinates use pixels from the original uploaded image. The analyst must provide
+`primarySelection`; it may be a rectangle or a point. `comparisonSelection` is required
+when `comparisonEvidenceId` is present. A calibration may also include `rulerRegion` to
+restrict where the engine searches for the ruler.
+
+The engine perspective-corrects the detected ruler and maps pixels to centimetres. It
+first uses two or more analyst-provided reference points. If they are omitted, it tries
+OCR on the ruler's major labels. OCR requires Tesseract; configure its executable with
+`TESSERACT_CMD`. The backend stores the selected region, its centre height, minimum and
+maximum ruler values, physical pixel scale, calibration method, confidence, and the
+generated annotated image. Comparison images are resized to the same physical
+centimetres-per-pixel scale and vertically aligned at the same ruler value.
+
+Install the Python dependencies with:
+
+```powershell
+python -m pip install -r Image_analysis/requirements.txt
+```
+
+Existing databases must apply the measurement migration before starting the updated
+backend:
+
+```powershell
+psql -U postgres -d idap -f code/jvm/repository-jdbi/src/sql/migrations/V2__measurement_calibration.sql
+```
 
 ## Error Responses
 
@@ -262,21 +395,24 @@ Implemented:
 - role-based user and case authorization
 - user listing/deletion for administrators
 - case creation, listing, reading, updating, and deletion
-- PostgreSQL persistence for users, tokens, and cases
+- accident workflow endpoints for weather, scene, vehicles, damages, evidence, images, analyses, measurements, comparisons, conclusions, and reports
+- WeatherAPI-backed weather refresh and Google Maps-backed scene refresh
+- Python-backed ruler perspective correction, calibrated damage measurement, and physically aligned comparison images
+- PostgreSQL persistence for users, tokens, cases, and accident workflow data
 - automated tests for authentication, authorization, and token persistence
 
 Current limitations:
 
 - database schema management is manual through SQL scripts; no migration tool is configured
 - administrator promotion is manual through `set-admin.sql`
-- evidence, image, analysis, measurement, and report tables exist in SQL but do not yet have HTTP endpoints
+- WeatherAPI and Google Maps API keys are required to refresh weather and scene data
+- automatic OCR calibration depends on a locally installed Tesseract executable; analyst reference points remain available as the reliable fallback
 - there is no pagination or filtering for user/case listing endpoints
 - there is no refresh-token flow or session management endpoint beyond logout
 - the OpenAPI file is maintained manually and is not generated from code
 
 Planned or possible future work:
 
-- add API endpoints for evidence, images, analyses, measurements, and reports
 - introduce database migrations
 - add pagination and search/filtering
 - add operational deployment documentation

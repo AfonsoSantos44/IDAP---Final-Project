@@ -1,5 +1,7 @@
 package pt.isel.domain
 
+import java.time.Instant
+
 data class Measurement(
     val measurementId: Int,
     val analysisId: Int,
@@ -14,4 +16,12 @@ data class Measurement(
     val damageAreaY1: Double,
     val damageAreaX2: Double,
     val damageAreaY2: Double,
+    val calculatedHeightCm: Double,
+    val damageMinHeightCm: Double,
+    val damageMaxHeightCm: Double,
+    val scaleCmPerPixel: Double,
+    val confidence: Double,
+    val calibrationMethod: String,
+    val comparisonImagePath: String?,
+    val processedAt: Instant,
 )

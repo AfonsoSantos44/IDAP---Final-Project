@@ -1,0 +1,176 @@
+users:
+  post:
+    tags:
+      - Users
+    summary: Register a new user
+    operationId: createUser
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../IDAP.yaml#/components/schemas/CreateUserRequest"
+    responses:
+      "201":
+        description: User created successfully.
+        headers:
+          Location:
+            description: URL of the created user.
+            schema:
+              type: string
+              example: /api/users/1
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/UserOutput"
+      "400":
+        $ref: "../../IDAP.yaml#/components/responses/BadRequestProblem"
+      "409":
+        $ref: "../../IDAP.yaml#/components/responses/ConflictProblem"
+  get:
+    tags:
+      - Users
+    summary: List all users
+    operationId: listUsers
+    description: Administrator permission is required.
+    security:
+      - cookieAuth: []
+    responses:
+      "200":
+        description: Users returned successfully.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../IDAP.yaml#/components/schemas/UserOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/AccessDeniedProblem"
+usersLogin:
+  post:
+    tags:
+      - Users
+    summary: Log in
+    operationId: login
+    description: |
+      Valid credentials create an opaque session token and return it in the idap_session HttpOnly cookie.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../IDAP.yaml#/components/schemas/LoginRequest"
+    responses:
+      "200":
+        description: Login succeeded.
+        headers:
+          Set-Cookie:
+            description: Session cookie containing the raw opaque token.
+            schema:
+              type: string
+              example: idap_session=abc123; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/CurrentUser"
+      "401":
+        description: Invalid credentials.
+        content:
+          application/problem+json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/Problem"
+            example:
+              type: https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/invalid-credentials
+              title: Invalid credentials
+usersLogout:
+  post:
+    tags:
+      - Users
+    summary: Log out
+    operationId: logout
+    description: Deletes the current persisted session token and expires the cookie.
+    security:
+      - cookieAuth: []
+    responses:
+      "204":
+        description: Logout succeeded.
+        headers:
+          Set-Cookie:
+            description: Expired idap_session cookie.
+            schema:
+              type: string
+              example: idap_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+usersMe:
+  get:
+    tags:
+      - Users
+    summary: Get the current authenticated user
+    operationId: getCurrentUser
+    security:
+      - cookieAuth: []
+    responses:
+      "200":
+        description: Current user returned successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/CurrentUser"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+userById:
+  get:
+    tags:
+      - Users
+    summary: Get a user by id
+    operationId: getUserById
+    description: Users can read their own profile. Administrators can read any profile.
+    security:
+      - cookieAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+    responses:
+      "200":
+        description: User returned successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/UserOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/AccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  delete:
+    tags:
+      - Users
+    summary: Delete a user by id
+    operationId: deleteUserById
+    description: Administrator permission is required.
+    security:
+      - cookieAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+    responses:
+      "204":
+        description: User deleted successfully.
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/AccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"

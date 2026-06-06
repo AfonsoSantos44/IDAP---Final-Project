@@ -1,0 +1,175 @@
+cases:
+  get:
+    tags:
+      - Cases
+    summary: List cases
+    operationId: listCases
+    description: Regular users receive only their own cases. Administrators receive all cases.
+    security:
+      - cookieAuth: []
+    responses:
+      "200":
+        description: Cases returned successfully.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../IDAP.yaml#/components/schemas/CaseOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+  post:
+    tags:
+      - Cases
+    summary: Create a case
+    operationId: createCase
+    description: >
+      Regular users always create cases for themselves. Administrators may provide userId to create a case for another
+      user.
+    security:
+      - cookieAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../IDAP.yaml#/components/schemas/CreateCaseRequest"
+    responses:
+      "201":
+        description: Case created successfully.
+        headers:
+          Location:
+            description: URL of the created case.
+            schema:
+              type: string
+              example: /api/cases/10
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/CaseOutput"
+      "400":
+        $ref: "../../IDAP.yaml#/components/responses/BadRequestProblem"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+caseById:
+  get:
+    tags:
+      - Cases
+    summary: Get a case by id
+    operationId: getCaseById
+    description: Regular users can access only their own cases. Administrators can access any case.
+    security:
+      - cookieAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+    responses:
+      "200":
+        description: Case returned successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/CaseOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  put:
+    tags:
+      - Cases
+    summary: Update a case
+    operationId: updateCase
+    description: Regular users can update only their own cases. Administrators can update any case.
+    security:
+      - cookieAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../IDAP.yaml#/components/schemas/UpdateCaseRequest"
+    responses:
+      "200":
+        description: Case updated successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/CaseOutput"
+      "400":
+        $ref: "../../IDAP.yaml#/components/responses/BadRequestProblem"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  delete:
+    tags:
+      - Cases
+    summary: Delete a case by id
+    operationId: deleteCaseById
+    description: Regular users can delete only their own cases. Administrators can delete any case.
+    security:
+      - cookieAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+    responses:
+      "204":
+        description: Case deleted successfully.
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+userCases:
+  get:
+    tags:
+      - Cases
+    summary: List cases for a user
+    operationId: listCasesByUserId
+    description: Regular users can list only their own cases. Administrators can list any user's cases.
+    security:
+      - cookieAuth: []
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+    responses:
+      "200":
+        description: Cases returned successfully.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../IDAP.yaml#/components/schemas/CaseOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"

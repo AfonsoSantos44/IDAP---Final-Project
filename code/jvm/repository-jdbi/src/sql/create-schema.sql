@@ -73,7 +73,7 @@ CREATE TABLE damage (
                         contact_zone VARCHAR(255) NOT NULL,
                         deformation_type VARCHAR(255) NOT NULL,
                         direction VARCHAR(255) NOT NULL,
-                        height_cm FLOAT NOT NULL,
+                        height_cm FLOAT,
                         damage_description TEXT NOT NULL,
                         FOREIGN KEY (vehicle_id) REFERENCES vehicle(vehicle_id) ON DELETE CASCADE
 );
@@ -138,6 +138,14 @@ CREATE TABLE measurement (
                              damage_area_y1 FLOAT NOT NULL,
                              damage_area_x2 FLOAT NOT NULL,
                              damage_area_y2 FLOAT NOT NULL,
+                             calculated_height_cm FLOAT NOT NULL,
+                             damage_min_height_cm FLOAT NOT NULL,
+                             damage_max_height_cm FLOAT NOT NULL,
+                             scale_cm_per_pixel FLOAT NOT NULL,
+                             confidence FLOAT NOT NULL,
+                             calibration_method VARCHAR(50) NOT NULL,
+                             comparison_image_path VARCHAR(255),
+                             processed_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
                              FOREIGN KEY (analysis_id) REFERENCES analysis(analysis_id) ON DELETE CASCADE,
                              FOREIGN KEY (evidence_id) REFERENCES evidence(evidence_id) ON DELETE CASCADE,

@@ -4,8 +4,9 @@ info:
   description: >
     REST API for the Intelligent Damage Analysis Platform backend. The current
     implementation supports user registration, cookie-based session
-    authentication, role-based authorization, and accident case management.
-  version: 0.2.0
+    authentication, role-based authorization, accident case management, and
+    accident-data analysis workflows.
+  version: 0.3.0
 
 servers:
   - url: http://localhost:8080
@@ -16,6 +17,20 @@ tags:
     description: User registration, session management, and user administration
   - name: Cases
     description: Accident case management
+  - name: Accident Environment
+    description: Weather and scene data collected from external providers
+  - name: Accident Vehicles and Damages
+    description: Vehicles involved in a case and their damage records
+  - name: Accident Evidence
+    description: Evidence records and uploaded image metadata
+  - name: Accident Analyses
+    description: Analysis records and evidence associations used during analysis
+  - name: Accident Measurements
+    description: Computed damage measurements from image analysis
+  - name: Accident Damage Comparisons
+    description: Compatibility checks between damage records
+  - name: Accident Conclusions and Reports
+    description: Final analysis conclusions and generated report records
 
 components:
   securitySchemes:
@@ -26,6 +41,64 @@ components:
       description: >
         Opaque session token returned by POST /api/users/login in an HttpOnly
         idap_session cookie. The API does not use JWT or Bearer authentication.
+
+  parameters:
+    CaseId:
+      name: caseId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
+    VehicleId:
+      name: vehicleId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
+    DamageId:
+      name: damageId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
+    EvidenceId:
+      name: evidenceId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
+    AnalysisId:
+      name: analysisId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
+    MeasurementId:
+      name: measurementId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
+    ComparisonId:
+      name: comparisonId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
+    ReportId:
+      name: reportId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
 
   schemas:
     CreateUserRequest:
@@ -154,6 +227,617 @@ components:
           nullable: true
           example: Front-left impact with visible bumper deformation.
 
+    WeatherConditionsOutput:
+      type: object
+      properties:
+        weatherId:
+          type: integer
+          format: int32
+        caseId:
+          type: integer
+          format: int32
+        conditionType:
+          type: string
+          nullable: true
+          example: Partly cloudy
+        temperature:
+          type: number
+          format: double
+          nullable: true
+          example: 18.7
+        visibility:
+          type: number
+          format: double
+          nullable: true
+          example: 10.0
+        precipitation:
+          type: string
+          nullable: true
+          example: 0.0 mm
+
+    RefreshWeatherConditionsRequest:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+          nullable: true
+          example: 38.736946
+        longitude:
+          type: number
+          format: double
+          nullable: true
+          example: -9.142685
+
+    AccidentSceneOutput:
+      type: object
+      properties:
+        sceneId:
+          type: integer
+          format: int32
+        caseId:
+          type: integer
+          format: int32
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        terrainInclination:
+          type: number
+          format: double
+        roadGradient:
+          type: number
+          format: double
+        roadType:
+          type: string
+          example: Avenida da Republica
+        spatialDescription:
+          type: string
+        vehiclePositioningNotes:
+          type: string
+
+    RefreshAccidentSceneRequest:
+      type: object
+      required:
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          type: number
+          format: double
+          example: 38.736946
+        longitude:
+          type: number
+          format: double
+          example: -9.142685
+
+    VehicleOutput:
+      type: object
+      properties:
+        vehicleId:
+          type: integer
+          format: int32
+        caseId:
+          type: integer
+          format: int32
+        brand:
+          type: string
+        model:
+          type: string
+        yearOfFabrication:
+          type: integer
+          format: int32
+        licensePlate:
+          type: string
+        role:
+          type: string
+          nullable: true
+
+    CreateVehicleRequest:
+      type: object
+      required:
+        - brand
+        - model
+        - yearOfFabrication
+        - licensePlate
+      properties:
+        brand:
+          type: string
+          maxLength: 255
+        model:
+          type: string
+          maxLength: 255
+        yearOfFabrication:
+          type: integer
+          format: int32
+        licensePlate:
+          type: string
+          maxLength: 50
+        role:
+          type: string
+          nullable: true
+          maxLength: 255
+
+    UpdateVehicleRequest:
+      type: object
+      properties:
+        brand:
+          type: string
+          nullable: true
+        model:
+          type: string
+          nullable: true
+        yearOfFabrication:
+          type: integer
+          format: int32
+          nullable: true
+        licensePlate:
+          type: string
+          nullable: true
+        role:
+          type: string
+          nullable: true
+
+    DamageOutput:
+      type: object
+      properties:
+        damageId:
+          type: integer
+          format: int32
+        vehicleId:
+          type: integer
+          format: int32
+        contactZone:
+          type: string
+        deformationType:
+          type: string
+        direction:
+          type: string
+        heightCm:
+          type: number
+          format: double
+          nullable: true
+        damageDescription:
+          type: string
+
+    CreateDamageRequest:
+      type: object
+      required:
+        - contactZone
+        - deformationType
+        - direction
+        - damageDescription
+      properties:
+        contactZone:
+          type: string
+        deformationType:
+          type: string
+        direction:
+          type: string
+        damageDescription:
+          type: string
+
+    UpdateDamageRequest:
+      type: object
+      properties:
+        contactZone:
+          type: string
+          nullable: true
+        deformationType:
+          type: string
+          nullable: true
+        direction:
+          type: string
+          nullable: true
+        damageDescription:
+          type: string
+          nullable: true
+
+    EvidenceOutput:
+      type: object
+      properties:
+        evidenceId:
+          type: integer
+          format: int32
+        caseId:
+          type: integer
+          format: int32
+        evidenceType:
+          type: string
+        evidenceDescription:
+          type: string
+        uploadedBy:
+          type: integer
+          format: int32
+        uploadedAt:
+          type: string
+          example: "2026-05-29 14:05:00"
+
+    CreateEvidenceRequest:
+      type: object
+      required:
+        - evidenceType
+        - evidenceDescription
+      properties:
+        evidenceType:
+          type: string
+        evidenceDescription:
+          type: string
+
+    UpdateEvidenceRequest:
+      type: object
+      properties:
+        evidenceType:
+          type: string
+          nullable: true
+        evidenceDescription:
+          type: string
+          nullable: true
+
+    ImageEvidenceOutput:
+      type: object
+      properties:
+        imageEvidenceId:
+          type: integer
+          format: int32
+        evidenceId:
+          type: integer
+          format: int32
+        filePath:
+          type: string
+        width:
+          type: integer
+          format: int32
+        height:
+          type: integer
+          format: int32
+        metadata:
+          type: string
+          nullable: true
+
+    UpsertImageEvidenceRequest:
+      type: object
+      required:
+        - filePath
+        - width
+        - height
+      properties:
+        filePath:
+          type: string
+        width:
+          type: integer
+          format: int32
+        height:
+          type: integer
+          format: int32
+        metadata:
+          type: string
+          nullable: true
+
+    AnalysisOutput:
+      type: object
+      properties:
+        analysisId:
+          type: integer
+          format: int32
+        caseId:
+          type: integer
+          format: int32
+        analystId:
+          type: integer
+          format: int32
+        createdAt:
+          type: string
+
+    AnalysisImageOutput:
+      type: object
+      properties:
+        analysisId:
+          type: integer
+          format: int32
+        evidenceId:
+          type: integer
+          format: int32
+        purpose:
+          type: string
+          nullable: true
+
+    UpsertAnalysisImageRequest:
+      type: object
+      required:
+        - evidenceId
+      properties:
+        evidenceId:
+          type: integer
+          format: int32
+        purpose:
+          type: string
+          nullable: true
+
+    MeasurementOutput:
+      type: object
+      properties:
+        measurementId:
+          type: integer
+          format: int32
+        analysisId:
+          type: integer
+          format: int32
+        evidenceId:
+          type: integer
+          format: int32
+        damageId:
+          type: integer
+          format: int32
+        refObjLengthCm:
+          type: number
+          format: double
+        refObjX1:
+          type: number
+          format: double
+        refObjY1:
+          type: number
+          format: double
+        refObjX2:
+          type: number
+          format: double
+        refObjY2:
+          type: number
+          format: double
+        damageAreaX1:
+          type: number
+          format: double
+        damageAreaY1:
+          type: number
+          format: double
+        damageAreaX2:
+          type: number
+          format: double
+        damageAreaY2:
+          type: number
+          format: double
+        calculatedHeightCm:
+          type: number
+          format: double
+          description: Ruler value at the centre of the analyst-selected damage.
+        damageMinHeightCm:
+          type: number
+          format: double
+          description: Lowest ruler value covered by the analyst-selected damage region.
+        damageMaxHeightCm:
+          type: number
+          format: double
+          description: Highest ruler value covered by the analyst-selected damage region.
+        scaleCmPerPixel:
+          type: number
+          format: double
+        confidence:
+          type: number
+          format: double
+        calibrationMethod:
+          type: string
+          enum:
+            - analyst-reference-points
+            - ocr-major-labels
+        comparisonImagePath:
+          type: string
+          nullable: true
+        processedAt:
+          type: string
+
+    CreateMeasurementRequest:
+      type: object
+      required:
+        - evidenceId
+        - damageId
+        - primarySelection
+      properties:
+        evidenceId:
+          type: integer
+          format: int32
+        damageId:
+          type: integer
+          format: int32
+        comparisonEvidenceId:
+          type: integer
+          format: int32
+          nullable: true
+        knownTickDistanceCm:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          exclusiveMinimum: true
+          description: Physical distance between consecutive ruler ticks, in centimetres.
+        primarySelection:
+          $ref: "#/components/schemas/DamageSelectionRequest"
+        primaryCalibration:
+          $ref: "#/components/schemas/RulerCalibrationRequest"
+        comparisonSelection:
+          allOf:
+            - $ref: "#/components/schemas/DamageSelectionRequest"
+          nullable: true
+          description: Required when comparisonEvidenceId is provided.
+        comparisonCalibration:
+          allOf:
+            - $ref: "#/components/schemas/RulerCalibrationRequest"
+          nullable: true
+
+    DamageSelectionRequest:
+      type: object
+      required:
+        - x1
+        - y1
+        - x2
+        - y2
+      description: Damage point or rectangular region in original-image pixel coordinates.
+      properties:
+        x1:
+          type: number
+          format: double
+          minimum: 0
+        y1:
+          type: number
+          format: double
+          minimum: 0
+        x2:
+          type: number
+          format: double
+          minimum: 0
+        y2:
+          type: number
+          format: double
+          minimum: 0
+
+    RulerReferencePointRequest:
+      type: object
+      required:
+        - x
+        - y
+        - valueCm
+      description: A labelled ruler position in original-image pixel coordinates.
+      properties:
+        x:
+          type: number
+          format: double
+          minimum: 0
+        y:
+          type: number
+          format: double
+          minimum: 0
+        valueCm:
+          type: number
+          format: double
+
+    RulerCalibrationRequest:
+      type: object
+      description: Optional manual calibration. Supply at least two reference points when OCR cannot read the ruler.
+      properties:
+        referencePoints:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/RulerReferencePointRequest"
+        rulerRegion:
+          allOf:
+            - $ref: "#/components/schemas/DamageSelectionRequest"
+          nullable: true
+          description: Optional search rectangle that constrains automatic ruler detection.
+
+    DamageComparisonOutput:
+      type: object
+      properties:
+        comparisonId:
+          type: integer
+          format: int32
+        analysisId:
+          type: integer
+          format: int32
+        damageSourceId:
+          type: integer
+          format: int32
+        damageTargetId:
+          type: integer
+          format: int32
+        compatibilityStatus:
+          type: string
+        notes:
+          type: string
+          nullable: true
+
+    CreateDamageComparisonRequest:
+      type: object
+      required:
+        - damageSourceId
+        - damageTargetId
+        - compatibilityStatus
+      properties:
+        damageSourceId:
+          type: integer
+          format: int32
+        damageTargetId:
+          type: integer
+          format: int32
+        compatibilityStatus:
+          type: string
+        notes:
+          type: string
+          nullable: true
+
+    UpdateDamageComparisonRequest:
+      type: object
+      properties:
+        damageSourceId:
+          type: integer
+          format: int32
+          nullable: true
+        damageTargetId:
+          type: integer
+          format: int32
+          nullable: true
+        compatibilityStatus:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    AnalysisConclusionOutput:
+      type: object
+      properties:
+        conclusionId:
+          type: integer
+          format: int32
+        analysisId:
+          type: integer
+          format: int32
+        compatibilityResult:
+          type: string
+        justification:
+          type: string
+
+    UpsertAnalysisConclusionRequest:
+      type: object
+      required:
+        - compatibilityResult
+        - justification
+      properties:
+        compatibilityResult:
+          type: string
+        justification:
+          type: string
+
+    ReportOutput:
+      type: object
+      properties:
+        reportId:
+          type: integer
+          format: int32
+        analysisId:
+          type: integer
+          format: int32
+        generatedAt:
+          type: string
+        filePath:
+          type: string
+
+    CreateReportRequest:
+      type: object
+      description: Optional report file path. If omitted, the backend generates a structured JSON report in the configured report output directory.
+      properties:
+        filePath:
+          type: string
+          nullable: true
+
+    UpdateReportRequest:
+      type: object
+      properties:
+        filePath:
+          type: string
+          nullable: true
+
     Problem:
       type: object
       required:
@@ -219,374 +903,84 @@ components:
           schema:
             $ref: "#/components/schemas/Problem"
     ConflictProblem:
-      description: A unique user field already exists.
+      description: A unique field or resource already exists.
       content:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
+    ExternalDataUnavailableProblem:
+      description: External scene or weather provider data is unavailable.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/external-data-unavailable
+            title: External data unavailable
+    ReportGenerationFailedProblem:
+      description: The backend could not generate the analysis report artifact.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/report-generation-failed
+            title: Report generation failed
 
 paths:
   /api/users:
-    post:
-      tags:
-        - Users
-      summary: Register a new user
-      operationId: createUser
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateUserRequest"
-      responses:
-        "201":
-          description: User created successfully.
-          headers:
-            Location:
-              description: URL of the created user.
-              schema:
-                type: string
-                example: /api/users/1
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserOutput"
-        "400":
-          $ref: "#/components/responses/BadRequestProblem"
-        "409":
-          $ref: "#/components/responses/ConflictProblem"
-
-    get:
-      tags:
-        - Users
-      summary: List all users
-      operationId: listUsers
-      description: Administrator permission is required.
-      security:
-        - cookieAuth: []
-      responses:
-        "200":
-          description: Users returned successfully.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/UserOutput"
-        "401":
-          $ref: "#/components/responses/UnauthorizedProblem"
-        "403":
-          $ref: "#/components/responses/AccessDeniedProblem"
-
+    $ref: "./openapi/paths/users.yaml#/users"
   /api/users/login:
-    post:
-      tags:
-        - Users
-      summary: Log in
-      operationId: login
-      description: >
-        Valid credentials create an opaque session token and return it in the
-        idap_session HttpOnly cookie.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LoginRequest"
-      responses:
-        "200":
-          description: Login succeeded.
-          headers:
-            Set-Cookie:
-              description: Session cookie containing the raw opaque token.
-              schema:
-                type: string
-                example: idap_session=abc123; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CurrentUser"
-        "401":
-          description: Invalid credentials.
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-              example:
-                type: https://github.com/AfonsoSantos44/IDAP---Final-Project/docs/problems/invalid-credentials
-                title: Invalid credentials
-
+    $ref: "./openapi/paths/users.yaml#/usersLogin"
   /api/users/logout:
-    post:
-      tags:
-        - Users
-      summary: Log out
-      operationId: logout
-      description: Deletes the current persisted session token and expires the cookie.
-      security:
-        - cookieAuth: []
-      responses:
-        "204":
-          description: Logout succeeded.
-          headers:
-            Set-Cookie:
-              description: Expired idap_session cookie.
-              schema:
-                type: string
-                example: idap_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax
-        "401":
-          $ref: "#/components/responses/UnauthorizedProblem"
-
+    $ref: "./openapi/paths/users.yaml#/usersLogout"
   /api/users/me:
-    get:
-      tags:
-        - Users
-      summary: Get the current authenticated user
-      operationId: getCurrentUser
-      security:
-        - cookieAuth: []
-      responses:
-        "200":
-          description: Current user returned successfully.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CurrentUser"
-        "401":
-          $ref: "#/components/responses/UnauthorizedProblem"
-
+    $ref: "./openapi/paths/users.yaml#/usersMe"
   /api/users/{id}:
-    get:
-      tags:
-        - Users
-      summary: Get a user by id
-      operationId: getUserById
-      description: Users can read their own profile. Administrators can read any profile.
-      security:
-        - cookieAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        "200":
-          description: User returned successfully.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserOutput"
-        "401":
-          $ref: "#/components/responses/UnauthorizedProblem"
-        "403":
-          $ref: "#/components/responses/AccessDeniedProblem"
-        "404":
-          $ref: "#/components/responses/NotFoundProblem"
-
-    delete:
-      tags:
-        - Users
-      summary: Delete a user by id
-      operationId: deleteUserById
-      description: Administrator permission is required.
-      security:
-        - cookieAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        "204":
-          description: User deleted successfully.
-        "401":
-          $ref: "#/components/responses/UnauthorizedProblem"
-        "403":
-          $ref: "#/components/responses/AccessDeniedProblem"
-        "404":
-          $ref: "#/components/responses/NotFoundProblem"
-
+    $ref: "./openapi/paths/users.yaml#/userById"
   /api/cases:
-    get:
-      tags:
-        - Cases
-      summary: List cases
-      operationId: listCases
-      description: Regular users receive only their own cases. Administrators receive all cases.
-      security:
-        - cookieAuth: []
-      responses:
-        "200":
-          description: Cases returned successfully.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CaseOutput"
-        "401":
-          $ref: "#/components/responses/UnauthorizedProblem"
-
-    post:
-      tags:
-        - Cases
-      summary: Create a case
-      operationId: createCase
-      description: >
-        Regular users always create cases for themselves. Administrators may
-        provide userId to create a case for another user.
-      security:
-        - cookieAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateCaseRequest"
-      responses:
-        "201":
-          description: Case created successfully.
-          headers:
-            Location:
-              description: URL of the created case.
-              schema:
-                type: string
-                example: /api/cases/10
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CaseOutput"
-        "400":
-          $ref: "#/components/responses/BadRequestProblem"
-        "401":
-          $ref: "#/components/responses/UnauthorizedProblem"
-        "404":
-          $ref: "#/components/responses/NotFoundProblem"
-
+    $ref: "./openapi/paths/cases.yaml#/cases"
   /api/cases/{id}:
-    get:
-      tags:
-        - Cases
-      summary: Get a case by id
-      operationId: getCaseById
-      description: Regular users can access only their own cases. Administrators can access any case.
-      security:
-        - cookieAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        "200":
-          description: Case returned successfully.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CaseOutput"
-        "401":
-          $ref: "#/components/responses/UnauthorizedProblem"
-        "403":
-          $ref: "#/components/responses/CaseAccessDeniedProblem"
-        "404":
-          $ref: "#/components/responses/NotFoundProblem"
-
-    put:
-      tags:
-        - Cases
-      summary: Update a case
-      operationId: updateCase
-      description: Regular users can update only their own cases. Administrators can update any case.
-      security:
-        - cookieAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateCaseRequest"
-      responses:
-        "200":
-          description: Case updated successfully.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CaseOutput"
-        "400":
-          $ref: "#/components/responses/BadRequestProblem"
-        "401":
-          $ref: "#/components/responses/UnauthorizedProblem"
-        "403":
-          $ref: "#/components/responses/CaseAccessDeniedProblem"
-        "404":
-          $ref: "#/components/responses/NotFoundProblem"
-
-    delete:
-      tags:
-        - Cases
-      summary: Delete a case by id
-      operationId: deleteCaseById
-      description: Regular users can delete only their own cases. Administrators can delete any case.
-      security:
-        - cookieAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        "204":
-          description: Case deleted successfully.
-        "401":
-          $ref: "#/components/responses/UnauthorizedProblem"
-        "403":
-          $ref: "#/components/responses/CaseAccessDeniedProblem"
-        "404":
-          $ref: "#/components/responses/NotFoundProblem"
-
+    $ref: "./openapi/paths/cases.yaml#/caseById"
   /api/users/{userId}/cases:
-    get:
-      tags:
-        - Cases
-      summary: List cases for a user
-      operationId: listCasesByUserId
-      description: Regular users can list only their own cases. Administrators can list any user's cases.
-      security:
-        - cookieAuth: []
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        "200":
-          description: Cases returned successfully.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CaseOutput"
-        "401":
-          $ref: "#/components/responses/UnauthorizedProblem"
-        "403":
-          $ref: "#/components/responses/CaseAccessDeniedProblem"
-        "404":
-          $ref: "#/components/responses/NotFoundProblem"
+    $ref: "./openapi/paths/cases.yaml#/userCases"
+  /api/cases/{caseId}/weather:
+    $ref: "./openapi/paths/accident-environment.yaml#/caseWeather"
+  /api/cases/{caseId}/scene:
+    $ref: "./openapi/paths/accident-environment.yaml#/caseScene"
+  /api/cases/{caseId}/vehicles:
+    $ref: "./openapi/paths/accident-vehicle-damage.yaml#/caseVehicles"
+  /api/vehicles/{vehicleId}:
+    $ref: "./openapi/paths/accident-vehicle-damage.yaml#/vehicleById"
+  /api/vehicles/{vehicleId}/damages:
+    $ref: "./openapi/paths/accident-vehicle-damage.yaml#/vehicleDamages"
+  /api/damages/{damageId}:
+    $ref: "./openapi/paths/accident-vehicle-damage.yaml#/damageById"
+  /api/cases/{caseId}/evidence:
+    $ref: "./openapi/paths/accident-evidence.yaml#/caseEvidence"
+  /api/evidence/{evidenceId}:
+    $ref: "./openapi/paths/accident-evidence.yaml#/evidenceById"
+  /api/evidence/{evidenceId}/image:
+    $ref: "./openapi/paths/accident-evidence.yaml#/evidenceImage"
+  /api/cases/{caseId}/analyses:
+    $ref: "./openapi/paths/accident-analysis.yaml#/caseAnalyses"
+  /api/analyses/{analysisId}:
+    $ref: "./openapi/paths/accident-analysis.yaml#/analysisById"
+  /api/analyses/{analysisId}/images:
+    $ref: "./openapi/paths/accident-analysis.yaml#/analysisImages"
+  /api/analyses/{analysisId}/images/{evidenceId}:
+    $ref: "./openapi/paths/accident-analysis.yaml#/analysisImageByEvidenceId"
+  /api/analyses/{analysisId}/measurements:
+    $ref: "./openapi/paths/accident-measurement.yaml#/analysisMeasurements"
+  /api/measurements/{measurementId}:
+    $ref: "./openapi/paths/accident-measurement.yaml#/measurementById"
+  /api/analyses/{analysisId}/damage-comparisons:
+    $ref: "./openapi/paths/accident-damage-comparison.yaml#/analysisDamageComparisons"
+  /api/damage-comparisons/{comparisonId}:
+    $ref: "./openapi/paths/accident-damage-comparison.yaml#/damageComparisonById"
+  /api/analyses/{analysisId}/conclusion:
+    $ref: "./openapi/paths/accident-conclusion-report.yaml#/analysisConclusion"
+  /api/analyses/{analysisId}/reports:
+    $ref: "./openapi/paths/accident-conclusion-report.yaml#/analysisReports"
+  /api/reports/{reportId}:
+    $ref: "./openapi/paths/accident-conclusion-report.yaml#/reportById"

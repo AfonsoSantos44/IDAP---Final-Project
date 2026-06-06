@@ -1,0 +1,202 @@
+caseEvidence:
+  get:
+    tags:
+      - Accident Evidence
+    summary: List evidence for a case
+    operationId: listCaseEvidence
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/CaseId"
+    responses:
+      "200":
+        description: Evidence returned successfully.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../IDAP.yaml#/components/schemas/EvidenceOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  post:
+    tags:
+      - Accident Evidence
+    summary: Create evidence for a case
+    operationId: createCaseEvidence
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/CaseId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../IDAP.yaml#/components/schemas/CreateEvidenceRequest"
+    responses:
+      "201":
+        description: Evidence created successfully.
+        headers:
+          Location:
+            schema:
+              type: string
+              example: /api/evidence/1
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/EvidenceOutput"
+      "400":
+        $ref: "../../IDAP.yaml#/components/responses/BadRequestProblem"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+evidenceById:
+  get:
+    tags:
+      - Accident Evidence
+    summary: Get evidence by id
+    operationId: getEvidenceById
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/EvidenceId"
+    responses:
+      "200":
+        description: Evidence returned successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/EvidenceOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  put:
+    tags:
+      - Accident Evidence
+    summary: Update evidence
+    operationId: updateEvidence
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/EvidenceId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../IDAP.yaml#/components/schemas/UpdateEvidenceRequest"
+    responses:
+      "200":
+        description: Evidence updated successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/EvidenceOutput"
+      "400":
+        $ref: "../../IDAP.yaml#/components/responses/BadRequestProblem"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  delete:
+    tags:
+      - Accident Evidence
+    summary: Delete evidence
+    operationId: deleteEvidence
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/EvidenceId"
+    responses:
+      "204":
+        description: Evidence deleted successfully.
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+evidenceImage:
+  get:
+    tags:
+      - Accident Evidence
+    summary: Get image metadata for evidence
+    operationId: getEvidenceImage
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/EvidenceId"
+    responses:
+      "200":
+        description: Image evidence returned successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/ImageEvidenceOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  put:
+    tags:
+      - Accident Evidence
+    summary: Create or update image metadata for evidence
+    operationId: upsertEvidenceImage
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/EvidenceId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../IDAP.yaml#/components/schemas/UpsertImageEvidenceRequest"
+    responses:
+      "200":
+        description: Image evidence saved successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/ImageEvidenceOutput"
+      "400":
+        $ref: "../../IDAP.yaml#/components/responses/BadRequestProblem"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  delete:
+    tags:
+      - Accident Evidence
+    summary: Delete image metadata for evidence
+    operationId: deleteEvidenceImage
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/EvidenceId"
+    responses:
+      "204":
+        description: Image evidence deleted successfully.
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"

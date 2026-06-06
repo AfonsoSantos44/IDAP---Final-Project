@@ -1,0 +1,131 @@
+analysisDamageComparisons:
+  get:
+    tags:
+      - Accident Damage Comparisons
+    summary: List damage comparisons for an analysis
+    operationId: listAnalysisDamageComparisons
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/AnalysisId"
+    responses:
+      "200":
+        description: Damage comparisons returned successfully.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../IDAP.yaml#/components/schemas/DamageComparisonOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  post:
+    tags:
+      - Accident Damage Comparisons
+    summary: Create a damage comparison
+    operationId: createAnalysisDamageComparison
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/AnalysisId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../IDAP.yaml#/components/schemas/CreateDamageComparisonRequest"
+    responses:
+      "201":
+        description: Damage comparison created successfully.
+        headers:
+          Location:
+            schema:
+              type: string
+              example: /api/damage-comparisons/1
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/DamageComparisonOutput"
+      "400":
+        $ref: "../../IDAP.yaml#/components/responses/BadRequestProblem"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+damageComparisonById:
+  get:
+    tags:
+      - Accident Damage Comparisons
+    summary: Get damage comparison by id
+    operationId: getDamageComparisonById
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/ComparisonId"
+    responses:
+      "200":
+        description: Damage comparison returned successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/DamageComparisonOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  put:
+    tags:
+      - Accident Damage Comparisons
+    summary: Update damage comparison
+    operationId: updateDamageComparison
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/ComparisonId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../IDAP.yaml#/components/schemas/UpdateDamageComparisonRequest"
+    responses:
+      "200":
+        description: Damage comparison updated successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/DamageComparisonOutput"
+      "400":
+        $ref: "../../IDAP.yaml#/components/responses/BadRequestProblem"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  delete:
+    tags:
+      - Accident Damage Comparisons
+    summary: Delete damage comparison
+    operationId: deleteDamageComparison
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/ComparisonId"
+    responses:
+      "204":
+        description: Damage comparison deleted successfully.
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"

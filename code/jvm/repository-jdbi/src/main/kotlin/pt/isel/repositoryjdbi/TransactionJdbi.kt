@@ -8,7 +8,13 @@ class TransactionJdbi(
 ) : Transaction {
     override val repoUsers = RepositoryUserJdbi(handle)
     override val repoCases = RepositoryCaseJdbi(handle)
-    // Add the others
+    override val repoAccidentEnvironment = RepositoryAccidentEnvironmentJdbi(handle)
+    override val repoAccidentVehicleDamage = RepositoryAccidentVehicleDamageJdbi(handle)
+    override val repoAccidentEvidence = RepositoryAccidentEvidenceJdbi(handle)
+    override val repoAccidentAnalysis = RepositoryAccidentAnalysisJdbi(handle)
+    override val repoAccidentMeasurement = RepositoryAccidentMeasurementJdbi(handle)
+    override val repoAccidentDamageComparison = RepositoryAccidentDamageComparisonJdbi(handle)
+    override val repoAccidentConclusionReport = RepositoryAccidentConclusionReportJdbi(handle)
 
     override fun rollback() {
         handle.rollback()

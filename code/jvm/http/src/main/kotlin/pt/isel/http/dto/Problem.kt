@@ -94,4 +94,39 @@ sealed class Problem(
         URI("$PROBLEM_URI_PATH/invalid-case-description"),
         "Invalid case description",
     )
+
+    data object AccidentDataNotFound : Problem(
+        URI("$PROBLEM_URI_PATH/accident-data-not-found"),
+        "Accident data not found",
+    )
+
+    data object InvalidAccidentData : Problem(
+        URI("$PROBLEM_URI_PATH/invalid-accident-data"),
+        "Invalid accident data",
+    )
+
+    data object MeasurementProcessingFailed : Problem(
+        URI("$PROBLEM_URI_PATH/measurement-processing-failed"),
+        "Measurement processing failed",
+    )
+
+    data object ReportGenerationFailed : Problem(
+        URI("$PROBLEM_URI_PATH/report-generation-failed"),
+        "Report generation failed",
+    )
+
+    data object DuplicateVehicle : Problem(
+        URI("$PROBLEM_URI_PATH/duplicate-vehicle"),
+        "Duplicate vehicle",
+    )
+
+    data object RelatedResourceMismatch : Problem(
+        URI("$PROBLEM_URI_PATH/related-resource-mismatch"),
+        "Related resource mismatch",
+    )
+
+    data object ExternalDataUnavailable : Problem(
+        URI("$PROBLEM_URI_PATH/external-data-unavailable"),
+        "External data unavailable",
+    )
 }

@@ -1,0 +1,266 @@
+caseVehicles:
+  get:
+    tags:
+      - Accident Vehicles and Damages
+    summary: List vehicles for a case
+    operationId: listCaseVehicles
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/CaseId"
+    responses:
+      "200":
+        description: Vehicles returned successfully.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../IDAP.yaml#/components/schemas/VehicleOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  post:
+    tags:
+      - Accident Vehicles and Damages
+    summary: Create a vehicle for a case
+    operationId: createCaseVehicle
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/CaseId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../IDAP.yaml#/components/schemas/CreateVehicleRequest"
+    responses:
+      "201":
+        description: Vehicle created successfully.
+        headers:
+          Location:
+            schema:
+              type: string
+              example: /api/vehicles/1
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/VehicleOutput"
+      "400":
+        $ref: "../../IDAP.yaml#/components/responses/BadRequestProblem"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+      "409":
+        $ref: "../../IDAP.yaml#/components/responses/ConflictProblem"
+vehicleById:
+  get:
+    tags:
+      - Accident Vehicles and Damages
+    summary: Get a vehicle by id
+    operationId: getVehicleById
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/VehicleId"
+    responses:
+      "200":
+        description: Vehicle returned successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/VehicleOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  put:
+    tags:
+      - Accident Vehicles and Damages
+    summary: Update a vehicle
+    operationId: updateVehicle
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/VehicleId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../IDAP.yaml#/components/schemas/UpdateVehicleRequest"
+    responses:
+      "200":
+        description: Vehicle updated successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/VehicleOutput"
+      "400":
+        $ref: "../../IDAP.yaml#/components/responses/BadRequestProblem"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+      "409":
+        $ref: "../../IDAP.yaml#/components/responses/ConflictProblem"
+  delete:
+    tags:
+      - Accident Vehicles and Damages
+    summary: Delete a vehicle
+    operationId: deleteVehicle
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/VehicleId"
+    responses:
+      "204":
+        description: Vehicle deleted successfully.
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+vehicleDamages:
+  get:
+    tags:
+      - Accident Vehicles and Damages
+    summary: List damages for a vehicle
+    operationId: listVehicleDamages
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/VehicleId"
+    responses:
+      "200":
+        description: Damages returned successfully.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../IDAP.yaml#/components/schemas/DamageOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  post:
+    tags:
+      - Accident Vehicles and Damages
+    summary: Create a damage record for a vehicle
+    operationId: createVehicleDamage
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/VehicleId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../IDAP.yaml#/components/schemas/CreateDamageRequest"
+    responses:
+      "201":
+        description: Damage created successfully.
+        headers:
+          Location:
+            schema:
+              type: string
+              example: /api/damages/1
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/DamageOutput"
+      "400":
+        $ref: "../../IDAP.yaml#/components/responses/BadRequestProblem"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+damageById:
+  get:
+    tags:
+      - Accident Vehicles and Damages
+    summary: Get damage by id
+    operationId: getDamageById
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/DamageId"
+    responses:
+      "200":
+        description: Damage returned successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/DamageOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  put:
+    tags:
+      - Accident Vehicles and Damages
+    summary: Update damage
+    operationId: updateDamage
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/DamageId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../IDAP.yaml#/components/schemas/UpdateDamageRequest"
+    responses:
+      "200":
+        description: Damage updated successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/DamageOutput"
+      "400":
+        $ref: "../../IDAP.yaml#/components/responses/BadRequestProblem"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  delete:
+    tags:
+      - Accident Vehicles and Damages
+    summary: Delete damage
+    operationId: deleteDamage
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/DamageId"
+    responses:
+      "204":
+        description: Damage deleted successfully.
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"

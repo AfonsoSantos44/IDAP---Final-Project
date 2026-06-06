@@ -32,6 +32,11 @@ build/
 # Kotlin Gradle plugin data
 .kotlin/
 
+# Python local environments and bytecode
+.venv/
+__pycache__/
+*.py[cod]
+
 # IntelliJ IDEA
 .idea/
 *.iml

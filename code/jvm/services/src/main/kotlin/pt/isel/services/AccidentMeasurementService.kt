@@ -1,0 +1,225 @@
+package pt.isel.services
+
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
+import pt.isel.domain.Measurement
+import pt.isel.repository.TransactionManager
+
+@Service
+class AccidentMeasurementService(
+    private val transactionManager: TransactionManager,
+    private val measurementEngine: MeasurementEngine,
+) {
+    private val logger = LoggerFactory.getLogger(AccidentMeasurementService::class.java)
+
+    fun createMeasurement(
+        analysisId: Int,
+        evidenceId: Int,
+        damageId: Int,
+        comparisonEvidenceId: Int?,
+        knownTickDistanceCm: Double?,
+        primarySelection: DamageSelectionInput,
+        primaryCalibration: RulerCalibrationInput?,
+        comparisonSelection: DamageSelectionInput?,
+        comparisonCalibration: RulerCalibrationInput?,
+    ): Either<AccidentDataError, Measurement> {
+        if (knownTickDistanceCm != null && !isValidPositiveNumber(knownTickDistanceCm)) {
+            return failure(AccidentDataError.InvalidAccidentData)
+        }
+        if (comparisonEvidenceId != null && comparisonSelection == null) {
+            return failure(AccidentDataError.InvalidAccidentData)
+        }
+        if (comparisonEvidenceId == null && (comparisonSelection != null || comparisonCalibration != null)) {
+            return failure(AccidentDataError.InvalidAccidentData)
+        }
+
+        val input =
+            when (
+                val result =
+                    transactionManager.run {
+                        val analysis =
+                            repoAccidentAnalysis.findAnalysisById(analysisId)
+                                ?: return@run failure(AccidentDataError.AnalysisNotFound)
+
+                        ensureEvidenceAndDamageBelongToCase(
+                            caseId = analysis.caseId,
+                            evidenceId = evidenceId,
+                            damageId = damageId,
+                        )?.let { return@run failure(it) }
+
+                        val primaryImage =
+                            repoAccidentEvidence.findImageEvidenceByEvidenceId(evidenceId)
+                                ?: return@run failure(AccidentDataError.ImageEvidenceNotFound)
+                        if (!primarySelection.isValidFor(primaryImage.width, primaryImage.height)) {
+                            return@run failure(AccidentDataError.InvalidAccidentData)
+                        }
+                        if (!primaryCalibration.isValidFor(primaryImage.width, primaryImage.height)) {
+                            return@run failure(AccidentDataError.InvalidAccidentData)
+                        }
+
+                        val comparisonImage =
+                            comparisonEvidenceId?.let { id ->
+                                val comparisonEvidence =
+                                    repoAccidentEvidence.findEvidenceById(id)
+                                        ?: return@run failure(AccidentDataError.EvidenceNotFound)
+                                if (comparisonEvidence.caseId != analysis.caseId) {
+                                    return@run failure(AccidentDataError.RelatedResourceMismatch)
+                                }
+                                repoAccidentEvidence.findImageEvidenceByEvidenceId(id)
+                                    ?: return@run failure(AccidentDataError.ImageEvidenceNotFound)
+                            }
+                        if (comparisonImage != null) {
+                            if (!comparisonSelection.isValidFor(comparisonImage.width, comparisonImage.height)) {
+                                return@run failure(AccidentDataError.InvalidAccidentData)
+                            }
+                            if (!comparisonCalibration.isValidFor(comparisonImage.width, comparisonImage.height)) {
+                                return@run failure(AccidentDataError.InvalidAccidentData)
+                            }
+                        }
+
+                        success(
+                            MeasurementProcessingInput(
+                                primaryImagePath = primaryImage.filePath,
+                                comparisonImagePath = comparisonImage?.filePath,
+                            ),
+                        )
+                    }
+            ) {
+                is Success -> result.value
+                is Failure -> return result
+            }
+
+        val engineResult =
+            when (
+                val result =
+                    measurementEngine.measure(
+                        primaryImagePath = input.primaryImagePath,
+                        comparisonImagePath = input.comparisonImagePath,
+                        knownTickDistanceCm = knownTickDistanceCm,
+                        primarySelection = primarySelection,
+                        primaryCalibration = primaryCalibration,
+                        comparisonSelection = comparisonSelection,
+                        comparisonCalibration = comparisonCalibration,
+                    )
+            ) {
+                is Success -> result.value
+                is Failure -> {
+                    logger.warn(
+                        "Measurement engine failed for analysis {}, evidence {}, damage {}: {}",
+                        analysisId,
+                        evidenceId,
+                        damageId,
+                        result.value.message(),
+                    )
+                    return failure(AccidentDataError.MeasurementProcessingFailed)
+                }
+            }
+
+        return transactionManager.run {
+            val analysis =
+                repoAccidentAnalysis.findAnalysisById(analysisId) ?: return@run failure(AccidentDataError.AnalysisNotFound)
+            ensureEvidenceAndDamageBelongToCase(
+                caseId = analysis.caseId,
+                evidenceId = evidenceId,
+                damageId = damageId,
+            )?.let { return@run failure(it) }
+
+            success(
+                repoAccidentMeasurement.createMeasurement(
+                    analysisId = analysisId,
+                    evidenceId = evidenceId,
+                    damageId = damageId,
+                    refObjLengthCm = engineResult.refObjLengthCm,
+                    refObjX1 = engineResult.refObjX1,
+                    refObjY1 = engineResult.refObjY1,
+                    refObjX2 = engineResult.refObjX2,
+                    refObjY2 = engineResult.refObjY2,
+                    damageAreaX1 = engineResult.damageAreaX1,
+                    damageAreaY1 = engineResult.damageAreaY1,
+                    damageAreaX2 = engineResult.damageAreaX2,
+                    damageAreaY2 = engineResult.damageAreaY2,
+                    calculatedHeightCm = engineResult.calculatedHeightCm,
+                    damageMinHeightCm = engineResult.damageMinHeightCm,
+                    damageMaxHeightCm = engineResult.damageMaxHeightCm,
+                    scaleCmPerPixel = engineResult.scaleCmPerPixel,
+                    confidence = engineResult.confidence,
+                    calibrationMethod = engineResult.calibrationMethod,
+                    comparisonImagePath = engineResult.comparisonImagePath,
+                ).also {
+                    repoAccidentVehicleDamage.updateDamageHeight(damageId, engineResult.calculatedHeightCm)
+                },
+            )
+        }
+    }
+
+    fun getMeasurementsByAnalysisId(analysisId: Int): Either<AccidentDataError, List<Measurement>> =
+        transactionManager.run {
+            repoAccidentAnalysis.findAnalysisById(analysisId) ?: return@run failure(AccidentDataError.AnalysisNotFound)
+            success(repoAccidentMeasurement.findMeasurementsByAnalysisId(analysisId))
+        }
+
+    fun getMeasurementById(measurementId: Int): Either<AccidentDataError, Measurement> =
+        transactionManager.run {
+            repoAccidentMeasurement.findMeasurementById(measurementId)?.let { success(it) }
+                ?: failure(AccidentDataError.MeasurementNotFound)
+        }
+
+    fun deleteMeasurement(measurementId: Int): Either<AccidentDataError, Unit> =
+        transactionManager.run {
+            repoAccidentMeasurement.findMeasurementById(measurementId)
+                ?: return@run failure(AccidentDataError.MeasurementNotFound)
+            repoAccidentMeasurement.deleteMeasurementById(measurementId)
+            success(Unit)
+        }
+
+    private fun MeasurementEngineError.message(): String =
+        when (this) {
+            is MeasurementEngineError.ScriptNotFound -> detail
+            is MeasurementEngineError.InputImageNotFound -> detail
+            is MeasurementEngineError.Timeout -> "Measurement engine timed out"
+            is MeasurementEngineError.ProcessingFailed -> detail
+            is MeasurementEngineError.InvalidEngineResponse -> detail
+        }
+
+    private fun DamageSelectionInput?.isValidFor(
+        width: Int,
+        height: Int,
+    ): Boolean {
+        if (this == null) return false
+        val values = listOf(x1, y1, x2, y2)
+        if (values.any { !isValidNumber(it) }) return false
+
+        val left = minOf(x1, x2)
+        val right = maxOf(x1, x2)
+        val top = minOf(y1, y2)
+        val bottom = maxOf(y1, y2)
+        return left >= 0.0 && top >= 0.0 && right < width && bottom < height
+    }
+
+    private fun RulerCalibrationInput?.isValidFor(
+        width: Int,
+        height: Int,
+    ): Boolean {
+        if (this == null) return true
+        if (referencePoints.size == 1) return false
+        if (referencePoints.isNotEmpty() && referencePoints.map { it.valueCm }.distinct().size < 2) return false
+        if (
+            referencePoints.any {
+                !isValidNumber(it.x) ||
+                    !isValidNumber(it.y) ||
+                    !isValidNumber(it.valueCm) ||
+                    it.x < 0.0 ||
+                    it.y < 0.0 ||
+                    it.x >= width ||
+                    it.y >= height
+            }
+        ) {
+            return false
+        }
+        return rulerRegion?.let {
+            it.isValidFor(width, height) &&
+                it.x1 != it.x2 &&
+                it.y1 != it.y2
+        } ?: true
+    }
+}

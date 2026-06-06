@@ -1,0 +1,141 @@
+analysisMeasurements:
+  get:
+    tags:
+      - Accident Measurements
+    summary: List measurements for an analysis
+    operationId: listAnalysisMeasurements
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/AnalysisId"
+    responses:
+      "200":
+        description: Measurements returned successfully.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../IDAP.yaml#/components/schemas/MeasurementOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  post:
+    tags:
+      - Accident Measurements
+    summary: Measure an analyst-selected damage
+    operationId: createAnalysisMeasurement
+    description: |
+      Detects and perspective-corrects the ruler, calibrates its physical values using
+      analyst reference points or OCR, and calculates the ruler height/range occupied
+      by the analyst-selected damage. When a comparison image is supplied, both images
+      are normalized to the same physical scale and vertically aligned at the primary
+      damage ruler value.
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/AnalysisId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../IDAP.yaml#/components/schemas/CreateMeasurementRequest"
+          examples:
+            manualCalibration:
+              summary: Compare two analyst-selected damages using labelled ruler points
+              value:
+                evidenceId: 1
+                damageId: 1
+                comparisonEvidenceId: 2
+                knownTickDistanceCm: 1.0
+                primarySelection:
+                  x1: 370
+                  y1: 515
+                  x2: 1450
+                  y2: 650
+                primaryCalibration:
+                  referencePoints:
+                    - x: 320
+                      y: 493
+                      valueCm: 80
+                    - x: 320
+                      y: 959
+                      valueCm: 70
+                comparisonSelection:
+                  x1: 290
+                  y1: 380
+                  x2: 1050
+                  y2: 760
+                comparisonCalibration:
+                  referencePoints:
+                    - x: 705
+                      y: 1100
+                      valueCm: 10
+                    - x: 705
+                      y: 870
+                      valueCm: 30
+    responses:
+      "201":
+        description: Measurement created successfully.
+        headers:
+          Location:
+            schema:
+              type: string
+              example: /api/measurements/1
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/MeasurementOutput"
+      "400":
+        $ref: "../../IDAP.yaml#/components/responses/BadRequestProblem"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+measurementById:
+  get:
+    tags:
+      - Accident Measurements
+    summary: Get measurement by id
+    operationId: getMeasurementById
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/MeasurementId"
+    responses:
+      "200":
+        description: Measurement returned successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../../IDAP.yaml#/components/schemas/MeasurementOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+  delete:
+    tags:
+      - Accident Measurements
+    summary: Delete measurement
+    operationId: deleteMeasurement
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../../IDAP.yaml#/components/parameters/MeasurementId"
+    responses:
+      "204":
+        description: Measurement deleted successfully.
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
+      "403":
+        $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
+      "404":
+        $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"

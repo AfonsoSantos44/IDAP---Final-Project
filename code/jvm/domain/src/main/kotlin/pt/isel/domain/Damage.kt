@@ -6,6 +6,6 @@ data class Damage(
     val contactZone: String,
     val deformationType: String,
     val direction: String,
-    val heightCm: Double,
+    val heightCm: Double?,
     val damageDescription: String,
 )
