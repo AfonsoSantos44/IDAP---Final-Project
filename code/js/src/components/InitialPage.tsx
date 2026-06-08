@@ -15,7 +15,7 @@ function InitialPage() {
             <div className="homepage-overlay">
                 <div className="homepage-content">
                     <h1 className="homepage-title">IDAP</h1>
-                    <p className="homepage-subtitle">Visualizador de alturas de danos automóveis</p>
+                    <p className="homepage-subtitle">Sistema de apoio à análise e comparação de danos em sinistros automóveis.</p>
                     <div className="homepage-buttons">
                         <button 
                             className="homepage-btn login-btn"

@@ -85,12 +85,11 @@ export default function EvidenceList() {
       <div className="case-list-header">
         <div>
           <h1 className="case-list-title">Evidências</h1>
-          <p className="case-list-subtitle">Lista de evidências por caso.</p>
+          <p className="case-list-subtitle">Lista de evidências do caso {caseId ?? '—'}</p>
         </div>
       </div>
 
       <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ fontWeight: 600 }}>Caso: {caseId ?? '—'}</div>
         <button onClick={() => navigate(caseId ? `/cases/${caseId}/evidences/create` : '/cases')} className="btn-link">Adicionar Evidência</button>
 
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
