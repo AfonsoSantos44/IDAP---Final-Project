@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import * as Icons from './utils/Icons';
 import '../styles/AboutPage.css';
 import { useAuth } from '../context/AuthContext';
@@ -28,11 +28,20 @@ const techStack = [
 ];
 
 export default function AboutPage() {
-    const { token } = useAuth();
+    const { token, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        await logout();
+        navigate('/initial');
+    }
 
     const content = (
         <div className="about-wrapper">
             <div className="about-container">
+                <div className="logout-wrapper">
+                    <button className="logout-btn" onClick={handleLogout}>Logout</button>
+                </div>
 
                 {/* Header */}
                 <div className="about-header">

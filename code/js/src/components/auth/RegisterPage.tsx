@@ -1,19 +1,36 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { userService } from "../../services/userService";
+import { useNavigate } from "react-router-dom";
 import "../../styles/RegisterPage.css";
-type Register = {
+type RegisterPage = {
   username: string;
+  email: string;
   password: string;
   error: string | undefined;
 };
 
-function Register() {
-  const [state, setState] = useState<Register>({ username: "", password: "", error: undefined });
-
+function RegisterPage() {
+  const [state, setState] = useState<RegisterPage>({ username: "", email: "", password: "", error: undefined });
+  const navigate = useNavigate();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setState(prev => ({ ...prev, error: undefined }));
+    try {
+      await userService.register({
+        username: state.username,
+        email: state.email,
+        password: state.password,
+      });
+      navigate("/login");
+    } catch (err: any) {
+      const message = err?.message || err?.title || "Erro ao registar";
+      setState(prev => ({ ...prev, error: message }));
+    }
+  }
   return (
     
     <div className="auth-wrapper">
-      {/* Animated background blobs */}
       <div className="auth-card">
         <h2>Criar Conta</h2>
         <p>Regista-te para começar</p>
@@ -33,6 +50,17 @@ function Register() {
           </div>
           
           <div className="auth-form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              placeholder="Insere o teu email"
+              value={state.email}
+              onChange={(e) => setState({ ...state, email: e.target.value })}
+              required
+            />
+          </div>
+          
+          <div className="auth-form-group">
             <label>Palavra-passe</label>
             <input
               type="password"
@@ -46,6 +74,7 @@ function Register() {
           <button
             type="submit"
             className="auth-submit-btn"
+            onClick={handleSubmit}
           >
             Registar
           </button>
@@ -59,4 +88,4 @@ function Register() {
   );
 }
 
-export default Register;
+export default RegisterPage;

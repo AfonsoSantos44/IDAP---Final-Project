@@ -1,0 +1,32 @@
+/* Styles for NotFoundPage and logout button */
+.not-found-wrapper {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.not-found-title { font-size: 2.25rem; margin: 0 0 0.75rem; }
+.not-found-message { color: #5e6689; }
+
+.logout-wrapper {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1200;
+}
+
+.logout-btn {
+  padding: 0.6rem 0.9rem;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #5c58ff 0%, #4e4bfa 100%);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(86,81,255,0.18);
+}
+
+.logout-btn:hover { transform: translateY(-2px); }

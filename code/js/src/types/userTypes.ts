@@ -9,10 +9,9 @@ export interface User {
 }
 
 export interface UserInput {
-  name: string;
+  username: string;
   email: string;
   password: string;
-  confirmPassword: string;
 }
 
 export interface LoginInputModel {
