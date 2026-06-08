@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { AuthProvider } from "./context/AuthContext";
 import { createBrowserRouter, RouterProvider ,Navigate} from "react-router-dom"
-import  HomePage  from "./components/HomePage";
+import  InitialPage  from "./components/InitialPage";
 import  LoginPage  from "./components/auth/LoginPage";
 import  RegisterPage  from "./components/auth/RegisterPage";
 import NotFoundPage from "./components/NotFoundPage";
@@ -9,6 +9,8 @@ import CasesListPage from "./components/cases/CasesListPage";
 import CreateCasePage from "./components/cases/CreateCasePage";
 import CaseInfoPage from "./components/cases/CaseInfoPage";
 import AboutPage from "./components/AboutPage";
+import HomePage from "./components/HomePage";
+import ProfilePage from "./components/auth/ProfilePage";
 
 const router = createBrowserRouter([
     {
@@ -16,10 +18,17 @@ const router = createBrowserRouter([
         element: <Navigate to="/home" replace/>,
     },
     {
+        path:"/initial",
+        element: <InitialPage/>
+    },
+    {
         path:"/home",
         element: <HomePage/>
     },
-  
+    {
+        path: "/profile",
+        element: <ProfilePage/>,
+    },
    {
         path: "/login",
         element: <LoginPage/>,

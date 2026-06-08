@@ -3,20 +3,20 @@ import { CaseDetailsOutput,CreateCaseInput, Case } from "../types/caseTypes";
 
 export const caseService = {
     async createCase(input: CreateCaseInput):Promise<CaseDetailsOutput>{
-        return fetchApi<CaseDetailsOutput>("case",{
+        return fetchApi<CaseDetailsOutput>("/cases",{
             method: "POST",
             body: JSON.stringify(input),
         });
     },
 
     async getAllCases():Promise<Case[]>{
-        return fetchApi<Case[]>("/case",{
-            method: "GET",
-        })
+        return fetchApi<Case[]>('/cases', {
+            method: 'GET',
+        });
     },
 
     async getCase(id: number): Promise<CaseDetailsOutput>{
-        return fetchApi<CaseDetailsOutput>(`/case/${id}`,{
+        return fetchApi<CaseDetailsOutput>(`/cases/${id}`,{
             method: "GET",
         })
     }

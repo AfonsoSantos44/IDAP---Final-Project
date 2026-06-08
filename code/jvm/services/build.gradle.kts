@@ -33,3 +33,7 @@ dependencies {
     testImplementation("org.springframework:spring-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 }
+
+kotlin {
+    jvmToolchain(21)
+}

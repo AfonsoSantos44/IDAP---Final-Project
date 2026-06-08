@@ -11,7 +11,21 @@ type Login = {
 };
 
 function LoginPage() {
-    const [state, setState] = useState<Login>({ username: "", password: "", error: undefined });
+  const [state, setState] = useState<Login>({ username: "", password: "", error: undefined });
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement> | React.FormEvent) => {
+    e.preventDefault();
+    setState(prev => ({ ...prev, error: undefined }));
+    try {
+      // backend expects email in the login model; we map username field to email
+      await userService.login({ email: state.username, password: state.password });
+      navigate("/home");
+    } catch (err: any) {
+      const message = err?.message || err?.title || "Erro ao iniciar sessão";
+      setState(prev => ({ ...prev, error: message }));
+    }
+  }
 return (
     <div className="auth-wrapper">
       <div className="auth-card">
@@ -46,8 +60,9 @@ return (
           </div>
           
           <button
-            type="submit"
+            type="button"
             className="auth-submit-btn"
+            onClick={handleSubmit}
           >
             Login
           </button>
