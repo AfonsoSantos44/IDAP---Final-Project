@@ -713,7 +713,7 @@ components:
 
     RulerCalibrationRequest:
       type: object
-      description: Optional manual calibration. Supply at least two reference points when OCR cannot read the ruler.
+      description: Optional manual fallback. Normally the ruler is calibrated automatically using OCR and detected tick spacing.
       properties:
         referencePoints:
           type: array

@@ -1,0 +1,194 @@
+{
+  "schemaVersion" : "1.0",
+  "generatedAt" : "2026-06-08T12:59:28.481185600Z",
+  "case" : {
+    "caseId" : 1,
+    "userId" : 1,
+    "createdAt" : "2026-06-08T12:43:33.296972Z",
+    "caseStatus" : "in-progress",
+    "accidentDescription" : "Comparison between two vehicle damages"
+  },
+  "environment" : {
+    "weather" : null,
+    "scene" : null
+  },
+  "analysis" : {
+    "analysisId" : 1,
+    "caseId" : 1,
+    "analystId" : 1,
+    "createdAt" : "2026-06-08T12:45:40.199337Z"
+  },
+  "vehicles" : [ {
+    "vehicle" : {
+      "vehicleId" : 1,
+      "caseId" : 1,
+      "brand" : "Renault",
+      "model" : "Clio",
+      "yearOfFabrication" : 2018,
+      "licensePlate" : "AA-01-AA",
+      "role" : "source"
+    },
+    "damages" : [ {
+      "damageId" : 1,
+      "vehicleId" : 1,
+      "contactZone" : "rear bumper",
+      "deformationType" : "scrape",
+      "direction" : "back-to-front",
+      "heightCm" : 77.74,
+      "damageDescription" : "Damage visible on vehicle A"
+    } ]
+  }, {
+    "vehicle" : {
+      "vehicleId" : 2,
+      "caseId" : 1,
+      "brand" : "Peugeot",
+      "model" : "208",
+      "yearOfFabrication" : 2020,
+      "licensePlate" : "BB-02-BB",
+      "role" : "target"
+    },
+    "damages" : [ {
+      "damageId" : 2,
+      "vehicleId" : 2,
+      "contactZone" : "rear bumper",
+      "deformationType" : "scrape",
+      "direction" : "back-to-front",
+      "heightCm" : 78.82,
+      "damageDescription" : "Damage visible on vehicle B"
+    } ]
+  } ],
+  "evidence" : [ {
+    "evidence" : {
+      "evidenceId" : 2,
+      "caseId" : 1,
+      "evidenceType" : "image",
+      "evidenceDescription" : "Vehicle B damage photograph",
+      "uploadedBy" : 1,
+      "uploadedAt" : "2026-06-08T12:45:01.865464Z"
+    },
+    "image" : {
+      "imageEvidenceId" : 2,
+      "evidenceId" : 2,
+      "filePath" : "C:/Users/reiaf/Documents/IDAP---Final-Project/code/jvm/Test_Images/Imagem WhatsApp 2024-10-14 às 23.52.20_86243432.jpg",
+      "width" : 1600,
+      "height" : 1200,
+      "metadata" : "Secondary image with visible ruler"
+    }
+  }, {
+    "evidence" : {
+      "evidenceId" : 1,
+      "caseId" : 1,
+      "evidenceType" : "image",
+      "evidenceDescription" : "Vehicle A damage photograph",
+      "uploadedBy" : 1,
+      "uploadedAt" : "2026-06-08T12:44:56.756929Z"
+    },
+    "image" : {
+      "imageEvidenceId" : 1,
+      "evidenceId" : 1,
+      "filePath" : "C:/Users/reiaf/Documents/IDAP---Final-Project/code/jvm/Test_Images/Imagem WhatsApp 2024-10-14 às 23.49.15_898f151f.jpg",
+      "width" : 1600,
+      "height" : 1200,
+      "metadata" : "Primary image with visible ruler"
+    }
+  } ],
+  "analysisImages" : [ {
+    "analysisImage" : {
+      "analysisId" : 1,
+      "evidenceId" : 1,
+      "purpose" : "primary damage image"
+    },
+    "evidence" : {
+      "evidenceId" : 1,
+      "caseId" : 1,
+      "evidenceType" : "image",
+      "evidenceDescription" : "Vehicle A damage photograph",
+      "uploadedBy" : 1,
+      "uploadedAt" : "2026-06-08T12:44:56.756929Z"
+    },
+    "image" : {
+      "imageEvidenceId" : 1,
+      "evidenceId" : 1,
+      "filePath" : "C:/Users/reiaf/Documents/IDAP---Final-Project/code/jvm/Test_Images/Imagem WhatsApp 2024-10-14 às 23.49.15_898f151f.jpg",
+      "width" : 1600,
+      "height" : 1200,
+      "metadata" : "Primary image with visible ruler"
+    }
+  }, {
+    "analysisImage" : {
+      "analysisId" : 1,
+      "evidenceId" : 2,
+      "purpose" : "secondary damage image"
+    },
+    "evidence" : {
+      "evidenceId" : 2,
+      "caseId" : 1,
+      "evidenceType" : "image",
+      "evidenceDescription" : "Vehicle B damage photograph",
+      "uploadedBy" : 1,
+      "uploadedAt" : "2026-06-08T12:45:01.865464Z"
+    },
+    "image" : {
+      "imageEvidenceId" : 2,
+      "evidenceId" : 2,
+      "filePath" : "C:/Users/reiaf/Documents/IDAP---Final-Project/code/jvm/Test_Images/Imagem WhatsApp 2024-10-14 às 23.52.20_86243432.jpg",
+      "width" : 1600,
+      "height" : 1200,
+      "metadata" : "Secondary image with visible ruler"
+    }
+  } ],
+  "measurements" : [ {
+    "measurementId" : 1,
+    "analysisId" : 1,
+    "evidenceId" : 1,
+    "damageId" : 1,
+    "refObjLengthCm" : 1.0,
+    "refObjX1" : 321.43,
+    "refObjY1" : 605.84,
+    "refObjX2" : 319.97,
+    "refObjY2" : 559.06,
+    "damageAreaX1" : 370.0,
+    "damageAreaY1" : 515.0,
+    "damageAreaX2" : 1450.0,
+    "damageAreaY2" : 650.0,
+    "calculatedHeightCm" : 77.74,
+    "damageMinHeightCm" : 76.28,
+    "damageMaxHeightCm" : 79.17,
+    "scaleCmPerPixel" : 0.021512,
+    "confidence" : 0.526,
+    "calibrationMethod" : "ocr-major-labels",
+    "comparisonImagePath" : "C:\\Users\\reiaf\\Documents\\IDAP---Final-Project\\build\\idap-measurements\\measurement-7c6c0b95-fadb-40df-bc18-7c07ef939169.jpg",
+    "processedAt" : "2026-06-08T12:48:26.409139Z"
+  }, {
+    "measurementId" : 3,
+    "analysisId" : 1,
+    "evidenceId" : 2,
+    "damageId" : 2,
+    "refObjLengthCm" : 1.0,
+    "refObjX1" : 705.74,
+    "refObjY1" : 166.62,
+    "refObjX2" : 705.74,
+    "refObjY2" : 146.89,
+    "damageAreaX1" : 1000.0,
+    "damageAreaY1" : 120.0,
+    "damageAreaX2" : 1160.0,
+    "damageAreaY2" : 220.0,
+    "calculatedHeightCm" : 78.82,
+    "damageMinHeightCm" : 76.48,
+    "damageMaxHeightCm" : 81.16,
+    "scaleCmPerPixel" : 0.050351,
+    "confidence" : 0.499,
+    "calibrationMethod" : "ocr-major-labels",
+    "comparisonImagePath" : "C:\\Users\\reiaf\\Documents\\IDAP---Final-Project\\build\\idap-measurements\\measurement-e702200e-66e0-400c-b9cd-7a8b7b4cb28b.jpg",
+    "processedAt" : "2026-06-08T12:55:33.449704Z"
+  } ],
+  "damageComparisons" : [ {
+    "comparisonId" : 1,
+    "analysisId" : 1,
+    "damageSourceId" : 1,
+    "damageTargetId" : 2,
+    "compatibilityStatus" : "compatible",
+    "notes" : "Both damages have similar measured height and matching contact zones."
+  } ],
+  "conclusion" : null
+}

@@ -6,10 +6,41 @@ import cv2
 import numpy as np
 from PIL import Image
 
-import measurement_engine
+from comparison_rendering import normalize_image_scale
+from measurement_processing import process_image
+from ruler_calibration import parse_ruler_values, robust_linear_fit
 
 
 class MeasurementEngineTests(unittest.TestCase):
+    def test_parses_consecutive_ruler_values_from_one_ocr_box(self):
+        self.assertEqual(
+            [64, 65, 66, 67, 68, 69],
+            parse_ruler_values("646566676869"),
+        )
+        self.assertEqual([78, 79], parse_ruler_values("78 79"))
+        self.assertEqual([], parse_ruler_values("810203"))
+
+    def test_ocr_fit_rejects_mirrored_and_noisy_label_families(self):
+        samples = [
+            (455.5, 80.0, 0.99),
+            (511.7, 79.0, 0.99),
+            (555.2, 78.0, 0.99),
+            (598.6, 77.0, 0.99),
+            (642.1, 76.0, 0.99),
+            (686.0, 75.0, 0.99),
+            (915.0, 70.0, 0.99),
+            (40.5, 81.0, 0.99),
+            (85.5, 82.0, 0.99),
+            (130.5, 83.0, 0.99),
+            (361.5, 28.0, 0.60),
+        ]
+
+        slope, intercept, _ = robust_linear_fit(samples, 5.0, 1.0)
+        measured_value = (slope * 582.5) + intercept
+
+        self.assertLess(slope, 0)
+        self.assertAlmostEqual(77.5, measured_value, delta=0.8)
+
     def test_perspective_ruler_uses_analyst_points_for_damage_range(self):
         with tempfile.TemporaryDirectory() as directory:
             image_path = Path(directory) / "perspective-ruler.png"
@@ -27,7 +58,7 @@ class MeasurementEngineTests(unittest.TestCase):
 
             cv2.imwrite(str(image_path), image)
 
-            processed = measurement_engine.process_image(
+            processed = process_image(
                 image_path,
                 {"x1": 250, "y1": 345, "x2": 500, "y2": 435},
                 {
@@ -53,7 +84,7 @@ class MeasurementEngineTests(unittest.TestCase):
 
     def test_scale_normalization_uses_centimetres_per_pixel(self):
         image = Image.new("RGB", (200, 100), "white")
-        normalized, factor = measurement_engine.normalize_image_scale(
+        normalized, factor = normalize_image_scale(
             image,
             source_cm_per_pixel=0.5,
             target_cm_per_pixel=1.0,

@@ -29,9 +29,10 @@ analysisMeasurements:
     summary: Measure an analyst-selected damage
     operationId: createAnalysisMeasurement
     description: |
-      Detects and perspective-corrects the ruler, calibrates its physical values using
-      analyst reference points or OCR, and calculates the ruler height/range occupied
-      by the analyst-selected damage. When a comparison image is supplied, both images
+      Detects and perspective-corrects the ruler, automatically calibrates its physical
+      values using OCR and detected tick spacing, and calculates the ruler height/range
+      occupied by the analyst-selected damage rectangle. Manual ruler reference points
+      are an optional fallback for unreadable rulers. When a comparison image is supplied, both images
       are normalized to the same physical scale and vertically aligned at the primary
       damage ruler value.
     security:
@@ -45,8 +46,8 @@ analysisMeasurements:
           schema:
             $ref: "../../IDAP.yaml#/components/schemas/CreateMeasurementRequest"
           examples:
-            manualCalibration:
-              summary: Compare two analyst-selected damages using labelled ruler points
+            automaticCalibration:
+              summary: Automatically calibrate the rulers and measure two selected damage regions
               value:
                 evidenceId: 1
                 damageId: 1
@@ -57,27 +58,11 @@ analysisMeasurements:
                   y1: 515
                   x2: 1450
                   y2: 650
-                primaryCalibration:
-                  referencePoints:
-                    - x: 320
-                      y: 493
-                      valueCm: 80
-                    - x: 320
-                      y: 959
-                      valueCm: 70
                 comparisonSelection:
-                  x1: 290
-                  y1: 380
-                  x2: 1050
-                  y2: 760
-                comparisonCalibration:
-                  referencePoints:
-                    - x: 705
-                      y: 1100
-                      valueCm: 10
-                    - x: 705
-                      y: 870
-                      valueCm: 30
+                  x1: 1000
+                  y1: 120
+                  x2: 1160
+                  y2: 220
     responses:
       "201":
         description: Measurement created successfully.

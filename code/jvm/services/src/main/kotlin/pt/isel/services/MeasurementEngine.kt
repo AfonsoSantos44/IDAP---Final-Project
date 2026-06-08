@@ -32,7 +32,7 @@ class MeasurementEngine(
     private val scriptPath: String,
     @Value("\${idap.measurement.output-dir:build/idap-measurements}")
     private val outputDirectory: String,
-    @Value("\${idap.measurement.timeout-seconds:30}")
+    @Value("\${idap.measurement.timeout-seconds:90}")
     private val timeoutSeconds: Long,
     @Value("\${idap.measurement.tesseract-executable:}")
     private val tesseractExecutable: String,

@@ -152,7 +152,7 @@ The application reads the following environment variables through `application.p
 | `MEASUREMENT_PYTHON` | `idap.measurement.python-executable` | `python` | Python executable used by the image measurement engine |
 | `MEASUREMENT_SCRIPT` | `idap.measurement.script-path` | `Image_analysis/measurement_engine.py` | Python script used for ruler/damage image processing |
 | `MEASUREMENT_OUTPUT_DIR` | `idap.measurement.output-dir` | `build/idap-measurements` | Directory where annotated comparison images are generated |
-| `MEASUREMENT_TIMEOUT_SECONDS` | `idap.measurement.timeout-seconds` | `30` | Timeout for each image processing run |
+| `MEASUREMENT_TIMEOUT_SECONDS` | `idap.measurement.timeout-seconds` | `90` | Timeout for each image processing run, including automatic OCR |
 | `TESSERACT_CMD` | `idap.measurement.tesseract-executable` | empty | Optional path to the Tesseract executable used for automatic ruler-label OCR |
 | `WEATHERAPI_KEY` | `idap.weather.api-key` | empty | WeatherAPI key used to fetch current weather for a case |
 | `WEATHERAPI_BASE_URL` | `idap.weather.base-url` | `https://api.weatherapi.com/v1` | WeatherAPI base URL |
@@ -323,23 +323,11 @@ with a body such as:
     "x2": 1450,
     "y2": 650
   },
-  "primaryCalibration": {
-    "referencePoints": [
-      { "x": 320, "y": 493, "valueCm": 80 },
-      { "x": 320, "y": 959, "valueCm": 70 }
-    ]
-  },
   "comparisonSelection": {
-    "x1": 290,
-    "y1": 380,
-    "x2": 1050,
-    "y2": 760
-  },
-  "comparisonCalibration": {
-    "referencePoints": [
-      { "x": 705, "y": 1100, "valueCm": 10 },
-      { "x": 705, "y": 870, "valueCm": 30 }
-    ]
+    "x1": 1000,
+    "y1": 120,
+    "x2": 1160,
+    "y2": 220
   }
 }
 ```
@@ -349,13 +337,27 @@ All coordinates use pixels from the original uploaded image. The analyst must pr
 when `comparisonEvidenceId` is present. A calibration may also include `rulerRegion` to
 restrict where the engine searches for the ruler.
 
-The engine perspective-corrects the detected ruler and maps pixels to centimetres. It
-first uses two or more analyst-provided reference points. If they are omitted, it tries
-OCR on the ruler's major labels. OCR requires Tesseract; configure its executable with
-`TESSERACT_CMD`. The backend stores the selected region, its centre height, minimum and
-maximum ruler values, physical pixel scale, calibration method, confidence, and the
-generated annotated image. Comparison images are resized to the same physical
-centimetres-per-pixel scale and vertically aligned at the same ruler value.
+The engine perspective-corrects the detected ruler and maps pixels to centimetres.
+Automatic OCR reads the ruler labels and validates the resulting scale against the
+detected tick spacing. The analyst normally provides only the damage rectangle for
+each image. Manual ruler reference points remain available as a fallback for damaged,
+covered, blurred, or otherwise unreadable rulers. The backend stores the selected
+region, its centre height, minimum and maximum ruler values, physical pixel scale,
+calibration method, confidence, and the generated annotated image. Comparison images
+are resized to the same physical centimetres-per-pixel scale and vertically aligned
+at the same ruler value.
+
+If automatic OCR cannot read a particular ruler, the same request may optionally
+include two manual reference points:
+
+```json
+"primaryCalibration": {
+  "referencePoints": [
+    { "x": 320, "y": 493, "valueCm": 80 },
+    { "x": 320, "y": 959, "valueCm": 70 }
+  ]
+}
+```
 
 Install the Python dependencies with:
 
@@ -363,11 +365,23 @@ Install the Python dependencies with:
 python -m pip install -r Image_analysis/requirements.txt
 ```
 
-Existing databases must apply the measurement migration before starting the updated
-backend:
+The image-analysis module is organized by responsibility:
+
+- `measurement_engine.py` reads the JVM request and orchestrates processing
+- `measurement_processing.py` runs the per-image measurement workflow
+- `ruler_detection.py` detects and perspective-corrects rulers and ticks
+- `ruler_calibration.py` performs OCR and pixel-to-centimetre calibration
+- `measurement_geometry.py` calculates damage heights and ruler positions
+- `comparison_rendering.py` annotates, scales, and aligns comparison images
+- `image_inputs.py` validates and normalizes image coordinates
+
+The project currently manages its development schema through `create-schema.sql`
+instead of incremental migrations. If the database was created before these
+measurement fields were added, recreate the schema:
 
 ```powershell
-psql -U postgres -d idap -f code/jvm/repository-jdbi/src/sql/migrations/V2__measurement_calibration.sql
+psql -U postgres -d idap -f code/jvm/repository-jdbi/src/sql/drop-tables.sql
+psql -U postgres -d idap -f code/jvm/repository-jdbi/src/sql/create-schema.sql
 ```
 
 ## Error Responses
@@ -406,7 +420,7 @@ Current limitations:
 - database schema management is manual through SQL scripts; no migration tool is configured
 - administrator promotion is manual through `set-admin.sql`
 - WeatherAPI and Google Maps API keys are required to refresh weather and scene data
-- automatic OCR calibration depends on a locally installed Tesseract executable; analyst reference points remain available as the reliable fallback
+- automatic OCR calibration requires the RapidOCR models to be available; they are downloaded by RapidOCR on first use, while analyst reference points remain available for unreadable rulers
 - there is no pagination or filtering for user/case listing endpoints
 - there is no refresh-token flow or session management endpoint beyond logout
 - the OpenAPI file is maintained manually and is not generated from code
