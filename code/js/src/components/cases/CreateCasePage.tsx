@@ -10,7 +10,7 @@ import { User } from '../../types/userTypes';
 
 function CreateCasePage() {
     const navigate = useNavigate();
-    const { logout } = useAuth();
+    const { logout, userId: currentUserId, isLoading: authLoading } = useAuth();
 
     const handleLogout = async () => {
         await logout();
@@ -25,6 +25,8 @@ function CreateCasePage() {
 
     const [users, setUsers] = useState<User[]>([]);
     const [loadingUsers, setLoadingUsers] = useState(false);
+    const [isAdmin, setIsAdmin] = useState<boolean>(false);
+    const [assignedUsername, setAssignedUsername] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
@@ -32,18 +34,43 @@ function CreateCasePage() {
         const loadUsers = async () => {
             setLoadingUsers(true);
             try {
+                // try to list all users - only allowed to admins
                 const data = await userService.getAllUsers();
                 setUsers(data);
+                setIsAdmin(true);
+                // if current user present, preselect them in the UI
+                                if (currentUserId) {
+                                    const me = data.find((u: any) => String((u.id ?? u.userId)) === String(currentUserId));
+                                    if (me) {
+                                        const meId = (me as any).id ?? (me as any).userId;
+                                        setAssignedUsername(me.username || me.email || String(meId));
+                                        setInput((prev) => ({ ...prev, user: Number(meId) }));
+                                    }
+                                }
             } catch (err) {
-                console.error('Failed to load users', err);
-                setError('Falha ao obter utilizadores.');
+                // non-admins will receive 401/403; treat as non-admin
+                console.debug('User is not admin or failed to list users', err);
+                setUsers([]);
+                setIsAdmin(false);
+                // fetch current user info to show username
+                try {
+                    const me = await userService.getMe();
+                    const meId = (me as any).id ?? (me as any).userId;
+                    setAssignedUsername(me.name || me.email || String(meId));
+                } catch (_) {
+                    // ignore
+                }
+                // if not admin, default the case reporter to current user id
+                if (currentUserId) {
+                    setInput((prev) => ({ ...prev, user: Number(currentUserId) }));
+                }
             } finally {
                 setLoadingUsers(false);
             }
         };
 
-        loadUsers();
-    }, []);
+        if (!authLoading) loadUsers();
+    }, [authLoading, currentUserId]);
 
     const handleInputChange = (field: keyof CreateCaseInput, value: any) => {
         setInput((prev) => ({
@@ -55,6 +82,7 @@ function CreateCasePage() {
     const handleSubmit = async () => {
         if (submitting) return; // prevent double submit
         setError(null);
+        console.debug('Submitting create case, input.user=', input.user, 'assignedUsername=', assignedUsername);
         if (!input.user || input.user === 0) {
             setError('Escolha um averiguador válido.');
             return;
@@ -88,16 +116,38 @@ function CreateCasePage() {
                     {loadingUsers ? (
                         <div>Carregando utilizadores...</div>
                     ) : (
-                        <select
-                            id="user"
-                            value={String(input.user)}
-                            onChange={(e) => handleInputChange('user', e.target.value)}
-                        >
-                            <option value={"0"}> Seleciona um averiguador</option>
-                            {users.map((u) => (
-                                <option key={u.id} value={String(u.id)}>{u.username || u.email}</option>
-                            ))}
-                        </select>
+                        isAdmin ? (
+                            <select
+                                id="user"
+                                value={assignedUsername}
+                                onChange={(e) => {
+                                    const selected = e.target.value;
+                                    setAssignedUsername(selected);
+                                    const found = users.find(u => {
+                                        const uid = (u as any).id ?? (u as any).userId;
+                                        return (u.username || u.email || String(uid)) === selected;
+                                    });
+                                    console.debug('CreateCase select change, selected=', selected, 'found=', found);
+                                    if (found) {
+                                        const fid = (found as any).id ?? (found as any).userId;
+                                        setInput(prev => ({ ...prev, user: Number(fid) }));
+                                    } else setInput(prev => ({ ...prev, user: 0 }));
+                                }}
+                            >
+                                <option value={""}> Seleciona um averiguador</option>
+                                {users.map((u) => {
+                                    const uid = (u as any).id ?? (u as any).userId;
+                                    return (
+                                        <option key={uid} value={u.username || u.email || String(uid)}>{u.username || u.email}</option>
+                                    );
+                                })}
+                            </select>
+                        ) : (
+                            <div>
+                                {currentUserId ? `Averiguador atual: #${currentUserId}` : 'Averiguador: (não disponível)'}
+                                <input type="hidden" name="user" value={String(input.user)} />
+                            </div>
+                        )
                     )}
                 </div>
 

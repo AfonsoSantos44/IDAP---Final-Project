@@ -11,6 +11,12 @@ import CaseInfoPage from "./components/cases/CaseInfoPage";
 import AboutPage from "./components/AboutPage";
 import HomePage from "./components/HomePage";
 import ProfilePage from "./components/auth/ProfilePage";
+import EvidenceMenu from "./components/evidences/EvidenceMenu";
+import EvidenceList from "./components/evidences/EvidenceList";
+import EvidenceCreate from "./components/evidences/EvidenceCreate";
+import ReportCreate from "./components/evidences/AnalysisCreate";
+import EvidenceUpdate from "./components/evidences/EvidenceUpdate";
+import AnalysisCreate from "./components/evidences/AnalysisCreate";
 
 const router = createBrowserRouter([
     {
@@ -53,6 +59,30 @@ const router = createBrowserRouter([
     {
         path: "/about",
         element:<AboutPage/>,
+    },
+    {
+        path: "/cases/:caseId/evidences",
+        element: <EvidenceList/>,
+    },
+    {
+        path: "/cases/:caseId/evidences/create",
+        element: <EvidenceCreate/>,
+    },
+    {
+        path: "/cases/:caseId/evidences/:evidenceId/edit",
+        element: <EvidenceUpdate/>,
+    },
+    {
+        path: "/cases/:caseId/menu",
+        element: <EvidenceMenu/>,
+    },
+    {
+        path: "/cases/:caseId/reports/create",
+        element: <ReportCreate/>,
+    },
+    {
+        path: "/cases/:caseId/analysis/:analysisId",
+        element: <AnalysisCreate/>,
     },
     {
         path: "*",

@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&display=swap');
+
+.homepage-wrapper { display:flex; align-items:center; justify-content:center; padding:2rem 0; min-height:100vh; box-sizing:border-box; background: radial-gradient(circle at top left, rgba(87,77,255,0.14), transparent 35%), linear-gradient(180deg,#f7f8ff 0%,#eef0fc 100%); position: relative; }
+.homepage-overlay { width: min(1280px, calc(100% - 4rem)); height: calc(100vh - 4rem); box-sizing: border-box; display:flex; align-items:center; justify-content:center; background:#fff; border-radius:36px; box-shadow:0 28px 60px rgba(51,51,93,0.12); padding:4rem; position: relative; }
+.homepage-content { max-width:860px; width:100%; margin:0 auto; text-align:center; padding-left:24px; padding-right:24px; box-sizing:border-box; }
+.homepage-title { margin:0; font-family:'Playfair Display', Georgia, serif; font-size: clamp(3rem, 7vw, 5rem); line-height:1; color:#232b5d; }
+.homepage-subtitle { margin:1rem auto 0; max-width:720px; color:#5e6689; font-size:1rem; font-weight:500; line-height:1.6; }
+
+.back-container { position: absolute; left: 16px; top: 16px; z-index: 1200; }
+.back-outside { position: absolute; left: 16px; top: 16px; z-index: 1200; }
+
+.homepage-btn { width:280px; max-width: calc(100% - 4rem); padding:1rem 1.8rem; border-radius:16px; font-size:1rem; font-weight:700; border:none; cursor:pointer; box-shadow:0 18px 50px rgba(86,81,255,0.18); }
+.homepage-btn:hover { transform: translateY(-2px); }
+.login-btn { background: linear-gradient(135deg, #5c58ff 0%, #4e4bfa 100%); color: #fff; }
+
+.back-btn { padding: 0.8rem 1.1rem; border-radius: 12px; border: 1px solid rgba(78,75,250,0.12); background: #fff; color: #4e4bfa; font-weight: 700; cursor: pointer; font-size: 0.95rem; box-shadow: 0 12px 30px rgba(86,81,255,0.12); }
+
+@media (max-width:640px){ .homepage-overlay{padding:2rem;} .homepage-btn{width:100%;} }
