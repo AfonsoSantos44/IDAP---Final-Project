@@ -49,6 +49,8 @@ def main():
 
     result = primary["result"]
     result["comparisonImagePath"] = comparison_image_path
+    if comparison is not None:
+        result["comparisonResult"] = comparison["result"]
     print(json.dumps(result, ensure_ascii=False), flush=True)
 
 

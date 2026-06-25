@@ -1,4 +1,4 @@
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 from image_inputs import RESAMPLE_FILTER
 from measurement_geometry import inverse_ruler_point
@@ -6,26 +6,56 @@ from measurement_geometry import inverse_ruler_point
 
 def annotate_image(image, ruler, selection, damage, confidence, method):
     draw = ImageDraw.Draw(image)
+    stroke = max(3, round(image.width / 450))
+    marker_radius = max(5, round(image.width / 300))
+    font = load_scaled_font(image.width)
+
     polygon = [tuple(map(float, point)) for point in ruler["polygon"]]
-    draw.line(polygon + [polygon[0]], fill=(0, 180, 0), width=4)
+    draw.line(polygon + [polygon[0]], fill=(0, 180, 0), width=stroke)
     draw.rectangle(
         (selection["x1"], selection["y1"], selection["x2"], selection["y2"]),
         outline=(255, 0, 0),
-        width=4,
+        width=stroke,
     )
     anchor_x, anchor_y = damage["anchor_point"]
-    draw.line((0, anchor_y, image.width, anchor_y), fill=(0, 110, 255), width=3)
-    draw.ellipse((anchor_x - 6, anchor_y - 6, anchor_x + 6, anchor_y + 6), fill=(0, 180, 0))
-    draw.text(
-        (10, 10),
+    draw.line((0, anchor_y, image.width, anchor_y), fill=(0, 110, 255), width=max(2, stroke - 1))
+    draw.ellipse(
         (
-            f"height={damage['center_height_cm']:.2f}cm "
-            f"range={damage['min_height_cm']:.2f}-{damage['max_height_cm']:.2f}cm "
-            f"confidence={confidence:.2f} calibration={method}"
+            anchor_x - marker_radius,
+            anchor_y - marker_radius,
+            anchor_x + marker_radius,
+            anchor_y + marker_radius,
         ),
-        fill=(255, 0, 0),
+        fill=(0, 180, 0),
     )
+
+    label = (
+        f"height={damage['center_height_cm']:.2f}cm "
+        f"range={damage['min_height_cm']:.2f}-{damage['max_height_cm']:.2f}cm "
+        f"confidence={confidence:.2f} calibration={method}"
+    )
+    origin = (max(10, round(image.width * 0.012)), max(10, round(image.width * 0.012)))
+    draw_label_with_background(draw, origin, label, font)
     return image
+
+
+def load_scaled_font(image_width):
+    size = max(16, round(image_width / 70))
+    try:
+        return ImageFont.load_default(size=size)
+    except TypeError:
+        # Older Pillow versions don't support a `size` argument here.
+        return ImageFont.load_default()
+
+
+def draw_label_with_background(draw, origin, text, font):
+    bbox = draw.textbbox(origin, text, font=font)
+    padding = 6
+    draw.rectangle(
+        (bbox[0] - padding, bbox[1] - padding, bbox[2] + padding, bbox[3] + padding),
+        fill=(255, 255, 255),
+    )
+    draw.text(origin, text, fill=(200, 0, 0), font=font)
 
 
 def save_aligned_comparison(output_dir, base_name, primary, comparison):
@@ -56,7 +86,9 @@ def save_aligned_comparison(output_dir, base_name, primary, comparison):
         comparison["calibration"],
         alignment_value,
     )
-    comparison_anchor = comparison_anchor_point[1] * comparison_factor
+    comparison_anchor = (
+            comparison_anchor_point[1] * comparison["scale_to_original"] * comparison_factor
+    )
 
     top_margin = 32
     aligned_y = max(primary_anchor, comparison_anchor) + top_margin
@@ -65,7 +97,7 @@ def save_aligned_comparison(output_dir, base_name, primary, comparison):
     canvas_height = max(
         primary_offset + primary_image.height,
         comparison_offset + comparison_image.height,
-    )
+        )
     canvas = Image.new("RGB", (primary_image.width + comparison_image.width, canvas_height), "white")
     canvas.paste(primary_image, (0, primary_offset))
     canvas.paste(comparison_image, (primary_image.width, comparison_offset))

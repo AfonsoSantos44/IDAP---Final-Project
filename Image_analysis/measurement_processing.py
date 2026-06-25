@@ -45,16 +45,26 @@ def process_image(path, selection_input, calibration_input, tick_distance_cm):
         damage["center_height_cm"],
         tick_distance_cm,
     )
+
+    # Render annotations on the full-resolution original photo, not the
+    # downscaled analysis copy. Drawing on `working` and then resizing again
+    # later (during comparison alignment) compounded into blurry overlays and
+    # a delivered image well below the original photo's resolution.
+    scale_to_original = 1.0 / working_factor
     annotated = annotate_image(
-        working.copy(),
-        ruler,
-        selection,
-        damage,
+        original.copy(),
+        {"polygon": scale_points(ruler["polygon"], scale_to_original)},
+        scale_rect(selection, scale_to_original),
+        scale_damage(damage, scale_to_original),
         confidence,
         calibration["method"],
     )
 
-    scale_to_original = 1.0 / working_factor
+    # cm-per-pixel must match the space the coordinates below are reported
+    # in (original-image pixels), not the downscaled working-image space
+    # calibration was actually fit in.
+    cm_per_pixel_original = calibration["cm_per_pixel"] * working_factor
+
     result = {
         "refObjLengthCm": tick_distance_cm,
         "refObjX1": to_original(ref_points[0][0], scale_to_original),
@@ -68,7 +78,7 @@ def process_image(path, selection_input, calibration_input, tick_distance_cm):
         "calculatedHeightCm": round(damage["center_height_cm"], 2),
         "damageMinHeightCm": round(damage["min_height_cm"], 2),
         "damageMaxHeightCm": round(damage["max_height_cm"], 2),
-        "scaleCmPerPixel": round(calibration["cm_per_pixel"], 6),
+        "scaleCmPerPixel": round(cm_per_pixel_original, 6),
         "confidence": confidence,
         "calibrationMethod": calibration["method"],
     }
@@ -76,9 +86,27 @@ def process_image(path, selection_input, calibration_input, tick_distance_cm):
     return {
         "result": result,
         "annotated_image": annotated,
-        "scale_cm_per_pixel": calibration["cm_per_pixel"],
-        "anchor_y": damage["anchor_point"][1],
+        "scale_cm_per_pixel": cm_per_pixel_original,
+        "scale_to_original": scale_to_original,
+        "anchor_y": to_original(damage["anchor_point"][1], scale_to_original),
         "anchor_value_cm": damage["center_height_cm"],
         "ruler": ruler,
         "calibration": calibration,
     }
+
+
+def scale_points(points, scale):
+    return [(to_original(x, scale), to_original(y, scale)) for x, y in points]
+
+
+def scale_rect(rect, scale):
+    return {key: to_original(value, scale) for key, value in rect.items()}
+
+
+def scale_damage(damage, scale):
+    scaled = dict(damage)
+    scaled["anchor_point"] = (
+        to_original(damage["anchor_point"][0], scale),
+        to_original(damage["anchor_point"][1], scale),
+    )
+    return scaled
