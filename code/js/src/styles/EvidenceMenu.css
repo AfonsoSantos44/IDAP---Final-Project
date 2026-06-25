@@ -1,14 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&display=swap');
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  background: transparent;
-  overflow-x: hidden;
-}
-
 .homepage-wrapper {
   width: 100%;
   min-height: 100vh;
@@ -19,6 +10,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 2rem 0;
+  position: relative;
 }
 
 .logout-wrapper {
@@ -40,8 +32,6 @@ body {
   box-shadow: 0 12px 30px rgba(255,77,79,0.18);
 }
 
-.logout-btn:hover { transform: translateY(-2px); filter: brightness(0.95); }
-
 .homepage-overlay {
   width: min(1280px, calc(100% - 4rem));
   height: calc(100vh - 4rem);
@@ -49,25 +39,29 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   background: #ffffff;
   border-radius: 36px;
   box-shadow: 0 28px 60px rgba(51, 51, 93, 0.12);
   padding: 4rem;
 }
 
-.homepage-content {
+ .homepage-content {
   max-width: 860px;
   width: 100%;
   margin: 0 auto;
   text-align: center;
+  padding-left: 24px;
+  padding-right: 24px;
+  box-sizing: border-box;
 }
 
 .homepage-title {
   margin: 0;
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: clamp(5rem, 9vw, 7.5rem);
+  font-size: clamp(3.5rem, 8vw, 6rem);
   line-height: 1;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.04em;
   color: #232b5d;
 }
 
@@ -104,11 +98,34 @@ body {
 .homepage-btn:hover { transform: translateY(-2px); }
 
 .login-btn { background: linear-gradient(135deg, #5c58ff 0%, #4e4bfa 100%); color: #ffffff; }
-.register-btn { background: #ffffff; color: #5c58ff; border: 1px solid rgba(92, 88, 255, 0.35); box-shadow: 0 16px 40px rgba(92, 88, 255, 0.12); }
 
-/* Back / secondary button */
-/* Page-specific helpers moved to per-page CSS files */
 
+.back-container {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  z-index: 1200;
+}
+.back-outside {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  z-index: 1200;
+}
+
+.back-btn {
+  padding: 0.8rem 1.1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(78,75,250,0.12);
+  background: #fff;
+  color: #4e4bfa;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.95rem;
+  box-shadow: 0 12px 30px rgba(86,81,255,0.12);
+}
+
+.page-btn { padding: 0.6rem 1rem; border-radius: 10px; border: none; cursor: pointer; }
 
 @media (max-width: 640px) {
   .homepage-overlay { padding: 2rem; }

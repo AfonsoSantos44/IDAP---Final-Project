@@ -1,0 +1,6 @@
+.back-container { position: absolute; left: 16px; top: 16px; z-index: 1200; }
+.back-outside { position: absolute; left: 16px; top: 16px; z-index:1200; }
+
+.back-btn { padding: 0.8rem 1.1rem; border-radius: 12px; border: 1px solid rgba(78,75,250,0.12); background: #fff; color: #4e4bfa; font-weight: 700; cursor: pointer; font-size: 0.95rem; box-shadow: 0 12px 30px rgba(86,81,255,0.12); }
+.case-list-page { position: relative; }
+.back-btn { padding:0.6rem 1rem; border-radius:10px; border:1px solid rgba(78,75,250,0.12); background:#fff; color:#4e4bfa; font-weight:700; cursor:pointer; box-shadow:0 8px 20px rgba(78,75,250,0.06); }

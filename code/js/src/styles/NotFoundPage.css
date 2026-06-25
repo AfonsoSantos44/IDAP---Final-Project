@@ -1,32 +1,125 @@
-/* Styles for NotFoundPage and logout button */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&display=swap');
+
 .not-found-wrapper {
-  min-height: 60vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    box-sizing: border-box;
+
+    background:
+        radial-gradient(
+            circle at top left,
+            rgba(87,77,255,0.14),
+            transparent 35%
+        ),
+        linear-gradient(
+            180deg,
+            #f7f8ff 0%,
+            #eef0fc 100%
+        );
 }
 
-.not-found-title { font-size: 2.25rem; margin: 0 0 0.75rem; }
-.not-found-message { color: #5e6689; }
+.not-found-overlay {
+    width: min(1280px, calc(100% - 4rem));
+    height: calc(100vh - 4rem);
 
-.logout-wrapper {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #fff;
+    border-radius: 36px;
+
+    box-shadow:
+        0 28px 60px rgba(51,51,93,0.12);
+
+    padding: 4rem;
+    box-sizing: border-box;
 }
 
-.logout-btn {
-  padding: 0.6rem 0.9rem;
-  border-radius: 12px;
-  border: none;
-  background: linear-gradient(135deg, #5c58ff 0%, #4e4bfa 100%);
-  color: #fff;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 12px 30px rgba(86,81,255,0.18);
+.not-found-content {
+    text-align: center;
+    max-width: 700px;
 }
 
-.logout-btn:hover { transform: translateY(-2px); }
+.not-found-code {
+    margin: 0;
+
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(6rem, 15vw, 10rem);
+    line-height: 1;
+
+    color: #4e4bfa;
+}
+
+.not-found-title {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+
+    color: #232b5d;
+
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.not-found-message {
+    margin: 0 auto 2rem;
+
+    max-width: 500px;
+
+    color: #5e6689;
+
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+.not-found-btn {
+    padding: 1rem 2rem;
+
+    border: none;
+    border-radius: 16px;
+
+    cursor: pointer;
+
+    background: linear-gradient(
+        135deg,
+        #5c58ff 0%,
+        #4e4bfa 100%
+    );
+
+    color: #fff;
+
+    font-size: 1rem;
+    font-weight: 700;
+
+    box-shadow:
+        0 18px 50px rgba(86,81,255,0.18);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.not-found-btn:hover {
+    transform: translateY(-2px);
+}
+
+@media (max-width: 640px) {
+    .not-found-overlay {
+        padding: 2rem;
+    }
+
+    .not-found-title {
+        font-size: 1.5rem;
+    }
+
+    .not-found-message {
+        font-size: 0.95rem;
+    }
+
+    .not-found-btn {
+        width: 100%;
+    }
+}

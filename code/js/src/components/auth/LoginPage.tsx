@@ -36,11 +36,11 @@ return (
         
         <form className="auth-form">
           <div className="auth-form-group">
-            <label>Nome de Utilizador</label>
+            <label>Email</label>
             <input
               type="text"
               name="username"
-              placeholder="Introduz o teu nome de utilizador"
+              placeholder="Insere o teu email"
               required
               autoComplete="username"
               onChange={(e) => setState({ ...state, username: e.target.value })}
@@ -52,7 +52,7 @@ return (
             <input
               type="password"
               name="password"
-              placeholder="Introduz a tua palavra-passe"
+              placeholder="Insere a tua palavra-passe"
               required
               autoComplete="current-password"
               onChange={(e) => setState({ ...state, password: e.target.value })}

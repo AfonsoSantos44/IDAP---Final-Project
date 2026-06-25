@@ -141,10 +141,10 @@ function CaseInfoPage() {
 					className="page-btn"
 					type="button"
 					onClick={() => {
-						window.location.href = `/analysis/${caseData?.id ?? id}`;
+						navigate(`/cases/${caseData?.id ?? id}/menu`);
 					}}
 				>
-					Analisar
+					Ver Mais
 				</button>
 			</div>
 		</div>

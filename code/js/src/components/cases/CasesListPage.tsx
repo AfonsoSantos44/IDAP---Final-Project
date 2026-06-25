@@ -19,7 +19,7 @@ export interface Case {
 
 function CasesListPage(){
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, userId: currentUserId, isLoading: authLoading } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -28,14 +28,28 @@ function CasesListPage(){
   const [error, setError] = useState<string | null>(null);
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [users, setUsers] = useState<{ id: number; username?: string; email?: string }[]>([]);
+const [selectedUserFilter, setSelectedUserFilter] = useState<string>('all');
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
+        // detect admin by attempting to list all users (endpoint requires admin)
+        let admin = false;
+        try {
+          const allUsers = await userService.getAllUsers();
+          admin = true;
+          setUsers(allUsers.map((u: any) => ({ id: u.id, username: u.username, email: u.email })));
+        } catch (e: any) {
+          // listing users is forbidden for non-admins — treat as non-admin
+          admin = false;
+          setUsers([]);
+        }
+        setIsAdmin(admin);
         const data = await caseService.getAllCases();
-        console.debug('Raw cases data from API:', data);
-        const mapped = data.map((c: any) => {
+        const mapped = data.sort((a,b)=> a.id - b.id).map((c: any) => {
           const idStr = String(c.id ?? c.caseId ?? "");
           return {
             id: idStr,
@@ -50,18 +64,13 @@ function CasesListPage(){
 
         // Remove possible duplicates by id (keep first occurrence)
         const uniqueById = Array.from(new Map(mapped.map((m) => [m.id, m])).values());
-
-        console.debug('Mapped cases (after dedupe):', uniqueById);
-
         // Map reporter id -> username by fetching each user individually.
         // Note: GET /api/users requires only authentication, while listing all users may need ADMIN role.
         try {
           const reporterIds = Array.from(new Set(uniqueById.map(c => c.reporter).filter(Boolean)));
-          console.debug('Reporter IDs to fetch:', reporterIds);
           const userEntries = await Promise.allSettled(
             reporterIds.map(id => userService.getUserById(Number(id)))
           );
-            console.debug('Reporter IDs to fetch:', reporterIds);
             const userMap = new Map<string, string>();
             userEntries.forEach((res, idx) => {
             const id = String(reporterIds[idx]);
@@ -74,19 +83,32 @@ function CasesListPage(){
                 console.debug('Failed to load user', reporterIds[idx], res);
             }
           });
-          const withReporterName = uniqueById.map(c => ({ ...c, reporterName: c.reporter ? userMap.get(c.reporter) : undefined }));
+          let withReporterName = uniqueById.map(c => ({ ...c, reporterName: c.reporter ? userMap.get(c.reporter) : undefined }));
+
+          // If not admin, hide cases from other users (show only current user's cases)
+          if (!admin && currentUserId) {
+            withReporterName = withReporterName.filter(c => String(c.reporter) === String(currentUserId));
+          }
+
           setCases(withReporterName);
         } catch (e) {
-          setCases(uniqueById);
+          let base = uniqueById;
+          if (!admin && currentUserId) {
+            base = base.filter(c => String(c.reporter) === String(currentUserId));
+          }
+          setCases(base);
         }
+
+        // users already loaded above when admin detection succeeded
       } catch (err: any) {
         setError(err?.message || 'Erro ao carregar casos');
       } finally {
         setLoading(false);
       }
     };
-    load();
-  }, []);
+    // wait until auth finished checking current user
+    if (!authLoading) load();
+  }, [authLoading, currentUserId]);
 
   const getStatusClass = (status?: string) => {
     if (!status) return 'Pendente';
@@ -124,25 +146,66 @@ function CasesListPage(){
       {loading && <p>Carregando casos...</p>}
       {!loading && !error && cases.length === 0 && <p>Nenhum caso encontrado.</p>}
 
+      <div className="case-list-grid-controls" style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12 }}>
+        {isAdmin && (
+          <div>
+            <label style={{ marginRight: 8 }}>Filtrar por utilizador:</label>
+<select
+  value={selectedUserFilter}
+  onChange={(e) => {
+    console.log('selected:', e.target.value);
+    setSelectedUserFilter(e.target.value);
+  }}
+>
+  <option value="all">Todos</option>
+
+  {users.map((u, index) => {
+    const uid = String(u.id ?? index+1);
+
+    return (
+      <option key={uid} value={uid}>
+        {u.username || u.email || uid}
+      </option>
+    );
+  })}
+</select>
+
+        </div>
+        )}
+      </div>
+
       <div className="case-list-grid">
-        {cases.map((c) => (
-          <div key={c.id} className="case-card">
-            <div className="case-card-header" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <h2 className="case-title">{c.title}</h2>
-              <span className={`case-status ${getStatusClass(c.status)}`}>{getStatusLabel(c.status)}</span>
-            </div>
-            <p className="case-meta">{c.description || '—'}</p>
-            <div className="case-meta">Averiguador: {(c as any).reporterName || c.reporter || '—'}</div>
-            <div className="case-meta">Criado: {c.createdAt ? new Date(c.createdAt).toLocaleString() : '—'}</div>
-            <div className="case-meta">Atualizado: {c.updatedAt ? new Date(c.updatedAt).toLocaleString() : '—'}</div>
-            <div className="case-footer">
-              <button className="btn-link" onClick={() => navigate(`/cases/${c.id}`)}>Aceder</button>
-            </div>
-          </div>
-        ))}
+        
+{cases.map((c) => {
+  if (selectedUserFilter !== 'all' && c.reporter !== selectedUserFilter) return null;
+
+  return (
+    <div key={c.id} className="case-card">
+      <div className="case-card-header" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <h2 className="case-title">{c.title}</h2>
+        <span className={`case-status ${getStatusClass(c.status)}`}
+        >
+          {getStatusLabel(c.status)}
+          
+        </span>
+      </div>
+
+      <p className="case-meta">{c.description || '—'}</p>
+      <div className="case-meta">Averiguador: {(c as any).reporterName || c.reporter || '—'}</div>
+      <div className="case-meta">Criado: {c.createdAt ? new Date(c.createdAt).toLocaleString() : '—'}</div>
+      <div className="case-meta">Atualizado: {c.updatedAt ? new Date(c.updatedAt).toLocaleString() : '—'}</div>
+
+      <div className="case-footer">
+        <button className="btn-link" onClick={() => navigate(`/cases/${c.id}`)}>
+          Aceder
+        </button>
+      </div>
+    </div>
+  );
+})}
       </div>
         <div className="case-list-actions">
-          <button className="page-btn" onClick={() => navigate('/cases/create')}>Criar Novo Caso</button>
+          {isAdmin && <button className="page-btn" onClick={() => navigate('/cases/create')}>Criar Novo Caso</button>}
         </div>
     </div>
     
