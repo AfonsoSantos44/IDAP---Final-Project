@@ -1,4 +1,4 @@
-import { fetchApi } from './api';
+import { fetchApi, uploadApi, API_BASE_URL } from './api';
 
 export interface EvidenceOutput {
 	evidenceId?: number;
@@ -25,13 +25,6 @@ export interface ImageEvidenceOutput {
 	filePath?: string;
 	width?: number;
 	height?: number;
-	metadata?: string | null;
-}
-
-export interface UpsertImageEvidenceRequest {
-	filePath: string;
-	width: number;
-	height: number;
 	metadata?: string | null;
 }
 
@@ -77,11 +70,19 @@ export const evidenceService = {
 		});
 	},
 
-	async upsertEvidenceImage(evidenceId: number, input: UpsertImageEvidenceRequest): Promise<ImageEvidenceOutput> {
-		return fetchApi<ImageEvidenceOutput>(`/evidence/${evidenceId}/image`, {
-			method: 'PUT',
-			body: JSON.stringify(input),
-		});
+	// Uploads the actual image bytes as multipart/form-data; stored in object storage (MinIO).
+	async uploadEvidenceImage(evidenceId: number, file: File, metadata?: string): Promise<ImageEvidenceOutput> {
+		const form = new FormData();
+		form.append('file', file);
+		if (metadata) form.append('metadata', metadata);
+		return uploadApi<ImageEvidenceOutput>(`/evidence/${evidenceId}/image`, form, 'PUT');
+	},
+
+	// Direct URL to the raw image bytes, usable as an <img src>. The cache-busting `v`
+	// param forces the browser to refetch after a new upload replaces the image.
+	evidenceImageContentUrl(evidenceId: number, version?: number): string {
+		const suffix = version !== undefined ? `?v=${version}` : '';
+		return `${API_BASE_URL}/evidence/${evidenceId}/image/content${suffix}`;
 	},
 
 	async deleteEvidenceImage(evidenceId: number): Promise<void> {

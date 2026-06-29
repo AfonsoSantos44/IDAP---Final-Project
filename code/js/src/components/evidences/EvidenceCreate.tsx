@@ -5,29 +5,6 @@ import { evidenceService } from '../../services/evidenceService';
 
 const SUGGESTED_TYPES = ['Foto', 'Documento', 'Medida', 'Outro'];
 
-function readImageSize(file: File): Promise<{ width: number; height: number }> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const image = new Image();
-
-    image.onload = () => {
-      const size = {
-        width: image.naturalWidth,
-        height: image.naturalHeight,
-      };
-      URL.revokeObjectURL(url);
-      resolve(size);
-    };
-
-    image.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('Nao foi possivel ler as dimensoes da imagem.'));
-    };
-
-    image.src = url;
-  });
-}
-
 export default function EvidenceCreate() {
   const navigate = useNavigate();
   const { caseId } = useParams();
@@ -83,22 +60,13 @@ export default function EvidenceCreate() {
     try {
       if (!caseId) throw new Error('Case ID ausente');
 
-      const imageSize = isPhotoEvidence && imageFile
-        ? await readImageSize(imageFile)
-        : null;
-
       const createdEvidence = await evidenceService.createCaseEvidence(Number(caseId), {
         evidenceType,
         evidenceDescription: description.trim(),
       });
 
-      if (isPhotoEvidence && imageFile && imageSize && createdEvidence.evidenceId !== undefined) {
-        await evidenceService.upsertEvidenceImage(createdEvidence.evidenceId, {
-          filePath: `/images/${imageFile.name}`,
-          width: imageSize.width,
-          height: imageSize.height,
-          metadata: null,
-        });
+      if (isPhotoEvidence && imageFile && createdEvidence.evidenceId !== undefined) {
+        await evidenceService.uploadEvidenceImage(createdEvidence.evidenceId, imageFile);
       }
 
       navigate(`/cases/${caseId}/evidences`);

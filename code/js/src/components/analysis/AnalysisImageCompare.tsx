@@ -12,12 +12,6 @@ type SelectableImage = {
   image: ImageEvidenceOutput;
 };
 
-function imageSource(filePath?: string) {
-  if (!filePath) return '';
-  if (/^(https?:|data:|blob:|\/)/.test(filePath)) return filePath;
-  return `/${filePath}`;
-}
-
 function imageLabel(item: SelectableImage) {
   const id = item.evidence.evidenceId ?? item.image.evidenceId;
   return `${item.evidence.evidenceType || 'Imagem'} #${id ?? '-'}`;
@@ -199,7 +193,9 @@ function ImagePreview({
       </div>
 
       <img
-        src={imageSource(item.image.filePath)}
+        src={evidenceService.evidenceImageContentUrl(
+          (item.evidence.evidenceId ?? item.image.evidenceId)!
+        )}
         alt={item.evidence.evidenceDescription || imageLabel(item)}
       />
 

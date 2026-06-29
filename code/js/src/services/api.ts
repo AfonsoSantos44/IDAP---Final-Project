@@ -35,6 +35,33 @@ export async function fetchApi<T>(
   return response.json();
 }
 
+/**
+ * Upload helper for multipart/form-data requests (e.g. image uploads).
+ * Deliberately does NOT set Content-Type so the browser adds the multipart boundary.
+ */
+export async function uploadApi<T>(
+  endpoint: string,
+  formData: FormData,
+  method: string = "PUT"
+): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method,
+    credentials: "include",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    await response.json().catch(() => ({ title: "Unknown error" }));
+    throw new ApiError(response.status, response.statusText);
+  }
+
+  if (response.status === 204 || response.headers.get("content-length") === "0") {
+    return undefined as T;
+  }
+
+  return response.json();
+}
+
 export { ApiError, API_BASE_URL };
 
 /*********************************************
