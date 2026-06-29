@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import '../../styles/EvidenceCreate.css';
+import '../../styles/AnalysisCreate.css';
 import type { CaseDetailsOutput } from '../../types/caseTypes';
 import { evidenceService, EvidenceOutput } from '../../services/evidenceService';
 
@@ -17,6 +17,24 @@ export default function AnalysisCreate() {
 
   const goBack = () =>
     navigate(caseId ? `/cases/${caseId}/menu` : '/cases');
+
+  const getStatusClass = (status?: string) => {
+    if (!status) return 'Pendente';
+    const s = String(status).toLowerCase();
+    if (s === 'open' || s === 'aberto') return 'Aberto';
+    if (s === 'in_progress' || s === 'in-progress' || s === 'in progress' || s === 'em progresso') return 'EmProgresso';
+    if (s === 'closed' || s === 'fechado') return 'Fechado';
+    return 'Pendente';
+  };
+
+  const getStatusLabel = (status?: string) => {
+    if (!status) return 'Pendente';
+    const s = String(status).toLowerCase();
+    if (s === 'open' || s === 'aberto') return 'Aberto';
+    if (s === 'in_progress' || s === 'in-progress' || s === 'in progress' || s === 'em progresso') return 'Em Progresso';
+    if (s === 'closed' || s === 'fechado') return 'Fechado';
+    return 'Pendente';
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,8 +73,8 @@ export default function AnalysisCreate() {
         </button>
       </div>
 
-      <div className="homepage-overlay">
-        <div className="homepage-content">
+      <div className="homepage-overlay analysis-create-overlay">
+        <div className="homepage-content analysis-create-content">
           <h1 className="homepage-title">IDAP</h1>
 
           <p className="homepage-subtitle">
@@ -72,10 +90,8 @@ export default function AnalysisCreate() {
             <div className="case-grid">
               <div className="info-card">
                 <span className="label">Estado: </span>
-                <span className="value status">
-                  {caseData.status === 'open' && 'Aberto'}
-                  {caseData.status === 'closed' && 'Fechado'}
-                  {caseData.status === 'in_progress' && 'Em progresso'}
+                <span className={`value status ${getStatusClass(caseData.status)}`}>
+                  {getStatusLabel(caseData.status)}
                 </span>
               </div>
 

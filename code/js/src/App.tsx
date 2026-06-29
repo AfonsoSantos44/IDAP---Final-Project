@@ -16,6 +16,7 @@ import EvidenceList from "./components/evidences/EvidenceList";
 import EvidenceCreate from "./components/evidences/EvidenceCreate";
 import EvidenceUpdate from "./components/evidences/EvidenceUpdate";
 import AnalysisCreate from "./components/analysis/AnalysisCreate";
+import AnalysisImageCompare from "./components/analysis/AnalysisImageCompare";
 
 const router = createBrowserRouter([
     {
@@ -74,6 +75,10 @@ const router = createBrowserRouter([
     {
         path: "/cases/:caseId/menu",
         element: <EvidenceMenu/>,
+    },
+    {
+        path: "/cases/:caseId/analysis/image",
+        element: <AnalysisImageCompare/>,
     },
     {
         path: "/cases/:caseId/analysis/:analysisId",
