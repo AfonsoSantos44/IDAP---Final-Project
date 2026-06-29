@@ -28,6 +28,8 @@ dependencies {
     implementation("org.springframework.security:spring-security-core")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
+    implementation("io.minio:minio:8.5.12")
+
     implementation("org.slf4j:slf4j-api:2.0.16")
 
     testImplementation("org.springframework:spring-test")

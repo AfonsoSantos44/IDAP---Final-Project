@@ -1,6 +1,7 @@
 package pt.isel.http
 
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -9,11 +10,12 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 import pt.isel.domain.SecurityPrincipal
 import pt.isel.http.dto.CreateEvidenceRequestDto
 import pt.isel.http.dto.UpdateEvidenceRequestDto
-import pt.isel.http.dto.UpsertImageEvidenceRequestDto
 import pt.isel.services.AccidentEvidenceService
 import pt.isel.services.Failure
 import pt.isel.services.Success
@@ -136,11 +138,12 @@ class AccidentEvidenceController(
         }
     }
 
-    @PutMapping(Uris.Evidence.IMAGE)
-    fun upsertImageEvidence(
+    @PutMapping(Uris.Evidence.IMAGE, consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    fun uploadImageEvidence(
         @AuthenticationPrincipal currentUser: SecurityPrincipal?,
         @PathVariable evidenceId: Int,
-        @RequestBody request: UpsertImageEvidenceRequestDto,
+        @RequestParam("file") file: MultipartFile,
+        @RequestParam("metadata", required = false) metadata: String?,
     ): ResponseEntity<*> {
         when (val access = accessControl.authorizeEvidence(currentUser, evidenceId)) {
             is EvidenceAccessResult.Authorized -> Unit
@@ -149,15 +152,34 @@ class AccidentEvidenceController(
 
         return when (
             val result =
-                evidenceService.upsertImageEvidence(
+                evidenceService.uploadImageEvidence(
                     evidenceId = evidenceId,
-                    filePath = request.filePath,
-                    width = request.width,
-                    height = request.height,
-                    metadata = request.metadata,
+                    bytes = file.bytes,
+                    contentType = file.contentType,
+                    metadata = metadata,
                 )
         ) {
             is Success -> ResponseEntity.ok(result.value.toOutputDto())
+            is Failure -> result.value.toProblemResponse()
+        }
+    }
+
+    @GetMapping(Uris.Evidence.IMAGE_CONTENT)
+    fun getImageEvidenceContent(
+        @AuthenticationPrincipal currentUser: SecurityPrincipal?,
+        @PathVariable evidenceId: Int,
+    ): ResponseEntity<*> {
+        when (val access = accessControl.authorizeEvidence(currentUser, evidenceId)) {
+            is EvidenceAccessResult.Authorized -> Unit
+            is EvidenceAccessResult.Rejected -> return access.response
+        }
+
+        return when (val result = evidenceService.getImageContent(evidenceId)) {
+            is Success ->
+                ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(result.value.contentType))
+                    .body(result.value.bytes)
+
             is Failure -> result.value.toProblemResponse()
         }
     }

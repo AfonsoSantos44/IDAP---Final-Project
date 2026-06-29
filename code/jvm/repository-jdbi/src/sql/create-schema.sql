@@ -91,6 +91,8 @@ CREATE TABLE evidence (
 );
 
 -- IMAGE EVIDENCE
+-- file_path holds the object-storage key (MinIO/S3), not the image bytes nor a local
+-- filesystem path. The binary content lives in the object store; only the key is in Postgres.
 CREATE TABLE image_evidence (
                                 image_evidence_id SERIAL PRIMARY KEY,
                                 evidence_id INT NOT NULL UNIQUE,
@@ -144,6 +146,7 @@ CREATE TABLE measurement (
                              scale_cm_per_pixel FLOAT NOT NULL,
                              confidence FLOAT NOT NULL,
                              calibration_method VARCHAR(50) NOT NULL,
+                             -- Object-storage key (MinIO/S3) of the generated annotated comparison image.
                              comparison_image_path VARCHAR(255),
                              processed_at TIMESTAMP NOT NULL DEFAULT NOW(),
 

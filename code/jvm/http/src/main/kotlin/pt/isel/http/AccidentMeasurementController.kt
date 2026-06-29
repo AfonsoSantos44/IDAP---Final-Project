@@ -1,6 +1,7 @@
 package pt.isel.http
 
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -104,6 +105,26 @@ class AccidentMeasurementController(
             is MeasurementAccessResult.Authorized -> ResponseEntity.ok(access.measurement.toOutputDto())
             is MeasurementAccessResult.Rejected -> access.response
         }
+
+    @GetMapping(Uris.Measurements.COMPARISON_IMAGE)
+    fun getComparisonImage(
+        @AuthenticationPrincipal currentUser: SecurityPrincipal?,
+        @PathVariable measurementId: Int,
+    ): ResponseEntity<*> {
+        when (val access = accessControl.authorizeMeasurement(currentUser, measurementId)) {
+            is MeasurementAccessResult.Authorized -> Unit
+            is MeasurementAccessResult.Rejected -> return access.response
+        }
+
+        return when (val result = measurementService.getComparisonImageContent(measurementId)) {
+            is Success ->
+                ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(result.value.contentType))
+                    .body(result.value.bytes)
+
+            is Failure -> result.value.toProblemResponse()
+        }
+    }
 
     @DeleteMapping(Uris.Measurements.DELETE_BY_ID)
     fun deleteMeasurement(

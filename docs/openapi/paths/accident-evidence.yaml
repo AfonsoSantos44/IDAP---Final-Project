@@ -155,8 +155,12 @@ evidenceImage:
   put:
     tags:
       - Accident Evidence
-    summary: Create or update image metadata for evidence
-    operationId: upsertEvidenceImage
+    summary: Upload or replace the image for evidence
+    description: >
+      Uploads the image bytes as multipart/form-data. The bytes are stored in object
+      storage (MinIO/S3); only the object key and image dimensions are persisted in the
+      database. Raw bytes can be retrieved from GET /api/evidence/{evidenceId}/image/content.
+    operationId: uploadEvidenceImage
     security:
       - cookieAuth: []
     parameters:
@@ -164,9 +168,19 @@ evidenceImage:
     requestBody:
       required: true
       content:
-        application/json:
+        multipart/form-data:
           schema:
-            $ref: "../../IDAP.yaml#/components/schemas/UpsertImageEvidenceRequest"
+            type: object
+            required:
+              - file
+            properties:
+              file:
+                type: string
+                format: binary
+                description: The image file to upload.
+              metadata:
+                type: string
+                description: Optional free-text metadata for the image.
     responses:
       "200":
         description: Image evidence saved successfully.

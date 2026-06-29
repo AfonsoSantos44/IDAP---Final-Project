@@ -109,13 +109,6 @@ data class ImageEvidenceOutputDto(
     val metadata: String?,
 )
 
-data class UpsertImageEvidenceRequestDto(
-    val filePath: String,
-    val width: Int,
-    val height: Int,
-    val metadata: String? = null,
-)
-
 data class AnalysisOutputDto(
     val analysisId: Int,
     val caseId: Int,

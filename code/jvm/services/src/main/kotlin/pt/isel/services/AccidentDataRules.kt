@@ -59,8 +59,8 @@ internal fun Transaction.ensureDamageBelongsToCase(
 }
 
 internal data class MeasurementProcessingInput(
-    val primaryImagePath: String,
-    val comparisonImagePath: String?,
+    val primaryImageKey: String,
+    val comparisonImageKey: String?,
 )
 
 internal data class GeoCoordinates(

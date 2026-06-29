@@ -138,6 +138,44 @@ To promote a user named `admin` to administrator:
 psql -U postgres -d idap -f code/jvm/repository-jdbi/src/sql/set-admin.sql
 ```
 
+## Image Storage
+
+Image bytes (evidence photos and generated annotated comparison images) are **not** stored
+in PostgreSQL. They live in S3-compatible object storage (MinIO), and the relational tables
+keep only the object key:
+
+- `image_evidence.file_path` holds the object key of an uploaded evidence image
+- `measurement.comparison_image_path` holds the object key of a generated comparison image
+
+This keeps the PostgreSQL tables and backups small while still allowing the API to serve the
+original and annotated images on demand.
+
+Start MinIO locally with the bundled Compose file:
+
+```bash
+docker compose up -d
+```
+
+This exposes the S3 API on `http://localhost:9000` and the web console on
+`http://localhost:9001` (default credentials `minioadmin` / `minioadmin`). The application
+creates the `idap-images` bucket automatically on first upload.
+
+Evidence images are uploaded as `multipart/form-data`:
+
+```http
+PUT /api/evidence/{evidenceId}/image
+Content-Type: multipart/form-data
+```
+
+with a `file` part (the image) and an optional `metadata` text part. The backend reads the
+image dimensions, stores the bytes in object storage, and persists the key plus dimensions.
+The raw bytes are served back from:
+
+```http
+GET /api/evidence/{evidenceId}/image/content
+GET /api/measurements/{measurementId}/comparison-image
+```
+
 ## Configuration
 
 The application reads the following environment variables through `application.properties`:
@@ -160,6 +198,11 @@ The application reads the following environment variables through `application.p
 | `GOOGLE_STREET_VIEW_METADATA_URL` | `idap.scene.street-view-metadata-url` | `https://maps.googleapis.com/maps/api/streetview/metadata` | Google Street View metadata URL |
 | `GOOGLE_GEOCODING_URL` | `idap.scene.geocoding-url` | `https://maps.googleapis.com/maps/api/geocode/json` | Google reverse geocoding URL |
 | `GOOGLE_ELEVATION_URL` | `idap.scene.elevation-url` | `https://maps.googleapis.com/maps/api/elevation/json` | Google elevation URL used for rough slope estimation |
+| `MINIO_ENDPOINT` | `idap.storage.endpoint` | `http://localhost:9000` | S3-compatible object storage endpoint for image bytes |
+| `MINIO_ACCESS_KEY` | `idap.storage.access-key` | `minioadmin` | Object storage access key |
+| `MINIO_SECRET_KEY` | `idap.storage.secret-key` | `minioadmin` | Object storage secret key |
+| `MINIO_BUCKET` | `idap.storage.bucket` | `idap-images` | Bucket where evidence and comparison images are stored |
+| `MAX_UPLOAD_SIZE` | `spring.servlet.multipart.max-file-size` / `max-request-size` | `25MB` | Maximum size of an uploaded image |
 
 For production-like HTTPS deployments, set `SESSION_COOKIE_SECURE=true`.
 
@@ -256,7 +299,10 @@ Authorization is role based:
 | `GET`, `PUT`, `DELETE` | `/api/damages/{damageId}` | Case owner or admin | Read, update, or delete a damage record |
 | `GET`, `POST` | `/api/cases/{caseId}/evidence` | Case owner or admin | List or create evidence for a case |
 | `GET`, `PUT`, `DELETE` | `/api/evidence/{evidenceId}` | Case owner or admin | Read, update, or delete evidence |
-| `GET`, `PUT`, `DELETE` | `/api/evidence/{evidenceId}/image` | Case owner or admin | Read, replace, or delete image evidence metadata |
+| `GET`, `DELETE` | `/api/evidence/{evidenceId}/image` | Case owner or admin | Read or delete image evidence metadata |
+| `PUT` | `/api/evidence/{evidenceId}/image` | Case owner or admin | Upload/replace the image (`multipart/form-data`); stored in object storage |
+| `GET` | `/api/evidence/{evidenceId}/image/content` | Case owner or admin | Download the raw evidence image bytes |
+| `GET` | `/api/measurements/{measurementId}/comparison-image` | Case owner or admin | Download the generated annotated comparison image |
 | `GET`, `POST` | `/api/cases/{caseId}/analyses` | Case owner or admin | List or create analyses for a case |
 | `GET`, `DELETE` | `/api/analyses/{analysisId}` | Case owner or admin | Read or delete an analysis |
 | `GET`, `PUT` | `/api/analyses/{analysisId}/images` | Case owner or admin | List or attach evidence images to an analysis |
@@ -303,7 +349,7 @@ The client may also provide explicit weather coordinates:
 }
 ```
 
-Measurement creation is image-driven. The client registers evidence and image metadata first, then calls:
+Measurement creation is image-driven. The client registers evidence and uploads the corresponding images first, then calls:
 
 ```http
 POST /api/analyses/{analysisId}/measurements

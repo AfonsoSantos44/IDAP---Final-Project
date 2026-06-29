@@ -46,6 +46,7 @@ object Uris {
         const val UPDATE_BY_ID = "$PREFIX/evidence/{evidenceId}"
         const val DELETE_BY_ID = "$PREFIX/evidence/{evidenceId}"
         const val IMAGE = "$PREFIX/evidence/{evidenceId}/image"
+        const val IMAGE_CONTENT = "$PREFIX/evidence/{evidenceId}/image/content"
     }
 
     object Analyses {
@@ -62,6 +63,7 @@ object Uris {
     object Measurements {
         const val GET_BY_ID = "$PREFIX/measurements/{measurementId}"
         const val DELETE_BY_ID = "$PREFIX/measurements/{measurementId}"
+        const val COMPARISON_IMAGE = "$PREFIX/measurements/{measurementId}/comparison-image"
     }
 
     object DamageComparisons {

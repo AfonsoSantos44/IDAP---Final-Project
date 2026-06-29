@@ -4,11 +4,17 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import pt.isel.domain.Measurement
 import pt.isel.repository.TransactionManager
+import pt.isel.services.storage.ObjectStorage
+import pt.isel.services.storage.StoredImage
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.UUID
 
 @Service
 class AccidentMeasurementService(
     private val transactionManager: TransactionManager,
     private val measurementEngine: MeasurementEngine,
+    private val objectStorage: ObjectStorage,
 ) {
     private val logger = LoggerFactory.getLogger(AccidentMeasurementService::class.java)
 
@@ -79,8 +85,8 @@ class AccidentMeasurementService(
 
                         success(
                             MeasurementProcessingInput(
-                                primaryImagePath = primaryImage.filePath,
-                                comparisonImagePath = comparisonImage?.filePath,
+                                primaryImageKey = primaryImage.filePath,
+                                comparisonImageKey = comparisonImage?.filePath,
                             ),
                         )
                     }
@@ -89,30 +95,47 @@ class AccidentMeasurementService(
                 is Failure -> return result
             }
 
+        // The Python engine works on local files. Download the stored objects to temporary
+        // files, run the engine, then push the generated annotated image back to storage.
+        val primaryTempImage = downloadToTemp(input.primaryImageKey)
+        val comparisonTempImage = input.comparisonImageKey?.let { downloadToTemp(it) }
+
         val engineResult =
-            when (
-                val result =
-                    measurementEngine.measure(
-                        primaryImagePath = input.primaryImagePath,
-                        comparisonImagePath = input.comparisonImagePath,
-                        knownTickDistanceCm = knownTickDistanceCm,
-                        primarySelection = primarySelection,
-                        primaryCalibration = primaryCalibration,
-                        comparisonSelection = comparisonSelection,
-                        comparisonCalibration = comparisonCalibration,
-                    )
-            ) {
-                is Success -> result.value
-                is Failure -> {
-                    logger.warn(
-                        "Measurement engine failed for analysis {}, evidence {}, damage {}: {}",
-                        analysisId,
-                        evidenceId,
-                        damageId,
-                        result.value.message(),
-                    )
-                    return failure(AccidentDataError.MeasurementProcessingFailed)
+            try {
+                when (
+                    val result =
+                        measurementEngine.measure(
+                            primaryImagePath = primaryTempImage.toString(),
+                            comparisonImagePath = comparisonTempImage?.toString(),
+                            knownTickDistanceCm = knownTickDistanceCm,
+                            primarySelection = primarySelection,
+                            primaryCalibration = primaryCalibration,
+                            comparisonSelection = comparisonSelection,
+                            comparisonCalibration = comparisonCalibration,
+                        )
+                ) {
+                    is Success -> result.value
+                    is Failure -> {
+                        logger.warn(
+                            "Measurement engine failed for analysis {}, evidence {}, damage {}: {}",
+                            analysisId,
+                            evidenceId,
+                            damageId,
+                            result.value.message(),
+                        )
+                        return failure(AccidentDataError.MeasurementProcessingFailed)
+                    }
                 }
+            } finally {
+                runCatching { Files.deleteIfExists(primaryTempImage) }
+                comparisonTempImage?.let { runCatching { Files.deleteIfExists(it) } }
+            }
+
+        // Upload the annotated comparison image (a local file produced by the engine) to
+        // storage and keep only its object key in the database.
+        val comparisonImageKey =
+            engineResult.comparisonImagePath?.let { localPath ->
+                uploadGeneratedImage(analysisId, localPath)
             }
 
         return transactionManager.run {
@@ -144,7 +167,7 @@ class AccidentMeasurementService(
                     scaleCmPerPixel = engineResult.scaleCmPerPixel,
                     confidence = engineResult.confidence,
                     calibrationMethod = engineResult.calibrationMethod,
-                    comparisonImagePath = engineResult.comparisonImagePath,
+                    comparisonImagePath = comparisonImageKey,
                 ).also {
                     repoAccidentVehicleDamage.updateDamageHeight(damageId, engineResult.calculatedHeightCm)
                 },
@@ -171,6 +194,39 @@ class AccidentMeasurementService(
             repoAccidentMeasurement.deleteMeasurementById(measurementId)
             success(Unit)
         }
+
+    /** Fetch the annotated comparison image bytes for a measurement, if one was generated. */
+    fun getComparisonImageContent(measurementId: Int): Either<AccidentDataError, StoredImage> {
+        val measurement =
+            when (val result = getMeasurementById(measurementId)) {
+                is Success -> result.value
+                is Failure -> return result
+            }
+        val key =
+            measurement.comparisonImagePath
+                ?: return failure(AccidentDataError.ImageEvidenceNotFound)
+        return success(StoredImage(objectStorage.get(key), contentTypeForKey(key)))
+    }
+
+    private fun downloadToTemp(key: String): Path {
+        val extension = key.substringAfterLast('.', "img")
+        val tempFile = Files.createTempFile("idap-measure-", ".$extension")
+        Files.write(tempFile, objectStorage.get(key))
+        return tempFile
+    }
+
+    private fun uploadGeneratedImage(
+        analysisId: Int,
+        localPath: String,
+    ): String? {
+        val source = Path.of(localPath)
+        if (!Files.isRegularFile(source)) return null
+        val extension = localPath.substringAfterLast('.', "png")
+        val key = "measurements/$analysisId/${UUID.randomUUID()}.$extension"
+        objectStorage.put(key, Files.readAllBytes(source), contentTypeForKey(key))
+        runCatching { Files.deleteIfExists(source) }
+        return key
+    }
 
     private fun MeasurementEngineError.message(): String =
         when (this) {
