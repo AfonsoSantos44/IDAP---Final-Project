@@ -14,14 +14,13 @@ import ProfilePage from "./components/auth/ProfilePage";
 import EvidenceMenu from "./components/evidences/EvidenceMenu";
 import EvidenceList from "./components/evidences/EvidenceList";
 import EvidenceCreate from "./components/evidences/EvidenceCreate";
-import ReportCreate from "./components/evidences/AnalysisCreate";
 import EvidenceUpdate from "./components/evidences/EvidenceUpdate";
-import AnalysisCreate from "./components/evidences/AnalysisCreate";
+import AnalysisCreate from "./components/analysis/AnalysisCreate";
 
 const router = createBrowserRouter([
     {
         path: "/",
-        element: <Navigate to="/home" replace/>,
+        element: <Navigate to="/initial" replace/>,
     },
     {
         path:"/initial",
@@ -75,10 +74,6 @@ const router = createBrowserRouter([
     {
         path: "/cases/:caseId/menu",
         element: <EvidenceMenu/>,
-    },
-    {
-        path: "/cases/:caseId/reports/create",
-        element: <ReportCreate/>,
     },
     {
         path: "/cases/:caseId/analysis/:analysisId",

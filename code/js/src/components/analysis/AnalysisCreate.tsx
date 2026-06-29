@@ -1,131 +1,159 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../../styles/EvidenceCreate.css';
-import accidentAnalysisService from '../../services/accidentAnalysisService';
+import type { CaseDetailsOutput } from '../../types/caseTypes';
+import { evidenceService, EvidenceOutput } from '../../services/evidenceService';
+
+import { caseService } from '../../services/caseService';
 
 export default function AnalysisCreate() {
   const navigate = useNavigate();
   const { caseId } = useParams();
 
-  const [submitting, setSubmitting] = useState(false);
+  const [caseData, setCaseData] = useState<CaseDetailsOutput | null>(null);
+  const [evidences, setEvidences] = useState<EvidenceOutput[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const goBack = () =>
     navigate(caseId ? `/cases/${caseId}/menu` : '/cases');
 
-  const handleCreate = async () => {
-    try {
-      setError(null);
-      setSubmitting(true);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      if (!caseId) {
-        throw new Error('ID do caso inválido.');
+        if (!caseId) {
+          throw new Error('ID do caso inválido.');
+        }
+
+        const id = Number(caseId);
+
+        const [caseRes, evidenceRes] = await Promise.all([
+          caseService.getCase(id),
+          evidenceService.listCaseEvidence(id),
+        ]);
+
+        setCaseData(caseRes);
+        setEvidences(evidenceRes);
+      } catch (err: any) {
+        setError(err?.message || 'Erro ao carregar dados.');
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const analysis =
-        await accidentAnalysisService.createCaseAnalysis(
-          Number(caseId)
-        );
-
-      navigate(
-        `/cases/${caseId}/analyses/${analysis.analysisId}`
-      );
-    } catch (err: any) {
-      setError(
-        err?.message || 'Erro ao criar análise.'
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    fetchData();
+  }, [caseId]);
 
   return (
     <div className="homepage-wrapper">
       <div className="back-container back-outside">
-        <button
-          className="page-btn secondary back-btn"
-          onClick={goBack}
-        >
+        <button className="back-btn" onClick={goBack}>
           Voltar
         </button>
       </div>
 
       <div className="homepage-overlay">
-        <div
-          className="homepage-content"
-          style={{ textAlign: 'left' }}
-        >
+        <div className="homepage-content">
           <h1 className="homepage-title">IDAP</h1>
 
           <p className="homepage-subtitle">
-            Criar uma nova análise para o caso {caseId}.
+            Informações do caso {caseId}
           </p>
 
-          <div
-            style={{
-              marginTop: 32,
-              padding: 24,
-              background: '#f7f8ff',
-              borderRadius: 16,
-              border: '1px solid rgba(78,75,250,0.1)',
-            }}
-          >
-            <h2
-              style={{
-                marginTop: 0,
-                color: '#232b5d',
-              }}
-            >
-              Nova Análise
-            </h2>
+          {loading && <p>A carregar dados...</p>}
 
-            <p
-              style={{
-                color: '#5e6689',
-                lineHeight: 1.6,
-              }}
-            >
-              Será criada uma nova análise associada
-              ao caso selecionado.
-            </p>
+          {error && <p style={{ color: 'red' }}>{error}</p>}
 
-            {error && (
-              <div
-                style={{
-                  marginTop: 16,
-                  color: 'red',
-                }}
-              >
-                {error}
+          {/* CASE INFO */}
+          {caseData && (
+            <div className="case-grid">
+              <div className="info-card">
+                <span className="label">Estado: </span>
+                <span className="value status">
+                  {caseData.status === 'open' && 'Aberto'}
+                  {caseData.status === 'closed' && 'Fechado'}
+                  {caseData.status === 'in_progress' && 'Em progresso'}
+                </span>
               </div>
-            )}
 
-            <div
-              style={{
-                marginTop: 24,
-                display: 'flex',
-                gap: 12,
-              }}
-            >
+              <div className="info-card wide">
+                <span className="label">Descrição: </span>
+                <span className="value">
+                  {caseData.description}
+                </span>
+              </div>
+
+              <div className="info-card">
+                <span className="label">Criado em </span>
+                <span className="value">
+                  {new Date(caseData.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* EVIDENCES */}
+          {caseData && (
+            <div className="evidence-section">
+              <h2 className="section-title">Evidências</h2>
+
+              {evidences.length > 0 ? (
+                <div className="evidence-grid">
+                  {evidences.map((ev) => (
+                    <div
+                      key={ev.evidenceId}
+                      className="evidence-card"
+                    >
+                      <div className="evidence-icon">📎</div>
+
+                      <div>
+                        <div className="evidence-name">
+                          {ev.evidenceType ||
+                            'Tipo desconhecido'}
+                        </div>
+
+                        <div className="evidence-type">
+                          {ev.evidenceDescription ||
+                            'Sem descrição'}
+                        </div>
+
+                        <div className="evidence-meta">
+                          {ev.uploadedAt
+                            ? new Date(
+                                ev.uploadedAt
+                              ).toLocaleString()
+                            : ''}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="no-evidence">
+                  Sem evidências associadas ao caso.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* BUTTON */}
+          {caseData && (
+            <div className="homepage-buttons">
               <button
                 className="homepage-btn login-btn"
-                onClick={handleCreate}
-                disabled={submitting}
+                onClick={() =>
+                  navigate(
+                    `/cases/${caseId}/analysis/image`
+                  )
+                }
               >
-                {submitting
-                  ? 'A criar...'
-                  : 'Criar Análise'}
-              </button>
-
-              <button
-                className="page-btn"
-                onClick={goBack}
-                disabled={submitting}
-              >
-                Cancelar
+                Analisar Imagens
               </button>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
