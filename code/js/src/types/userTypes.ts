@@ -19,11 +19,15 @@ export interface LoginInputModel {
   password: string;
 }
 export interface TokenOutputModel {
-  token: string;
+  userId: number;
+  username: string;
+  email: string;
 }
 
 export interface UserMe {
-    id: number;
+    userId: number;
+    id?: number;
     name: string;
+    username?: string;
     email: string;
 }

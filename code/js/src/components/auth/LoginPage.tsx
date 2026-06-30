@@ -2,6 +2,7 @@ import React,{useReducer, useState} from "react";
 import { userService } from "../../services/userService";
 import { Link, useNavigate } from "react-router-dom";
 import "../../styles/LoginPage.css";
+import { useAuth } from "../../context/AuthContext";
 
 
 type Login = {
@@ -13,13 +14,15 @@ type Login = {
 function LoginPage() {
   const [state, setState] = useState<Login>({ username: "", password: "", error: undefined });
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement> | React.FormEvent) => {
     e.preventDefault();
-    setState(prev => ({ ...prev, error: undefined }));
+      setState(prev => ({ ...prev, error: undefined }));
     try {
       // backend expects email in the login model; we map username field to email
-      await userService.login({ email: state.username, password: state.password });
+      const user = await userService.login({ email: state.username, password: state.password });
+      login("authenticated", String(user.userId));
       navigate("/home");
     } catch (err: any) {
       const message = err?.message || err?.title || "Erro ao iniciar sessão";

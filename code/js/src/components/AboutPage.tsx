@@ -28,7 +28,7 @@ const techStack = [
 ];
 
 export default function AboutPage() {
-    const { token, logout } = useAuth();
+    const { logout } = useAuth();
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -36,7 +36,7 @@ export default function AboutPage() {
         navigate('/initial');
     }
 
-    const content = (
+    return (
         <div className="about-wrapper">
             <div className="about-container">
                 <div className="logout-wrapper">
@@ -124,6 +124,4 @@ export default function AboutPage() {
             </div>
         </div>
     );
-
-    return token ? <ProtectedLayout>{content}</ProtectedLayout> : content;
 }

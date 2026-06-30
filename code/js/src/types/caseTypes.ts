@@ -15,7 +15,9 @@ export interface CreateCaseInput{
 };
 
 export interface CaseDetailsOutput{
+    caseId?: number,
     id: number,
+    userId?: number,
     user: number,
     createdAt: Date,
     status: string,

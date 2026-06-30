@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Try to get user info - if cookie exists, this will succeed
         const userInfo = await userService.getMe();
         setToken("authenticated"); // Just a flag, real token is in cookie
-        setUserId(userInfo.id.toString());
+        setUserId(String(userInfo.userId ?? userInfo.id));
       } catch (error) {
         // No valid cookie, user is not authenticated
         setToken(null);

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../../styles/AnalysisImageCompare.css';
 import { evidenceService } from '../../services/evidenceService';
@@ -12,9 +12,35 @@ type SelectableImage = {
   image: ImageEvidenceOutput;
 };
 
+type ImageDisplayMeasurements = {
+  naturalWidth: number;
+  naturalHeight: number;
+  displayedWidth: number;
+  displayedHeight: number;
+  resizeFactor: number;
+};
+
 function imageLabel(item: SelectableImage) {
   const id = item.evidence.evidenceId ?? item.image.evidenceId;
   return `${item.evidence.evidenceType || 'Imagem'} #${id ?? '-'}`;
+}
+
+function getImageDisplayMeasurements(
+  image: HTMLImageElement
+): ImageDisplayMeasurements {
+  const bounds = image.getBoundingClientRect();
+  const naturalWidth = image.naturalWidth;
+  const naturalHeight = image.naturalHeight;
+  const displayedWidth = Math.round(bounds.width);
+  const displayedHeight = Math.round(bounds.height);
+
+  return {
+    naturalWidth,
+    naturalHeight,
+    displayedWidth,
+    displayedHeight,
+    resizeFactor: naturalWidth > 0 ? displayedWidth / naturalWidth : 1,
+  };
 }
 
 export default function AnalysisImageCompare() {
@@ -177,6 +203,52 @@ function ImagePreview({
   title: string;
   item?: SelectableImage;
 }) {
+  const imageRef = useRef<HTMLImageElement | null>(null);
+  const [measurements, setMeasurements] =
+    useState<ImageDisplayMeasurements | null>(null);
+
+  const evidenceId = item?.evidence.evidenceId ?? item?.image.evidenceId;
+  const imageSrc =
+    evidenceId !== undefined
+      ? evidenceService.evidenceImageContentUrl(evidenceId)
+      : '';
+
+  const updateMeasurements = useCallback(() => {
+    const image = imageRef.current;
+    if (!image || !image.complete || image.naturalWidth === 0) return;
+
+    setMeasurements(getImageDisplayMeasurements(image));
+  }, []);
+
+  useEffect(() => {
+    setMeasurements(null);
+    const frame = window.requestAnimationFrame(updateMeasurements);
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [imageSrc, updateMeasurements]);
+
+  useEffect(() => {
+    const image = imageRef.current;
+    if (!image) return;
+
+    const resizeObserver =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(updateMeasurements)
+        : null;
+
+    resizeObserver?.observe(image);
+    window.addEventListener('resize', updateMeasurements);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', updateMeasurements);
+    };
+  }, [imageSrc, updateMeasurements]);
+
+  const handleImageLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
+    setMeasurements(getImageDisplayMeasurements(event.currentTarget));
+  };
+
   if (!item) {
     return (
       <div className="image-preview-card empty">
@@ -193,11 +265,31 @@ function ImagePreview({
       </div>
 
       <img
-        src={evidenceService.evidenceImageContentUrl(
-          (item.evidence.evidenceId ?? item.image.evidenceId)!
-        )}
+        key={imageSrc}
+        ref={imageRef}
+        src={imageSrc}
         alt={item.evidence.evidenceDescription || imageLabel(item)}
+        onLoad={handleImageLoad}
       />
+
+      <div className="image-measurements-panel">
+        <div>
+          <span>Altura original</span>
+          <strong>{item.image.height ?? measurements?.naturalHeight ?? '-'} px</strong>
+        </div>
+        <div>
+          <span>Altura exibida</span>
+          <strong>{measurements ? `${measurements.displayedHeight} px` : '-'}</strong>
+        </div>
+        <div>
+          <span>Resize</span>
+          <strong>
+            {measurements
+              ? `${Math.round(measurements.resizeFactor * 100)}%`
+              : '-'}
+          </strong>
+        </div>
+      </div>
 
       <p>{item.evidence.evidenceDescription || 'Sem descricao.'}</p>
     </div>

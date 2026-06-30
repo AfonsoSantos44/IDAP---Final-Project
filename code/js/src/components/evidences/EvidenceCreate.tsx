@@ -22,7 +22,7 @@ export default function EvidenceCreate() {
   const isPhotoEvidence = selectedType === 'Foto';
   const isDocumentEvidence = selectedType === 'Documento';
 
-  const goBack = () => navigate(caseId ? `/cases/${caseId}/menu` : '/cases');
+  const goBack = () => navigate(caseId ? `/cases/${caseId}` : '/cases');
 
   const validate = (): string | null => {
     const typeValue = (selectedType === 'Outro' ? customType : selectedType).trim();

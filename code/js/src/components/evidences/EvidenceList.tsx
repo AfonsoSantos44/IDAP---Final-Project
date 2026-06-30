@@ -80,7 +80,7 @@ export default function EvidenceList() {
   return (
     <div className="case-list-page" style={{ position: 'relative' }}>
       <div className="back-container back-outside">
-        <button className="page-btn secondary back-btn" onClick={() => navigate(caseId ? `/cases/${caseId}/menu` : '/cases')}>Voltar</button>
+        <button className="page-btn secondary back-btn" onClick={() => navigate(caseId ? `/cases/${caseId}` : '/cases')}>Voltar</button>
       </div>
       <div className="case-list-header">
         <div>

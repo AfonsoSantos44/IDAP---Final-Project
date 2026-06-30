@@ -14,7 +14,6 @@ export interface Case {
   reporter?: string;
   reporterName?: string;
   createdAt?: string; // ISO date
-  updatedAt?: string; // ISO date
 }
 
 function CasesListPage(){
@@ -58,7 +57,6 @@ const [selectedUserFilter, setSelectedUserFilter] = useState<string>('all');
             status: c.status ?? c.state ?? 'Desconhecido',
             reporter: c.userId ? String(c.userId) : (c.user ? String(c.user) : undefined),
             createdAt: c.createdAt ?? c.created_at ?? undefined,
-            updatedAt: c.updatedAt ?? c.updated_at ?? undefined,
           };
         });
 
@@ -193,7 +191,6 @@ const [selectedUserFilter, setSelectedUserFilter] = useState<string>('all');
       <p className="case-meta">{c.description || '—'}</p>
       <div className="case-meta">Averiguador: {(c as any).reporterName || c.reporter || '—'}</div>
       <div className="case-meta">Criado: {c.createdAt ? new Date(c.createdAt).toLocaleString() : '—'}</div>
-      <div className="case-meta">Atualizado: {c.updatedAt ? new Date(c.updatedAt).toLocaleString() : '—'}</div>
 
       <div className="case-footer">
         <button className="btn-link" onClick={() => navigate(`/cases/${c.id}`)}>

@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import type React from "react";
 import { AuthProvider } from "./context/AuthContext";
 import { createBrowserRouter, RouterProvider ,Navigate} from "react-router-dom"
 import  InitialPage  from "./components/InitialPage";
@@ -11,17 +12,21 @@ import CaseInfoPage from "./components/cases/CaseInfoPage";
 import AboutPage from "./components/AboutPage";
 import HomePage from "./components/HomePage";
 import ProfilePage from "./components/auth/ProfilePage";
-import EvidenceMenu from "./components/evidences/EvidenceMenu";
 import EvidenceList from "./components/evidences/EvidenceList";
 import EvidenceCreate from "./components/evidences/EvidenceCreate";
 import EvidenceUpdate from "./components/evidences/EvidenceUpdate";
 import AnalysisCreate from "./components/analysis/AnalysisCreate";
 import AnalysisImageCompare from "./components/analysis/AnalysisImageCompare";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+
+const protect = (element: React.ReactNode) => (
+    <ProtectedRoute>{element}</ProtectedRoute>
+);
 
 const router = createBrowserRouter([
     {
         path: "/",
-        element: <Navigate to="/initial" replace/>,
+        element: protect(<Navigate to="/home" replace/>),
     },
     {
         path:"/initial",
@@ -29,11 +34,11 @@ const router = createBrowserRouter([
     },
     {
         path:"/home",
-        element: <HomePage/>
+        element: protect(<HomePage/>)
     },
     {
         path: "/profile",
-        element: <ProfilePage/>,
+        element: protect(<ProfilePage/>),
     },
    {
         path: "/login",
@@ -46,47 +51,43 @@ const router = createBrowserRouter([
     },
     {
         path: "/cases",
-        element: <CasesListPage/>,
+        element: protect(<CasesListPage/>),
     },
     {
         path: "/cases/create",
-        element: <CreateCasePage/>,
+        element: protect(<CreateCasePage/>),
     },
     {
         path: "/cases/:id",
-        element: <CaseInfoPage/>,
+        element: protect(<CaseInfoPage/>),
     },
     {
         path: "/about",
-        element:<AboutPage/>,
+        element: protect(<AboutPage/>),
     },
     {
         path: "/cases/:caseId/evidences",
-        element: <EvidenceList/>,
+        element: protect(<EvidenceList/>),
     },
     {
         path: "/cases/:caseId/evidences/create",
-        element: <EvidenceCreate/>,
+        element: protect(<EvidenceCreate/>),
     },
     {
         path: "/cases/:caseId/evidences/:evidenceId/edit",
-        element: <EvidenceUpdate/>,
-    },
-    {
-        path: "/cases/:caseId/menu",
-        element: <EvidenceMenu/>,
+        element: protect(<EvidenceUpdate/>),
     },
     {
         path: "/cases/:caseId/analysis/image",
-        element: <AnalysisImageCompare/>,
+        element: protect(<AnalysisImageCompare/>),
     },
     {
         path: "/cases/:caseId/analysis/:analysisId",
-        element: <AnalysisCreate/>,
+        element: protect(<AnalysisCreate/>),
     },
     {
         path: "*",
-        element: <NotFoundPage/>,
+        element: protect(<NotFoundPage/>),
     },
     
 ]);

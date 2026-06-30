@@ -81,7 +81,7 @@
 
 .image-preview-card {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   gap: 0.65rem;
   align-content: start;
   min-height: 0;
@@ -101,11 +101,42 @@
 .image-preview-card img {
   width: 100%;
   height: 100%;
-  max-height: 48vh;
+  max-height: 42vh;
   object-fit: contain;
   border-radius: 6px;
   background: #f4f5fb;
   border: 1px solid rgba(35,43,93,0.08);
+}
+
+.image-measurements-panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.image-measurements-panel div {
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(35,43,93,0.08);
+  border-radius: 8px;
+  background: #f8f9ff;
+}
+
+.image-measurements-panel span,
+.image-measurements-panel strong {
+  display: block;
+}
+
+.image-measurements-panel span {
+  color: #5e6689;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.image-measurements-panel strong {
+  margin-top: 0.2rem;
+  color: #232b5d;
+  font-size: 0.9rem;
 }
 
 .image-preview-card p {
@@ -147,5 +178,9 @@
 
   .image-preview-card {
     min-height: 320px;
+  }
+
+  .image-measurements-panel {
+    grid-template-columns: 1fr;
   }
 }
