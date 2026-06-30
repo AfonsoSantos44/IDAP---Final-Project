@@ -2,7 +2,8 @@
 // User Types
 
 export interface User {
-  id: number;
+  id?: number;
+  userId?: number;
   username: string;
   email: string;
   role: string;

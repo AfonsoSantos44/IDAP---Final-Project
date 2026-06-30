@@ -1,7 +1,7 @@
 import { CreateCaseInput } from '../../types/caseTypes';
 import '../../styles/CreateCasePage.css';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { userService } from '../../services/userService';
@@ -28,6 +28,76 @@ const emptyVehicleForm: VehicleFormInput = {
 type PendingVehicle = CreateVehicleRequest & {
     localId: number;
 };
+
+type DropdownOption = {
+    value: string;
+    label: string;
+};
+
+function StyledDropdown({
+    id,
+    value,
+    placeholder,
+    options,
+    onChange,
+}: {
+    id: string;
+    value: string;
+    placeholder: string;
+    options: DropdownOption[];
+    onChange: (value: string) => void;
+}) {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement | null>(null);
+    const selectedLabel = options.find((option) => option.value === value)?.label || placeholder;
+
+    useEffect(() => {
+        const closeDropdown = (event: MouseEvent) => {
+            if (!dropdownRef.current?.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', closeDropdown);
+        return () => document.removeEventListener('mousedown', closeDropdown);
+    }, []);
+
+    return (
+        <div className="create-case-dropdown" ref={dropdownRef}>
+            <button
+                id={id}
+                type="button"
+                className={`create-case-dropdown-trigger ${isOpen ? 'open' : ''}`}
+                aria-haspopup="listbox"
+                aria-expanded={isOpen}
+                onClick={() => setIsOpen((open) => !open)}
+            >
+                <span>{selectedLabel}</span>
+                <span className="create-case-dropdown-chevron">▾</span>
+            </button>
+
+            {isOpen && (
+                <div className="create-case-dropdown-menu" role="listbox" aria-labelledby={id}>
+                    {options.map((option) => (
+                        <button
+                            key={option.value}
+                            type="button"
+                            className={option.value === value ? 'selected' : ''}
+                            role="option"
+                            aria-selected={option.value === value}
+                            onClick={() => {
+                                onChange(option.value);
+                                setIsOpen(false);
+                            }}
+                        >
+                            {option.label}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
 
 function CreateCasePage() {
     const navigate = useNavigate();
@@ -200,6 +270,41 @@ function CreateCasePage() {
         setVehicles((prev) => prev.filter((vehicle) => vehicle.localId !== localId));
     };
 
+    const investigatorOptions = [
+        { value: '', label: 'Seleciona um averiguador' },
+        ...users.map((u) => {
+            const uid = (u as any).id ?? (u as any).userId;
+            const label = u.username || u.email || String(uid);
+
+            return {
+                value: label,
+                label,
+            };
+        }),
+    ];
+
+    const statusOptions = [
+        { value: '', label: 'Seleciona o estado do caso' },
+        { value: 'open', label: 'Aberto' },
+        { value: 'in_progress', label: 'Em progresso' },
+        { value: 'closed', label: 'Fechado' },
+    ];
+
+    const handleInvestigatorChange = (selected: string) => {
+        setAssignedUsername(selected);
+        const found = users.find(u => {
+            const uid = (u as any).id ?? (u as any).userId;
+            return (u.username || u.email || String(uid)) === selected;
+        });
+        console.debug('CreateCase select change, selected=', selected, 'found=', found);
+        if (found) {
+            const fid = (found as any).id ?? (found as any).userId;
+            setInput(prev => ({ ...prev, user: Number(fid) }));
+        } else {
+            setInput(prev => ({ ...prev, user: 0 }));
+        }
+    };
+
     return (
         <div className="create-case-page">
             <div className="logout-wrapper">
@@ -215,31 +320,13 @@ function CreateCasePage() {
                         <div>Carregando utilizadores...</div>
                     ) : (
                         isAdmin ? (
-                            <select
+                            <StyledDropdown
                                 id="user"
                                 value={assignedUsername}
-                                onChange={(e) => {
-                                    const selected = e.target.value;
-                                    setAssignedUsername(selected);
-                                    const found = users.find(u => {
-                                        const uid = (u as any).id ?? (u as any).userId;
-                                        return (u.username || u.email || String(uid)) === selected;
-                                    });
-                                    console.debug('CreateCase select change, selected=', selected, 'found=', found);
-                                    if (found) {
-                                        const fid = (found as any).id ?? (found as any).userId;
-                                        setInput(prev => ({ ...prev, user: Number(fid) }));
-                                    } else setInput(prev => ({ ...prev, user: 0 }));
-                                }}
-                            >
-                                <option value={""}> Seleciona um averiguador</option>
-                                {users.map((u) => {
-                                    const uid = (u as any).id ?? (u as any).userId;
-                                    return (
-                                        <option key={uid} value={u.username || u.email || String(uid)}>{u.username || u.email}</option>
-                                    );
-                                })}
-                            </select>
+                                placeholder="Seleciona um averiguador"
+                                options={investigatorOptions}
+                                onChange={handleInvestigatorChange}
+                            />
                         ) : (
                             <div>
                                 {currentUserId ? `Averiguador atual: #${currentUserId}` : 'Averiguador: (não disponível)'}
@@ -261,16 +348,13 @@ function CreateCasePage() {
 
                 <div className="form-group">
                     <label htmlFor="status">Estado:</label>
-                    <select
+                    <StyledDropdown
                         id="status"
                         value={input.status}
-                        onChange={(e) => handleInputChange('status', e.target.value)}
-                    >
-                        <option value=""> Seleciona o estado do caso </option>
-                        <option value="open">Aberto</option>
-                        <option value="in_progress">Em progresso</option>
-                        <option value="closed">Fechado</option>
-                    </select>
+                        placeholder="Seleciona o estado do caso"
+                        options={statusOptions}
+                        onChange={(value) => handleInputChange('status', value)}
+                    />
                 </div>
 
                 <section className="vehicles-section">
