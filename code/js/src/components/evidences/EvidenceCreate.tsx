@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../../styles/EvidenceCreate.css';
 import { evidenceService } from '../../services/evidenceService';
@@ -13,6 +13,7 @@ export default function EvidenceCreate() {
   const [customType, setCustomType] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<string | null>(null);
@@ -23,6 +24,18 @@ export default function EvidenceCreate() {
   const isDocumentEvidence = selectedType === 'Documento';
 
   const goBack = () => navigate(caseId ? `/cases/${caseId}` : '/cases');
+
+  useEffect(() => {
+    if (!imageFile) {
+      setImagePreview('');
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(imageFile);
+    setImagePreview(previewUrl);
+
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [imageFile]);
 
   const validate = (): string | null => {
     const typeValue = (selectedType === 'Outro' ? customType : selectedType).trim();
@@ -132,6 +145,12 @@ export default function EvidenceCreate() {
             {isPhotoEvidence && (
               <section className="type-fields">
                 <h2>Imagem da foto</h2>
+
+                {imagePreview && (
+                  <div className="image-upload-preview">
+                    <img src={imagePreview} alt="Preview da imagem selecionada" />
+                  </div>
+                )}
 
                 <label className="file-upload-box">
                   <span>Selecionar imagem</span>

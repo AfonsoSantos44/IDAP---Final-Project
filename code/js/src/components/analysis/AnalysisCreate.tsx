@@ -1,10 +1,51 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../../styles/AnalysisCreate.css';
 import type { CaseDetailsOutput } from '../../types/caseTypes';
 import { evidenceService, EvidenceOutput } from '../../services/evidenceService';
 
 import { caseService } from '../../services/caseService';
+
+function evidenceKind(type?: string) {
+  const normalized = String(type ?? '').trim().toLowerCase();
+
+  if (normalized === 'foto' || normalized === 'imagem' || normalized === 'image') return 'photo';
+  if (normalized === 'documento' || normalized === 'document' || normalized === 'pdf') return 'document';
+  if (normalized === 'medida' || normalized === 'measurement') return 'measurement';
+  return 'other';
+}
+
+function evidenceIcon(type?: string) {
+  const kind = evidenceKind(type);
+
+  if (kind === 'document') return 'ðŸ“„';
+  if (kind === 'measurement') return 'ðŸ“';
+  return 'ðŸ§¾';
+}
+
+function EvidenceVisual({ evidence }: { evidence: EvidenceOutput }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const isPhoto = evidenceKind(evidence.evidenceType) === 'photo';
+  const evidenceId = evidence.evidenceId;
+
+  if (isPhoto && evidenceId !== undefined && !imageFailed) {
+    return (
+      <div className="evidence-preview">
+        <img
+          src={evidenceService.evidenceImageContentUrl(evidenceId)}
+          alt={evidence.evidenceDescription || 'Preview da foto'}
+          onError={() => setImageFailed(true)}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`evidence-icon ${evidenceKind(evidence.evidenceType)}`}>
+      {isPhoto ? 'ðŸ–¼ï¸' : evidenceIcon(evidence.evidenceType)}
+    </div>
+  );
+}
 
 export default function AnalysisCreate() {
   const navigate = useNavigate();
@@ -43,7 +84,7 @@ export default function AnalysisCreate() {
         setError(null);
 
         if (!caseId) {
-          throw new Error('ID do caso inválido.');
+          throw new Error('ID do caso invÃ¡lido.');
         }
 
         const id = Number(caseId);
@@ -123,7 +164,7 @@ export default function AnalysisCreate() {
                       key={ev.evidenceId}
                       className="evidence-card"
                     >
-                      <div className="evidence-icon">📎</div>
+                      <EvidenceVisual evidence={ev} />
 
                       <div>
                         <div className="evidence-name">
@@ -133,7 +174,7 @@ export default function AnalysisCreate() {
 
                         <div className="evidence-type">
                           {ev.evidenceDescription ||
-                            'Sem descrição'}
+                            'Sem descriÃ§Ã£o'}
                         </div>
 
                         <div className="evidence-meta">

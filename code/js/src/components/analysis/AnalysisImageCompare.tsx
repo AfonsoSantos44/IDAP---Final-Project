@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../../styles/AnalysisImageCompare.css';
 import { evidenceService } from '../../services/evidenceService';
@@ -6,6 +6,7 @@ import type {
   EvidenceOutput,
   ImageEvidenceOutput,
 } from '../../services/evidenceService';
+import { vehicleService, type DamageOutput, type VehicleOutput } from '../../services/vehicleService';
 
 type SelectableImage = {
   evidence: EvidenceOutput;
@@ -48,6 +49,8 @@ export default function AnalysisImageCompare() {
   const { caseId } = useParams();
 
   const [images, setImages] = useState<SelectableImage[]>([]);
+  const [vehicles, setVehicles] = useState<VehicleOutput[]>([]);
+  const [vehicleDamages, setVehicleDamages] = useState<Record<number, DamageOutput[]>>({});
   const [firstImageId, setFirstImageId] = useState('');
   const [secondImageId, setSecondImageId] = useState('');
   const [loading, setLoading] = useState(true);
@@ -65,7 +68,11 @@ export default function AnalysisImageCompare() {
           throw new Error('ID do caso invalido.');
         }
 
-        const evidences = await evidenceService.listCaseEvidence(Number(caseId));
+        const caseNumber = Number(caseId);
+        const [evidences, caseVehicles] = await Promise.all([
+          evidenceService.listCaseEvidence(caseNumber),
+          vehicleService.getCaseVehicles(caseNumber),
+        ]);
         const imageResults = await Promise.allSettled(
           evidences
             .filter((evidence) => evidence.evidenceId !== undefined)
@@ -83,8 +90,31 @@ export default function AnalysisImageCompare() {
           .map((result) => result.value);
 
         setImages(availableImages);
+        setVehicles(caseVehicles);
         setFirstImageId(String(availableImages[0]?.evidence.evidenceId ?? ''));
         setSecondImageId(String(availableImages[1]?.evidence.evidenceId ?? ''));
+
+        const damageResults = await Promise.allSettled(
+          caseVehicles
+            .slice(0, 2)
+            .filter((vehicle) => vehicle.vehicleId !== undefined)
+            .map(async (vehicle) => ({
+              vehicleId: vehicle.vehicleId!,
+              damages: await vehicleService.getVehicleDamages(vehicle.vehicleId!),
+            }))
+        );
+
+        const damagesByVehicle = damageResults.reduce<Record<number, DamageOutput[]>>(
+          (acc, result) => {
+            if (result.status === 'fulfilled') {
+              acc[result.value.vehicleId] = result.value.damages;
+            }
+            return acc;
+          },
+          {}
+        );
+
+        setVehicleDamages(damagesByVehicle);
       } catch (err: any) {
         setError(err?.message || 'Erro ao carregar imagens.');
       } finally {
@@ -136,7 +166,7 @@ export default function AnalysisImageCompare() {
 
           {!loading && !error && images.length < 2 && (
             <p className="no-evidence">
-              Sao necessarias pelo menos duas imagens associadas as evidencias do caso.
+              São necessarias pelo menos duas imagens associadas as evidências do caso.
             </p>
           )}
 
@@ -185,8 +215,31 @@ export default function AnalysisImageCompare() {
               )}
 
               <div className="image-compare-grid">
-                <ImagePreview title="Imagem esquerda" item={firstImage} />
-                <ImagePreview title="Imagem direita" item={secondImage} />
+                <div className="image-compare-column left-column">
+                  <VehicleDamageCard
+                    title="Veículo A"
+                    vehicle={vehicles[0]}
+                    damages={
+                      vehicles[0]?.vehicleId !== undefined
+                        ? vehicleDamages[vehicles[0].vehicleId] ?? []
+                        : []
+                    }
+                  />
+                  <ImagePreview title="Imagem esquerda" item={firstImage} />
+                </div>
+
+                <div className="image-compare-column right-column">
+                  <ImagePreview title="Imagem direita" item={secondImage} />
+                  <VehicleDamageCard
+                    title="Veículo B"
+                    vehicle={vehicles[1]}
+                    damages={
+                      vehicles[1]?.vehicleId !== undefined
+                        ? vehicleDamages[vehicles[1].vehicleId] ?? []
+                        : []
+                    }
+                  />
+                </div>
               </div>
             </>
           )}
@@ -293,5 +346,68 @@ function ImagePreview({
 
       <p>{item.evidence.evidenceDescription || 'Sem descricao.'}</p>
     </div>
+  );
+}
+
+function vehicleLabel(vehicle?: VehicleOutput) {
+  if (!vehicle) return 'Sem veí­culo associado';
+  const brandModel = [vehicle.brand, vehicle.model].filter(Boolean).join(' ');
+  return brandModel || `Veí­culo #${vehicle.vehicleId ?? '-'}`;
+}
+
+function VehicleDamageCard({
+  title,
+  vehicle,
+  damages,
+}: {
+  title: string;
+  vehicle?: VehicleOutput;
+  damages: DamageOutput[];
+}) {
+  return (
+    <section className="vehicle-damage-info-card">
+      <div className="vehicle-damage-info-header">
+        <h2>{title}</h2>
+        <span>{vehicleLabel(vehicle)}</span>
+      </div>
+
+      {vehicle ? (
+        <>
+          <div className="vehicle-damage-info-meta">
+            <span>{vehicle.licensePlate || 'Sem matrícula'}</span>
+            <span>{vehicle.yearOfFabrication ?? 'Ano desconhecido'}</span>
+          </div>
+
+          <h3 className="analysis-damage-title">Danos:</h3>
+
+          {damages.length > 0 ? (
+            <div className="analysis-damage-list">
+              {damages.map((damage) => (
+                <div
+                  className="analysis-damage-item"
+                  key={damage.damageId ?? `${damage.contactZone}-${damage.direction}`}
+                >
+                  <div>
+                    <strong>{damage.contactZone || 'Zona sem nome'}</strong>
+                    <span>{damage.deformationType || 'Tipo não definido'}</span>
+                  </div>
+                  <p>{damage.damageDescription || 'Sem descrição.'}</p>
+                  <small>
+                    Direção: {damage.direction || '-'}
+                    {damage.heightCm !== null && damage.heightCm !== undefined
+                      ? ` | Altura: ${damage.heightCm} cm`
+                      : ''}
+                  </small>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="analysis-damage-empty">Sem danos registados.</p>
+          )}
+        </>
+      ) : (
+        <p className="analysis-damage-empty">Não existe veículo nesta posição.</p>
+      )}
+    </section>
   );
 }

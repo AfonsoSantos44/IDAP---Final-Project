@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/CaseInfoPage.css';
 import { caseService } from '../../services/caseService';
 import { userService } from '../../services/userService';
 import analysisService from '../../services/analysisService';
-import { vehicleService, type CreateVehicleRequest, type VehicleOutput } from '../../services/vehicleService';
+import { vehicleService, type CreateDamageRequest, type CreateVehicleRequest, type DamageOutput, type VehicleOutput } from '../../services/vehicleService';
 
 type VehicleFormInput = {
 	brand: string;
@@ -15,12 +15,26 @@ type VehicleFormInput = {
 	role: string;
 };
 
+type DamageFormInput = {
+	contactZone: string;
+	deformationType: string;
+	direction: string;
+	damageDescription: string;
+};
+
 const emptyVehicleForm: VehicleFormInput = {
 	brand: '',
 	model: '',
 	yearOfFabrication: '',
 	licensePlate: '',
 	role: '',
+};
+
+const emptyDamageForm: DamageFormInput = {
+	contactZone: '',
+	deformationType: '',
+	direction: '',
+	damageDescription: '',
 };
 
 function CaseInfoPage() {
@@ -43,6 +57,14 @@ function CaseInfoPage() {
 	const [vehicleInput, setVehicleInput] = useState<VehicleFormInput>(emptyVehicleForm);
 	const [vehicleError, setVehicleError] = useState<string | null>(null);
 	const [submittingVehicle, setSubmittingVehicle] = useState(false);
+	const [selectedDamageVehicle, setSelectedDamageVehicle] = useState<VehicleOutput | null>(null);
+	const [damageInput, setDamageInput] = useState<DamageFormInput>(emptyDamageForm);
+	const [damageError, setDamageError] = useState<string | null>(null);
+	const [submittingDamage, setSubmittingDamage] = useState(false);
+	const [selectedDetailsVehicle, setSelectedDetailsVehicle] = useState<VehicleOutput | null>(null);
+	const [vehicleDamages, setVehicleDamages] = useState<DamageOutput[]>([]);
+	const [loadingDamages, setLoadingDamages] = useState(false);
+	const [damagesError, setDamagesError] = useState<string | null>(null);
 
 	useEffect(() => {
 		const load = async () => {
@@ -127,12 +149,12 @@ function CaseInfoPage() {
 	};
 
 	const validateVehicle = (): string | null => {
-		if (!vehicleInput.brand.trim()) return 'A marca do veiculo é obrigatória.';
-		if (!vehicleInput.model.trim()) return 'O modelo do veiculo é obrigatório.';
-		if (!vehicleInput.licensePlate.trim()) return 'A matricula do veiculo é obrigatória.';
+		if (!vehicleInput.brand.trim()) return 'A marca do veiculo Ã© obrigatÃ³ria.';
+		if (!vehicleInput.model.trim()) return 'O modelo do veiculo Ã© obrigatÃ³rio.';
+		if (!vehicleInput.licensePlate.trim()) return 'A matricula do veiculo Ã© obrigatÃ³ria.';
 
 		const year = Number(vehicleInput.yearOfFabrication);
-		if (!Number.isInteger(year)) return 'O ano de fabricação deve ser um número inteiro.';
+		if (!Number.isInteger(year)) return 'O ano de fabricaÃ§Ã£o deve ser um nÃºmero inteiro.';
 		if (year < 1900 || year > new Date().getFullYear() + 1) {
 			return 'Insira um ano de fabricacao valido.';
 		}
@@ -164,7 +186,7 @@ function CaseInfoPage() {
 
 		const targetCaseId = caseData?.id ?? currentCaseId;
 		if (!targetCaseId) {
-			setVehicleError('Não foi possível associar o veículo ao caso.');
+			setVehicleError('NÃ£o foi possÃ­vel associar o veÃ­culo ao caso.');
 			return;
 		}
 
@@ -182,7 +204,7 @@ function CaseInfoPage() {
 			setVehicles((prev) => [...prev, createdVehicle]);
 			closeVehicleModal();
 		} catch (err: any) {
-			setVehicleError(err?.message || 'Falha ao adicionar veículo.');
+			setVehicleError(err?.message || 'Falha ao adicionar veÃ­culo.');
 		} finally {
 			setSubmittingVehicle(false);
 		}
@@ -190,13 +212,113 @@ function CaseInfoPage() {
 
 	const handleRemoveVehicle = async (vehicle: VehicleOutput) => {
 		if (!vehicle.vehicleId) return;
-		if (!confirm('Tem a certeza que deseja remover este veículo?')) return;
+		if (!confirm('Tem a certeza que deseja remover este veÃ­culo?')) return;
 
 		try {
 			await vehicleService.deleteVehicle(vehicle.vehicleId);
 			setVehicles((prev) => prev.filter((item) => item.vehicleId !== vehicle.vehicleId));
 		} catch (err: any) {
-			alert(err?.message || 'Falha ao remover veículo.');
+			alert(err?.message || 'Falha ao remover veÃ­culo.');
+		}
+	};
+
+	const openVehicleDetailsModal = async (vehicle: VehicleOutput) => {
+		if (!vehicle.vehicleId) return;
+
+		setSelectedDetailsVehicle(vehicle);
+		setVehicleDamages([]);
+		setDamagesError(null);
+		setLoadingDamages(true);
+
+		try {
+			const damages = await vehicleService.getVehicleDamages(vehicle.vehicleId);
+			setVehicleDamages(damages);
+		} catch (err: any) {
+			setDamagesError(err?.message || 'Falha ao carregar danos do veÃ­culo.');
+		} finally {
+			setLoadingDamages(false);
+		}
+	};
+
+	const closeVehicleDetailsModal = () => {
+		setSelectedDetailsVehicle(null);
+		setVehicleDamages([]);
+		setDamagesError(null);
+		setLoadingDamages(false);
+	};
+
+	const handleRemoveDamage = async (damage: DamageOutput) => {
+		if (!damage.damageId) return;
+		if (!confirm('Tem a certeza que deseja remover este dano?')) return;
+
+		try {
+			await vehicleService.deleteDamage(damage.damageId);
+			setVehicleDamages((prev) => prev.filter((item) => item.damageId !== damage.damageId));
+		} catch (err: any) {
+			setDamagesError(err?.message || 'Falha ao remover dano.');
+		}
+	};
+
+	const openDamageModal = (vehicle: VehicleOutput) => {
+		setSelectedDamageVehicle(vehicle);
+		setDamageInput(emptyDamageForm);
+		setDamageError(null);
+	};
+
+	const closeDamageModal = () => {
+		setSelectedDamageVehicle(null);
+		setDamageInput(emptyDamageForm);
+		setDamageError(null);
+	};
+
+	const handleDamageInputChange = (field: keyof DamageFormInput, value: string) => {
+		setDamageInput((prev) => ({
+			...prev,
+			[field]: value,
+		}));
+	};
+
+	const validateDamage = (): string | null => {
+		if (!damageInput.contactZone.trim()) return 'A zona de contacto Ã© obrigatÃ³ria.';
+		if (!damageInput.deformationType.trim()) return 'O tipo de deformaÃ§Ã£o Ã© obrigatÃ³rio.';
+		if (!damageInput.direction.trim()) return 'A direÃ§Ã£o Ã© obrigatÃ³ria.';
+		if (!damageInput.damageDescription.trim()) return 'A descriÃ§Ã£o do dano Ã© obrigatÃ³ria.';
+		return null;
+	};
+
+	const handleDamageSubmit = async (event: React.FormEvent) => {
+		event.preventDefault();
+		setDamageError(null);
+
+		const validationError = validateDamage();
+		if (validationError) {
+			setDamageError(validationError);
+			return;
+		}
+
+		if (!selectedDamageVehicle?.vehicleId) {
+			setDamageError('NÃ£o foi possÃ­vel identificar o veÃ­culo.');
+			return;
+		}
+
+		const damage: CreateDamageRequest = {
+			contactZone: damageInput.contactZone.trim(),
+			deformationType: damageInput.deformationType.trim(),
+			direction: damageInput.direction.trim(),
+			damageDescription: damageInput.damageDescription.trim(),
+		};
+
+		try {
+			setSubmittingDamage(true);
+			const createdDamage = await vehicleService.createVehicleDamage(selectedDamageVehicle.vehicleId, damage);
+			if (selectedDetailsVehicle?.vehicleId === selectedDamageVehicle.vehicleId) {
+				setVehicleDamages((prev) => [...prev, createdDamage]);
+			}
+			closeDamageModal();
+		} catch (err: any) {
+			setDamageError(err?.message || 'Falha ao criar dano.');
+		} finally {
+			setSubmittingDamage(false);
 		}
 	};
 
@@ -215,7 +337,7 @@ function CaseInfoPage() {
 			const analysis = await analysisService.createCaseAnalysis(Number(targetCaseId));
 			navigate(`/cases/${targetCaseId}/analysis/${analysis.analysisId}`);
 		} catch (err: any) {
-			alert(err?.message || 'Erro ao criar análise');
+			alert(err?.message || 'Erro ao criar anÃ¡lise');
 		}
 	};
 
@@ -272,16 +394,16 @@ function CaseInfoPage() {
 					<div className="case-info-row vehicles-info-row">
 						<div className="vehicles-info-header">
 							<strong className="case-info-label">
-								Veículos envolvidos:
+								Veí­culos envolvidos:
 							</strong>
 							<button className="add-case-vehicle-btn" type="button" onClick={openVehicleModal}>
-								Adicionar veículo
+								Adicionar veí­culo
 							</button>
 						</div>
 
 						<div className={`case-vehicles-list ${vehicles.length > 4 ? 'scrollable' : ''}`}>
 							{vehicles.length === 0 ? (
-								<span className="case-info-value">Ainda não existem veículos adicionados.</span>
+								<span className="case-info-value">Ainda não existem veí­culos adicionados.</span>
 							) : (
 								vehicles.map((vehicle) => (
 									<div className="case-vehicle-card" key={vehicle.vehicleId ?? `${vehicle.licensePlate}-${vehicle.model}`}>
@@ -290,14 +412,32 @@ function CaseInfoPage() {
 											<span>{vehicle.licensePlate ?? 'Sem matrícula'} - {vehicle.yearOfFabrication ?? 'Ano desconhecido'}</span>
 											{vehicle.role && <small>{vehicle.role}</small>}
 										</div>
-										<button
-											className="remove-vehicle-btn"
-											type="button"
-											onClick={() => handleRemoveVehicle(vehicle)}
-											disabled={!vehicle.vehicleId}
-										>
-											Remover
-										</button>
+										<div className="case-vehicle-actions">
+											<button
+												className="vehicle-details-btn"
+												type="button"
+												onClick={() => openVehicleDetailsModal(vehicle)}
+												disabled={!vehicle.vehicleId}
+											>
+												Detalhes
+											</button>
+											<button
+												className="create-damage-btn"
+												type="button"
+												onClick={() => openDamageModal(vehicle)}
+												disabled={!vehicle.vehicleId}
+											>
+												Criar dano
+											</button>
+											<button
+												className="remove-vehicle-btn"
+												type="button"
+												onClick={() => handleRemoveVehicle(vehicle)}
+												disabled={!vehicle.vehicleId}
+											>
+												Remover
+											</button>
+										</div>
 									</div>
 								))
 							)}
@@ -314,17 +454,7 @@ function CaseInfoPage() {
 						navigate(`/cases/${caseData?.id ?? currentCaseId}/evidences`);
 					}}
 				>
-					Ver todas as evidências
-				</button>
-
-				<button
-					className="case-menu-btn"
-					type="button"
-					onClick={() => {
-						navigate(`/cases/${caseData?.id ?? currentCaseId}/evidences/create`);
-					}}
-				>
-					Adicionar evidência
+					Gerir evidências
 				</button>
 
 				<button
@@ -336,11 +466,157 @@ function CaseInfoPage() {
 				</button>
 			</div>
 
+			{selectedDetailsVehicle && (
+				<div className="vehicle-modal-backdrop" role="dialog" aria-modal="true">
+					<div className="vehicle-modal vehicle-details-modal">
+						<div className="vehicle-details-modal-header">
+							<div>
+								<h2>{formatVehicleLabel(selectedDetailsVehicle)}</h2>
+								<p>InformaÃ§Ã£o do veí­culo e danos associados.</p>
+							</div>
+							<button type="button" className="secondary-action" onClick={closeVehicleDetailsModal}>
+								Fechar
+							</button>
+						</div>
+
+						<div className="vehicle-details-grid">
+							<div>
+								<strong>Matrícula</strong>
+								<span>{selectedDetailsVehicle.licensePlate ?? '-'}</span>
+							</div>
+							<div>
+								<strong>Ano</strong>
+								<span>{selectedDetailsVehicle.yearOfFabrication ?? '-'}</span>
+							</div>
+							<div>
+								<strong>Marca</strong>
+								<span>{selectedDetailsVehicle.brand ?? '-'}</span>
+							</div>
+							<div>
+								<strong>Modelo</strong>
+								<span>{selectedDetailsVehicle.model ?? '-'}</span>
+							</div>
+							<div className="wide">
+								<strong>Papel no acidente</strong>
+								<span>{selectedDetailsVehicle.role || '-'}</span>
+							</div>
+						</div>
+
+						<section className="vehicle-damages-section">
+							<h3>Danos associados</h3>
+
+							{loadingDamages && <p className="vehicle-damages-empty">A carregar danos...</p>}
+							{damagesError && <div className="vehicle-error-message">{damagesError}</div>}
+							{!loadingDamages && !damagesError && vehicleDamages.length === 0 && (
+								<p className="vehicle-damages-empty">Ainda não existem danos associados a este veículo.</p>
+							)}
+
+							{!loadingDamages && !damagesError && vehicleDamages.length > 0 && (
+								<div className="vehicle-damages-list">
+									{vehicleDamages.map((damage) => (
+										<div className="vehicle-damage-card" key={damage.damageId ?? `${damage.contactZone}-${damage.direction}`}>
+                                            <div>
+                                                <div>
+                                                    <strong>{damage.contactZone || 'Zona sem nome'}</strong>
+                                                    <span>{damage.deformationType || 'Tipo não definido'}</span>
+                                                </div>
+                                                <button
+                                                    className="remove-damage-btn"
+                                                    type="button"
+                                                    onClick={() => handleRemoveDamage(damage)}
+                                                    disabled={!damage.damageId}
+                                                >
+                                                    Remover
+                                                </button>
+                                            </div>
+											<p>{damage.damageDescription || 'Sem descrição.'}</p>
+											<small>
+												Direção: {damage.direction || '-'}
+												{damage.heightCm !== null && damage.heightCm !== undefined
+													? ` | Altura: ${damage.heightCm} cm`
+													: ''}
+											</small>
+										</div>
+									))}
+								</div>
+							)}
+						</section>
+					</div>
+				</div>
+			)}
+
+			{selectedDamageVehicle && (
+				<div className="vehicle-modal-backdrop" role="dialog" aria-modal="true">
+					<div className="vehicle-modal">
+						<h2>Criar dano</h2>
+						<p>
+							Registe um dano para {formatVehicleLabel(selectedDamageVehicle)}.
+						</p>
+
+						{damageError && <div className="vehicle-error-message">{damageError}</div>}
+
+						<form onSubmit={handleDamageSubmit} className="vehicle-modal-form">
+							<div className="vehicle-form-grid">
+								<div className="vehicle-form-group">
+									<label htmlFor="damage-contact-zone">Zona de contacto:</label>
+									<input
+										id="damage-contact-zone"
+										value={damageInput.contactZone}
+										onChange={(e) => handleDamageInputChange('contactZone', e.target.value)}
+										placeholder="Ex.: Frente direita"
+									/>
+								</div>
+
+								<div className="vehicle-form-group">
+									<label htmlFor="damage-deformation-type">Tipo de deformação:</label>
+									<input
+										id="damage-deformation-type"
+										value={damageInput.deformationType}
+										onChange={(e) => handleDamageInputChange('deformationType', e.target.value)}
+										placeholder="Ex.: Amolgadela"
+									/>
+								</div>
+
+								<div className="vehicle-form-group wide">
+									<label htmlFor="damage-direction">Direção:</label>
+									<input
+										id="damage-direction"
+										value={damageInput.direction}
+										onChange={(e) => handleDamageInputChange('direction', e.target.value)}
+										placeholder="Ex.: Da frente para trás"
+									/>
+								</div>
+
+								<div className="vehicle-form-group wide">
+									<label htmlFor="damage-description">Descrição:</label>
+									<textarea
+										id="damage-description"
+										value={damageInput.damageDescription}
+										onChange={(e) => handleDamageInputChange('damageDescription', e.target.value)}
+										placeholder="Descreva o dano observado"
+										rows={4}
+									/>
+								</div>
+							</div>
+
+							<div className="vehicle-modal-actions">
+								<button type="button" className="secondary-action" onClick={closeDamageModal}>
+									Cancelar
+								</button>
+								<button type="submit" disabled={submittingDamage}>
+									{submittingDamage ? 'A criar...' : 'Criar dano'}
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			)}
+
 			{showVehicleModal && (
 				<div className="vehicle-modal-backdrop" role="dialog" aria-modal="true">
 					<div className="vehicle-modal">
-						<h2>Adicionar veículo ao caso</h2>
-						<p>Preencha os dados do veículo para o associar a este caso.</p>
+						<h2>Adicionar veí­culo ao caso</h2>
+						<p>Preencha os dados do veí­culo para o associar a este caso.</p>
 
 						{vehicleError && <div className="vehicle-error-message">{vehicleError}</div>}
 
@@ -405,7 +681,7 @@ function CaseInfoPage() {
 									Cancelar
 								</button>
 								<button type="submit" disabled={submittingVehicle}>
-									{submittingVehicle ? 'A adicionar...' : 'Adicionar veículo'}
+									{submittingVehicle ? 'A adicionar...' : 'Adicionar veí­culo'}
 								</button>
 							</div>
 						</form>

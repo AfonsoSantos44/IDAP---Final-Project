@@ -9,25 +9,25 @@
 
 .analysis-image-overlay {
   align-items: stretch;
-  height: calc(100vh - 2.5rem);
-  width: min(1400px, calc(100% - 3rem));
-  padding: 2.5rem 4rem;
+  height: calc(100vh - 1.5rem);
+  width: min(1660px, calc(100% - 1.5rem));
+  padding: 2.25rem 3.25rem;
   overflow: hidden;
 }
 
 .analysis-image-content {
   display: flex;
   flex-direction: column;
-  max-width: 1180px;
+  max-width: 1480px;
   text-align: left;
 }
 
 .analysis-image-content .homepage-title {
-  font-size: clamp(3rem, 5vw, 4.25rem);
+  font-size: clamp(2.8rem, 4.5vw, 4rem);
 }
 
 .analysis-image-content .homepage-subtitle {
-  margin-top: 0.65rem;
+  margin-top: 0.45rem;
 }
 
 .analysis-image-content .homepage-title,
@@ -50,7 +50,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-top: 1rem;
 }
 
 .image-select-label {
@@ -73,10 +73,147 @@
 .image-compare-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.2rem;
+  gap: 1rem;
   flex: 1;
   min-height: 0;
   margin-top: 1rem;
+}
+
+.image-compare-column {
+  display: grid;
+  grid-template-columns: minmax(205px, 0.36fr) minmax(0, 1fr);
+  gap: 0.8rem;
+  min-height: 0;
+}
+
+.image-compare-column.right-column {
+  grid-template-columns: minmax(0, 1fr) minmax(205px, 0.36fr);
+}
+
+.vehicle-damage-info-card {
+  display: grid;
+  align-content: start;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid rgba(35,43,93,0.08);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.05);
+  min-width: 0;
+}
+
+.vehicle-damage-info-header {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.vehicle-damage-info-header h2 {
+  margin: 0;
+  color: #232b5d;
+  font-size: 1rem;
+}
+
+.vehicle-damage-info-header span {
+  color: #4e4bfa;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.vehicle-damage-info-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.vehicle-damage-info-meta span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0.35rem 0.5rem;
+  border-radius: 10px;
+  background: #f8f9ff;
+  color: #5e6689;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.analysis-damage-title {
+  margin: 0;
+  color: #232b5d;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.analysis-damage-list {
+  display: grid;
+  align-content: start;
+  gap: 0.65rem;
+  max-height: 42vh;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.analysis-damage-item {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(35,43,93,0.08);
+  border-radius: 10px;
+  background: #f8f9ff;
+}
+
+.analysis-damage-item > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.analysis-damage-item strong {
+  color: #232b5d;
+  font-size: 0.92rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.analysis-damage-item span,
+.analysis-damage-item small {
+  color: #5e6689;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.analysis-damage-item span {
+  flex-shrink: 0;
+  max-width: 42%;
+  text-align: right;
+}
+
+.analysis-damage-item p,
+.analysis-damage-empty {
+  margin: 0;
+  color: #5e6689;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.analysis-damage-empty {
+  padding: 0.65rem;
+  border: 1px dashed rgba(35,43,93,0.16);
+  border-radius: 8px;
+  text-align: center;
 }
 
 .image-preview-card {
@@ -101,7 +238,7 @@
 .image-preview-card img {
   width: 100%;
   height: 100%;
-  max-height: 42vh;
+  max-height: 50vh;
   object-fit: contain;
   border-radius: 6px;
   background: #f4f5fb;
@@ -176,8 +313,19 @@
     grid-template-columns: 1fr;
   }
 
+  .image-compare-column {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
   .image-preview-card {
     min-height: 320px;
+  }
+
+  .analysis-damage-item > div,
+  .vehicle-damage-info-header {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .image-measurements-panel {
