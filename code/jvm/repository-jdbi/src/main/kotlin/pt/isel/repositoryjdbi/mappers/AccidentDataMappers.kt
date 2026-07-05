@@ -104,6 +104,7 @@ class ImageEvidenceMapper : RowMapper<ImageEvidence> {
         ImageEvidence(
             imageEvidenceId = rs.getInt("image_evidence_id"),
             evidenceId = rs.getInt("evidence_id"),
+            vehicleId = rs.getInt("vehicle_id"),
             filePath = rs.getString("file_path"),
             width = rs.getInt("width"),
             height = rs.getInt("height"),

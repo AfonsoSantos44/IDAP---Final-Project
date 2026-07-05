@@ -96,11 +96,13 @@ CREATE TABLE evidence (
 CREATE TABLE image_evidence (
                                 image_evidence_id SERIAL PRIMARY KEY,
                                 evidence_id INT NOT NULL UNIQUE,
+                                vehicle_id INT NOT NULL,
                                 file_path VARCHAR(255) NOT NULL,
                                 width INT NOT NULL,
                                 height INT NOT NULL,
                                 metadata TEXT,
-                                FOREIGN KEY (evidence_id) REFERENCES evidence(evidence_id) ON DELETE CASCADE
+                                FOREIGN KEY (evidence_id) REFERENCES evidence(evidence_id) ON DELETE CASCADE,
+                                FOREIGN KEY (vehicle_id) REFERENCES vehicle(vehicle_id) ON DELETE CASCADE
 );
 
 -- ANALYSIS
@@ -192,6 +194,7 @@ CREATE INDEX idx_vehicle_case ON vehicle(case_id);
 CREATE INDEX idx_damage_vehicle ON damage(vehicle_id);
 CREATE INDEX idx_evidence_case ON evidence(case_id);
 CREATE INDEX idx_evidence_uploaded_by ON evidence(uploaded_by);
+CREATE INDEX idx_image_evidence_vehicle ON image_evidence(vehicle_id);
 CREATE INDEX idx_analysis_case ON analysis(case_id);
 CREATE INDEX idx_analysis_analyst ON analysis(analyst_id);
 CREATE INDEX idx_measurement_analysis ON measurement(analysis_id);

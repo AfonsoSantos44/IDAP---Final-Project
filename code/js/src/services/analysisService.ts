@@ -1,4 +1,4 @@
-import { fetchApi } from './api';
+import { API_BASE_URL, fetchApi } from './api';
 
 export interface AccidentAnalysisOutput {
 	analysisId?: number;
@@ -16,6 +16,49 @@ export interface AnalysisImageOutput {
 export interface UpsertAnalysisImageRequest {
 	evidenceId: number;
 	purpose: string;
+}
+
+export interface DamageSelectionRequest {
+	x1: number;
+	y1: number;
+	x2: number;
+	y2: number;
+}
+
+export interface RulerReferencePointRequest {
+	x: number;
+	y: number;
+	valueCm: number;
+}
+
+export interface RulerCalibrationRequest {
+	referencePoints: RulerReferencePointRequest[];
+}
+
+export interface CreateMeasurementRequest {
+	evidenceId: number;
+	damageId: number;
+	comparisonEvidenceId: number;
+	knownTickDistanceCm: number;
+	primarySelection: DamageSelectionRequest;
+	primaryCalibration?: RulerCalibrationRequest;
+	comparisonSelection: DamageSelectionRequest;
+	comparisonCalibration?: RulerCalibrationRequest;
+}
+
+export interface MeasurementOutput {
+	measurementId?: number;
+	analysisId?: number;
+	evidenceId?: number;
+	damageId?: number;
+	calculatedHeightCm?: number;
+	damageMinHeightCm?: number;
+	damageMaxHeightCm?: number;
+	scaleCmPerPixel?: number;
+	confidence?: number;
+	calibrationMethod?: string;
+	comparisonImagePath?: string | null;
+	processedAt?: string;
 }
 
 export const accidentAnalysisService = {
@@ -75,6 +118,20 @@ export const accidentAnalysisService = {
 				method: 'DELETE',
 			}
 		);
+	},
+
+	async createMeasurement(
+		analysisId: number,
+		input: CreateMeasurementRequest
+	): Promise<MeasurementOutput> {
+		return fetchApi<MeasurementOutput>(`/analyses/${analysisId}/measurements`, {
+			method: 'POST',
+			body: JSON.stringify(input),
+		});
+	},
+
+	comparisonImageContentUrl(measurementId: number): string {
+		return `${API_BASE_URL}/measurements/${measurementId}/comparison-image`;
 	},
 };
 

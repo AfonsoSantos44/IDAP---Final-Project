@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../../styles/EvidenceCreate.css';
 import { evidenceService } from '../../services/evidenceService';
+import { vehicleService, type VehicleOutput } from '../../services/vehicleService';
 
 const SUGGESTED_TYPES = ['Foto', 'Documento', 'Medida', 'Outro'];
 
@@ -20,6 +21,8 @@ export default function EvidenceEdit() {
   const [hasImage, setHasImage] = useState<boolean>(false);
   const [imageVersion] = useState<number>(0);
   const [localPreview, setLocalPreview] = useState<string>('');
+  const [vehicles, setVehicles] = useState<VehicleOutput[]>([]);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
   const [documentFile, setDocumentFile] = useState<File | null>(null);
 
   const MAX_TYPE = 50;
@@ -39,6 +42,15 @@ export default function EvidenceEdit() {
 
         const evidence = await evidenceService.getEvidenceById(Number(evidenceId));
         const type = evidence.evidenceType ?? '';
+        const effectiveCaseId = Number(caseId ?? evidence.caseId);
+
+        if (Number.isFinite(effectiveCaseId)) {
+          const caseVehicles = await vehicleService.getCaseVehicles(effectiveCaseId);
+          setVehicles(caseVehicles);
+          if (caseVehicles.length > 0 && caseVehicles[0].vehicleId !== undefined) {
+            setSelectedVehicleId(String(caseVehicles[0].vehicleId));
+          }
+        }
 
         if (SUGGESTED_TYPES.includes(type)) {
           setSelectedType(type);
@@ -52,8 +64,11 @@ export default function EvidenceEdit() {
 
         if (type === 'Foto') {
           try {
-            await evidenceService.getEvidenceImage(Number(evidenceId));
+            const image = await evidenceService.getEvidenceImage(Number(evidenceId));
             setHasImage(true);
+            if (image.vehicleId !== undefined) {
+              setSelectedVehicleId(String(image.vehicleId));
+            }
           } catch {
             setHasImage(false);
           }
@@ -66,7 +81,7 @@ export default function EvidenceEdit() {
     };
 
     loadEvidence();
-  }, [evidenceId]);
+  }, [caseId, evidenceId]);
 
   // Local preview of a freshly selected file, before it is uploaded.
   useEffect(() => {
@@ -90,6 +105,10 @@ export default function EvidenceEdit() {
 
     if (isPhotoEvidence && !imageFile && !hasImage) {
       return 'A imagem e obrigatoria para evidencias do tipo Foto.';
+    }
+
+    if (isPhotoEvidence && imageFile && !selectedVehicleId) {
+      return 'Selecione o veiculo associado a foto.';
     }
 
     return null;
@@ -123,7 +142,11 @@ export default function EvidenceEdit() {
       });
 
       if (isPhotoEvidence && imageFile) {
-        await evidenceService.uploadEvidenceImage(Number(evidenceId), imageFile);
+        await evidenceService.uploadEvidenceImage(
+          Number(evidenceId),
+          imageFile,
+          Number(selectedVehicleId),
+        );
       }
 
       navigate(`/cases/${caseId}/evidences`);
@@ -202,6 +225,24 @@ export default function EvidenceEdit() {
               <section className="type-fields">
                 <h2>Imagem da foto</h2>
 
+                <label className="form-label">Veiculo associado</label>
+                <select
+                  value={selectedVehicleId}
+                  onChange={(e) => setSelectedVehicleId(e.target.value)}
+                  className="form-control"
+                  disabled={vehicles.length === 0}
+                >
+                  {vehicles.length === 0 ? (
+                    <option value="">Nenhum veiculo associado ao caso</option>
+                  ) : (
+                    vehicles.map((vehicle) => (
+                      <option key={vehicle.vehicleId} value={vehicle.vehicleId}>
+                        {vehicleLabel(vehicle)}
+                      </option>
+                    ))
+                  )}
+                </select>
+
                 {(localPreview || hasImage) && (
                   <img
                     src={
@@ -277,4 +318,10 @@ export default function EvidenceEdit() {
       </div>
     </div>
   );
+}
+
+function vehicleLabel(vehicle: VehicleOutput) {
+  const brandModel = [vehicle.brand, vehicle.model].filter(Boolean).join(' ');
+  const plate = vehicle.licensePlate ? ` - ${vehicle.licensePlate}` : '';
+  return `${brandModel || `Veiculo #${vehicle.vehicleId ?? '-'}`}${plate}`;
 }

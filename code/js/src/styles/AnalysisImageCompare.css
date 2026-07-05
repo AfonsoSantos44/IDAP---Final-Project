@@ -46,6 +46,28 @@
   font-weight: 700;
 }
 
+.analysis-measurement-status {
+  margin: 0.85rem 0 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.analysis-measurement-status.running {
+  background: #f8f9ff;
+  color: #4e4bfa;
+}
+
+.analysis-measurement-status.success {
+  background: #f2fbf6;
+  color: #247345;
+}
+
+.analysis-measurement-status.error {
+  background: #fff4f1;
+  color: #b63422;
+}
+
 .image-selector-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -235,7 +257,12 @@
   font-weight: 700;
 }
 
-.image-preview-card img {
+.image-reference-stage {
+  position: relative;
+  min-height: 0;
+}
+
+.image-reference-stage img {
   width: 100%;
   height: 100%;
   max-height: 50vh;
@@ -243,6 +270,71 @@
   border-radius: 6px;
   background: #f4f5fb;
   border: 1px solid rgba(35,43,93,0.08);
+  cursor: crosshair;
+  user-select: none;
+}
+
+.reference-marker {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: #e23c2f;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.reference-controls {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.65rem;
+  border: 1px solid rgba(35,43,93,0.08);
+  border-radius: 8px;
+  background: #f8f9ff;
+}
+
+.reference-controls-header,
+.reference-point-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.reference-controls-header span,
+.reference-point-row span {
+  color: #232b5d;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.reference-controls-header button {
+  border: 0;
+  background: transparent;
+  color: #4e4bfa;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.reference-point-row input {
+  width: 72px;
+  min-height: 32px;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid rgba(78,75,250,0.18);
+  border-radius: 8px;
+  background: #fff;
+  color: #232b5d;
+  font: inherit;
+  font-size: 0.82rem;
 }
 
 .image-measurements-panel {
@@ -300,6 +392,18 @@
   color: #4e4bfa;
   font-size: 0.9rem;
   font-weight: 700;
+}
+
+.analysis-measurement-actions {
+  margin-top: 0.85rem;
+  display: flex;
+  justify-content: center;
+}
+
+.analysis-measurement-actions .homepage-btn {
+  width: auto;
+  min-width: 180px;
+  padding-inline: 1.4rem;
 }
 
 @media (max-width: 780px) {

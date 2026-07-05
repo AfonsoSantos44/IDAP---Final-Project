@@ -239,7 +239,7 @@ internal fun AccidentDataError.toProblemResponse(): ResponseEntity<Any> =
         is AccidentDataError.DuplicateVehicle -> Problem.DuplicateVehicle.response(HttpStatus.CONFLICT)
         is AccidentDataError.InvalidAccidentData -> Problem.InvalidAccidentData.response(HttpStatus.BAD_REQUEST)
         is AccidentDataError.MeasurementProcessingFailed ->
-            Problem.MeasurementProcessingFailed.response(HttpStatus.BAD_REQUEST)
+            Problem.MeasurementProcessingFailed(this.detail).response(HttpStatus.BAD_REQUEST)
 
         is AccidentDataError.ReportGenerationFailed ->
             Problem.ReportGenerationFailed.response(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -324,6 +324,7 @@ internal fun ImageEvidence.toOutputDto() =
     ImageEvidenceOutputDto(
         imageEvidenceId = imageEvidenceId,
         evidenceId = evidenceId,
+        vehicleId = vehicleId,
         filePath = filePath,
         width = width,
         height = height,

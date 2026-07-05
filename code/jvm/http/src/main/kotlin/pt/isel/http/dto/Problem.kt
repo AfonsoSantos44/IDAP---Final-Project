@@ -105,10 +105,12 @@ sealed class Problem(
         "Invalid accident data",
     )
 
-    data object MeasurementProcessingFailed : Problem(
-        URI("$PROBLEM_URI_PATH/measurement-processing-failed"),
-        "Measurement processing failed",
-    )
+    data class MeasurementProcessingFailed(
+        val detail: String,
+    ) : Problem(
+            URI("$PROBLEM_URI_PATH/measurement-processing-failed"),
+            "Measurement processing failed",
+        )
 
     data object ReportGenerationFailed : Problem(
         URI("$PROBLEM_URI_PATH/report-generation-failed"),

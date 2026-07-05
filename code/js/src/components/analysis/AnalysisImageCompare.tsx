@@ -7,18 +7,21 @@ import type {
   ImageEvidenceOutput,
 } from '../../services/evidenceService';
 import { vehicleService, type DamageOutput, type VehicleOutput } from '../../services/vehicleService';
+import accidentAnalysisService, {
+  type DamageSelectionRequest,
+  type MeasurementOutput,
+  type RulerReferencePointRequest,
+} from '../../services/analysisService';
 
 type SelectableImage = {
   evidence: EvidenceOutput;
   image: ImageEvidenceOutput;
 };
 
-type ImageDisplayMeasurements = {
-  naturalWidth: number;
-  naturalHeight: number;
-  displayedWidth: number;
-  displayedHeight: number;
-  resizeFactor: number;
+type ReferencePoint = RulerReferencePointRequest & {
+  valueText: string;
+  markerLeft: number;
+  markerTop: number;
 };
 
 function imageLabel(item: SelectableImage) {
@@ -26,22 +29,34 @@ function imageLabel(item: SelectableImage) {
   return `${item.evidence.evidenceType || 'Imagem'} #${id ?? '-'}`;
 }
 
-function getImageDisplayMeasurements(
-  image: HTMLImageElement
-): ImageDisplayMeasurements {
-  const bounds = image.getBoundingClientRect();
-  const naturalWidth = image.naturalWidth;
-  const naturalHeight = image.naturalHeight;
-  const displayedWidth = Math.round(bounds.width);
-  const displayedHeight = Math.round(bounds.height);
+function fullImageSelection(image: ImageEvidenceOutput): DamageSelectionRequest | null {
+  if (!image.width || !image.height || image.width < 2 || image.height < 2) return null;
+  const width = image.width - 1;
+  const height = image.height - 1;
 
   return {
-    naturalWidth,
-    naturalHeight,
-    displayedWidth,
-    displayedHeight,
-    resizeFactor: naturalWidth > 0 ? displayedWidth / naturalWidth : 1,
+    x1: 0,
+    y1: 0,
+    x2: width,
+    y2: height,
   };
+}
+
+function calibrationFromPoints(points: ReferencePoint[]) {
+  return {
+    referencePoints: points.map((point) => ({
+      x: point.x,
+      y: point.y,
+      valueCm: Number(point.valueText),
+    })),
+  };
+}
+
+function hasTwoValidReferencePoints(points: ReferencePoint[]) {
+  return (
+    points.length === 2 &&
+    points.every((point) => Number.isFinite(Number(point.valueText)))
+  );
 }
 
 export default function AnalysisImageCompare() {
@@ -53,8 +68,18 @@ export default function AnalysisImageCompare() {
   const [vehicleDamages, setVehicleDamages] = useState<Record<number, DamageOutput[]>>({});
   const [firstImageId, setFirstImageId] = useState('');
   const [secondImageId, setSecondImageId] = useState('');
+  const [analysisId, setAnalysisId] = useState<number | null>(null);
+  const [firstMeasurement, setFirstMeasurement] = useState<MeasurementOutput | null>(null);
+  const [secondMeasurement, setSecondMeasurement] = useState<MeasurementOutput | null>(null);
+  const [firstReferencePoints, setFirstReferencePoints] = useState<ReferencePoint[]>([]);
+  const [secondReferencePoints, setSecondReferencePoints] = useState<ReferencePoint[]>([]);
+  const [measurementStatus, setMeasurementStatus] = useState('');
+  const [measurementStatusType, setMeasurementStatusType] =
+    useState<'running' | 'success' | 'error' | ''>('');
+  const [measuring, setMeasuring] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const measurementRunRef = useRef(0);
 
   const goBack = () => navigate(-1);
 
@@ -69,9 +94,10 @@ export default function AnalysisImageCompare() {
         }
 
         const caseNumber = Number(caseId);
-        const [evidences, caseVehicles] = await Promise.all([
+        const [evidences, caseVehicles, analyses] = await Promise.all([
           evidenceService.listCaseEvidence(caseNumber),
           vehicleService.getCaseVehicles(caseNumber),
+          accidentAnalysisService.listCaseAnalyses(caseNumber),
         ]);
         const imageResults = await Promise.allSettled(
           evidences
@@ -91,12 +117,26 @@ export default function AnalysisImageCompare() {
 
         setImages(availableImages);
         setVehicles(caseVehicles);
-        setFirstImageId(String(availableImages[0]?.evidence.evidenceId ?? ''));
-        setSecondImageId(String(availableImages[1]?.evidence.evidenceId ?? ''));
+        setAnalysisId(
+          analyses[0]?.analysisId ??
+            (await accidentAnalysisService.createCaseAnalysis(caseNumber)).analysisId ??
+            null
+        );
+
+        const firstVehicleId = caseVehicles[0]?.vehicleId;
+        const secondVehicleId = caseVehicles[1]?.vehicleId;
+        const firstVehicleImage = availableImages.find(
+          (item) => item.image.vehicleId === firstVehicleId
+        );
+        const secondVehicleImage = availableImages.find(
+          (item) => item.image.vehicleId === secondVehicleId
+        );
+
+        setFirstImageId(String(firstVehicleImage?.evidence.evidenceId ?? ''));
+        setSecondImageId(String(secondVehicleImage?.evidence.evidenceId ?? ''));
 
         const damageResults = await Promise.allSettled(
           caseVehicles
-            .slice(0, 2)
             .filter((vehicle) => vehicle.vehicleId !== undefined)
             .map(async (vehicle) => ({
               vehicleId: vehicle.vehicleId!,
@@ -144,6 +184,153 @@ export default function AnalysisImageCompare() {
   const sameImageSelected =
     Boolean(firstImageId) && firstImageId === secondImageId;
 
+  const firstVehicle = vehicles[0];
+  const secondVehicle = vehicles[1];
+
+  const firstVehicleImages = useMemo(
+    () => images.filter((item) => item.image.vehicleId === firstVehicle?.vehicleId),
+    [firstVehicle?.vehicleId, images]
+  );
+
+  const secondVehicleImages = useMemo(
+    () => images.filter((item) => item.image.vehicleId === secondVehicle?.vehicleId),
+    [secondVehicle?.vehicleId, images]
+  );
+
+  const firstVehicleDamages = useMemo(
+    () =>
+      firstVehicle?.vehicleId !== undefined
+        ? vehicleDamages[firstVehicle.vehicleId] ?? []
+        : [],
+    [firstVehicle?.vehicleId, vehicleDamages]
+  );
+
+  const secondVehicleDamages = useMemo(
+    () =>
+      secondVehicle?.vehicleId !== undefined
+        ? vehicleDamages[secondVehicle.vehicleId] ?? []
+        : [],
+    [secondVehicle?.vehicleId, vehicleDamages]
+  );
+
+  useEffect(() => {
+    if (
+      firstVehicleImages.length > 0 &&
+      !firstVehicleImages.some((item) => String(item.evidence.evidenceId) === firstImageId)
+    ) {
+      setFirstImageId(String(firstVehicleImages[0].evidence.evidenceId ?? ''));
+    }
+  }, [firstImageId, firstVehicleImages]);
+
+  useEffect(() => {
+    if (
+      secondVehicleImages.length > 0 &&
+      !secondVehicleImages.some((item) => String(item.evidence.evidenceId) === secondImageId)
+    ) {
+      setSecondImageId(String(secondVehicleImages[0].evidence.evidenceId ?? ''));
+    }
+  }, [secondImageId, secondVehicleImages]);
+
+  useEffect(() => {
+    setFirstReferencePoints([]);
+    setFirstMeasurement(null);
+  }, [firstImageId]);
+
+  useEffect(() => {
+    setSecondReferencePoints([]);
+    setSecondMeasurement(null);
+  }, [secondImageId]);
+
+  const runMeasurements = async () => {
+    if (!analysisId || !firstImage || !secondImage) {
+      setMeasurementStatus('Selecione duas imagens para correr a medição.');
+      setMeasurementStatusType('error');
+      return;
+    }
+
+    const firstEvidenceId = firstImage.evidence.evidenceId;
+    const secondEvidenceId = secondImage.evidence.evidenceId;
+    const firstDamageId = firstVehicleDamages[0]?.damageId;
+    const secondDamageId = secondVehicleDamages[0]?.damageId;
+
+    if (!firstEvidenceId || !secondEvidenceId) {
+      setMeasurementStatus('Não foi possível identificar as evidências das imagens.');
+      setMeasurementStatusType('error');
+      return;
+    }
+
+    if (!firstDamageId || !secondDamageId) {
+      setMeasurementStatus('Registe pelo menos um dano em cada veículo antes de correr a medição.');
+      setMeasurementStatusType('error');
+      return;
+    }
+
+    if (!hasTwoValidReferencePoints(firstReferencePoints) || !hasTwoValidReferencePoints(secondReferencePoints)) {
+      setMeasurementStatus('Selecione 2 pontos de referência em cada imagem e preencha os respetivos valores em cm.');
+      setMeasurementStatusType('error');
+      return;
+    }
+
+    const primarySelection = fullImageSelection(firstImage.image);
+    const comparisonSelection = fullImageSelection(secondImage.image);
+    if (!primarySelection || !comparisonSelection) {
+      setMeasurementStatus('Não foi possível obter as dimensões das imagens para a medição.');
+      setMeasurementStatusType('error');
+      return;
+    }
+
+    const runId = measurementRunRef.current + 1;
+    measurementRunRef.current = runId;
+    setMeasuring(true);
+    setMeasurementStatus('A correr medições...');
+    setMeasurementStatusType('running');
+
+    try {
+      const firstCalibration = calibrationFromPoints(firstReferencePoints);
+      const secondCalibration = calibrationFromPoints(secondReferencePoints);
+      const [firstResult, secondResult] = await Promise.all([
+        accidentAnalysisService.createMeasurement(analysisId, {
+          evidenceId: firstEvidenceId,
+          damageId: firstDamageId,
+          comparisonEvidenceId: secondEvidenceId,
+          knownTickDistanceCm: 1,
+          primarySelection,
+          primaryCalibration: firstCalibration,
+          comparisonSelection,
+          comparisonCalibration: secondCalibration,
+        }),
+        accidentAnalysisService.createMeasurement(analysisId, {
+          evidenceId: secondEvidenceId,
+          damageId: secondDamageId,
+          comparisonEvidenceId: firstEvidenceId,
+          knownTickDistanceCm: 1,
+          primarySelection: comparisonSelection,
+          primaryCalibration: secondCalibration,
+          comparisonSelection: primarySelection,
+          comparisonCalibration: firstCalibration,
+        }),
+      ]);
+
+      if (measurementRunRef.current === runId) {
+        setFirstMeasurement(firstResult);
+        setSecondMeasurement(secondResult);
+        setMeasurementStatus('Medições concluídas.');
+        setMeasurementStatusType('success');
+      }
+    } catch (err: any) {
+      if (measurementRunRef.current === runId) {
+        setFirstMeasurement(null);
+        setSecondMeasurement(null);
+        setMeasurementStatus(err?.message || 'A medição falhou.');
+        setMeasurementStatusType('error');
+      }
+    } finally {
+      if (measurementRunRef.current === runId) {
+        setMeasuring(false);
+      }
+    }
+  };
+
   return (
     <div className="homepage-wrapper analysis-image-page">
       <div className="back-container back-outside">
@@ -164,13 +351,13 @@ export default function AnalysisImageCompare() {
 
           {error && <p className="analysis-error">{error}</p>}
 
-          {!loading && !error && images.length < 2 && (
+          {!loading && !error && (firstVehicleImages.length === 0 || secondVehicleImages.length === 0) && (
             <p className="no-evidence">
-              São necessarias pelo menos duas imagens associadas as evidências do caso.
+              São necessarias fotos associadas aos dois veículos do caso.
             </p>
           )}
 
-          {!loading && !error && images.length >= 2 && (
+          {!loading && !error && firstVehicleImages.length > 0 && secondVehicleImages.length > 0 && (
             <>
               <div className="image-selector-grid">
                 <label className="image-select-label">
@@ -179,7 +366,7 @@ export default function AnalysisImageCompare() {
                     value={firstImageId}
                     onChange={(event) => setFirstImageId(event.target.value)}
                   >
-                    {images.map((item) => (
+                    {firstVehicleImages.map((item) => (
                       <option
                         key={`first-${item.evidence.evidenceId}`}
                         value={item.evidence.evidenceId}
@@ -196,7 +383,7 @@ export default function AnalysisImageCompare() {
                     value={secondImageId}
                     onChange={(event) => setSecondImageId(event.target.value)}
                   >
-                    {images.map((item) => (
+                    {secondVehicleImages.map((item) => (
                       <option
                         key={`second-${item.evidence.evidenceId}`}
                         value={item.evidence.evidenceId}
@@ -214,30 +401,57 @@ export default function AnalysisImageCompare() {
                 </p>
               )}
 
+              <div className="analysis-measurement-actions">
+                <button
+                  type="button"
+                  className="homepage-btn login-btn"
+                  disabled={measuring || sameImageSelected}
+                  onClick={runMeasurements}
+                >
+                  {measuring ? 'A medir...' : 'Correr medições'}
+                </button>
+              </div>
+
+              {measurementStatus && (
+                <p className={`analysis-measurement-status ${measurementStatusType}`}>
+                  {measurementStatus}
+                  {firstMeasurement?.calculatedHeightCm !== undefined &&
+                  secondMeasurement?.calculatedHeightCm !== undefined
+                    ? ` Alturas calculadas: ${firstMeasurement.calculatedHeightCm} cm e ${secondMeasurement.calculatedHeightCm} cm.`
+                    : ''}
+                </p>
+              )}
+
               <div className="image-compare-grid">
                 <div className="image-compare-column left-column">
                   <VehicleDamageCard
                     title="Veículo A"
-                    vehicle={vehicles[0]}
-                    damages={
-                      vehicles[0]?.vehicleId !== undefined
-                        ? vehicleDamages[vehicles[0].vehicleId] ?? []
-                        : []
-                    }
+                    vehicle={firstVehicle}
+                    damages={firstVehicleDamages}
                   />
-                  <ImagePreview title="Imagem esquerda" item={firstImage} />
+                  <ImagePreview
+                    title="Imagem esquerda"
+                    item={firstImage}
+                    measurement={firstMeasurement}
+                    measuring={measuring}
+                    referencePoints={firstReferencePoints}
+                    onReferencePointsChange={setFirstReferencePoints}
+                  />
                 </div>
 
                 <div className="image-compare-column right-column">
-                  <ImagePreview title="Imagem direita" item={secondImage} />
+                  <ImagePreview
+                    title="Imagem direita"
+                    item={secondImage}
+                    measurement={secondMeasurement}
+                    measuring={measuring}
+                    referencePoints={secondReferencePoints}
+                    onReferencePointsChange={setSecondReferencePoints}
+                  />
                   <VehicleDamageCard
                     title="Veículo B"
-                    vehicle={vehicles[1]}
-                    damages={
-                      vehicles[1]?.vehicleId !== undefined
-                        ? vehicleDamages[vehicles[1].vehicleId] ?? []
-                        : []
-                    }
+                    vehicle={secondVehicle}
+                    damages={secondVehicleDamages}
                   />
                 </div>
               </div>
@@ -252,55 +466,70 @@ export default function AnalysisImageCompare() {
 function ImagePreview({
   title,
   item,
+  measurement,
+  measuring,
+  referencePoints,
+  onReferencePointsChange,
 }: {
   title: string;
   item?: SelectableImage;
+  measurement: MeasurementOutput | null;
+  measuring: boolean;
+  referencePoints: ReferencePoint[];
+  onReferencePointsChange: React.Dispatch<React.SetStateAction<ReferencePoint[]>>;
 }) {
   const imageRef = useRef<HTMLImageElement | null>(null);
-  const [measurements, setMeasurements] =
-    useState<ImageDisplayMeasurements | null>(null);
-
   const evidenceId = item?.evidence.evidenceId ?? item?.image.evidenceId;
   const imageSrc =
     evidenceId !== undefined
       ? evidenceService.evidenceImageContentUrl(evidenceId)
       : '';
 
-  const updateMeasurements = useCallback(() => {
-    const image = imageRef.current;
-    if (!image || !image.complete || image.naturalWidth === 0) return;
+  const handleImageClick = (event: React.MouseEvent<HTMLImageElement>) => {
+    const image = event.currentTarget;
+    if (!image.naturalWidth || !image.naturalHeight) return;
 
-    setMeasurements(getImageDisplayMeasurements(image));
-  }, []);
+    const bounds = image.getBoundingClientRect();
+    const naturalRatio = image.naturalWidth / image.naturalHeight;
+    const boundsRatio = bounds.width / bounds.height;
+    const renderedWidth = boundsRatio > naturalRatio ? bounds.height * naturalRatio : bounds.width;
+    const renderedHeight = boundsRatio > naturalRatio ? bounds.height : bounds.width / naturalRatio;
+    const offsetX = (bounds.width - renderedWidth) / 2;
+    const offsetY = (bounds.height - renderedHeight) / 2;
+    const clickX = event.clientX - bounds.left - offsetX;
+    const clickY = event.clientY - bounds.top - offsetY;
 
-  useEffect(() => {
-    setMeasurements(null);
-    const frame = window.requestAnimationFrame(updateMeasurements);
+    if (clickX < 0 || clickY < 0 || clickX > renderedWidth || clickY > renderedHeight) return;
 
-    return () => window.cancelAnimationFrame(frame);
-  }, [imageSrc, updateMeasurements]);
+    const x = Math.round((clickX / renderedWidth) * image.naturalWidth);
+    const y = Math.round((clickY / renderedHeight) * image.naturalHeight);
+    const markerLeft = ((event.clientX - bounds.left) / bounds.width) * 100;
+    const markerTop = ((event.clientY - bounds.top) / bounds.height) * 100;
 
-  useEffect(() => {
-    const image = imageRef.current;
-    if (!image) return;
-
-    const resizeObserver =
-      typeof ResizeObserver !== 'undefined'
-        ? new ResizeObserver(updateMeasurements)
-        : null;
-
-    resizeObserver?.observe(image);
-    window.addEventListener('resize', updateMeasurements);
-
-    return () => {
-      resizeObserver?.disconnect();
-      window.removeEventListener('resize', updateMeasurements);
-    };
-  }, [imageSrc, updateMeasurements]);
-
-  const handleImageLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
-    setMeasurements(getImageDisplayMeasurements(event.currentTarget));
+    onReferencePointsChange((current) => {
+      const nextPoint: ReferencePoint = {
+        x,
+        y,
+        valueCm: 0,
+        valueText: '',
+        markerLeft,
+        markerTop,
+      };
+      return current.length >= 2 ? [current[1], nextPoint] : [...current, nextPoint];
+    });
   };
+
+  const updateReferenceValue = (index: number, valueText: string) => {
+    onReferencePointsChange((current) =>
+      current.map((point, pointIndex) =>
+        pointIndex === index
+          ? { ...point, valueText, valueCm: Number(valueText) }
+          : point
+      )
+    );
+  };
+
+  const clearReferencePoints = () => onReferencePointsChange([]);
 
   if (!item) {
     return (
@@ -317,34 +546,95 @@ function ImagePreview({
         <span>{imageLabel(item)}</span>
       </div>
 
-      <img
-        key={imageSrc}
-        ref={imageRef}
-        src={imageSrc}
-        alt={item.evidence.evidenceDescription || imageLabel(item)}
-        onLoad={handleImageLoad}
-      />
-
-      <div className="image-measurements-panel">
-        <div>
-          <span>Altura original</span>
-          <strong>{item.image.height ?? measurements?.naturalHeight ?? '-'} px</strong>
-        </div>
-        <div>
-          <span>Altura exibida</span>
-          <strong>{measurements ? `${measurements.displayedHeight} px` : '-'}</strong>
-        </div>
-        <div>
-          <span>Resize</span>
-          <strong>
-            {measurements
-              ? `${Math.round(measurements.resizeFactor * 100)}%`
-              : '-'}
-          </strong>
-        </div>
+      <div className="image-reference-stage">
+        <img
+          key={imageSrc}
+          ref={imageRef}
+          src={imageSrc}
+          alt={item.evidence.evidenceDescription || imageLabel(item)}
+          onClick={handleImageClick}
+          draggable={false}
+        />
+        {referencePoints.map((point, index) => (
+          <span
+            key={`${point.x}-${point.y}-${index}`}
+            className="reference-marker"
+            style={{ left: `${point.markerLeft}%`, top: `${point.markerTop}%` }}
+          >
+            {index + 1}
+          </span>
+        ))}
       </div>
 
+      <div className="reference-controls">
+        <div className="reference-controls-header">
+          <span>Pontos de referência</span>
+          <button type="button" onClick={clearReferencePoints}>
+            Limpar
+          </button>
+        </div>
+        {[0, 1].map((index) => {
+          const point = referencePoints[index];
+          return (
+            <label key={index} className="reference-point-row">
+              <span>
+                P{index + 1}: {point ? `${point.x}, ${point.y}` : 'clique na imagem'}
+              </span>
+              <input
+                type="number"
+                step="0.1"
+                placeholder="cm"
+                value={point?.valueText ?? ''}
+                disabled={!point}
+                onChange={(event) => updateReferenceValue(index, event.target.value)}
+              />
+            </label>
+          );
+        })}
+      </div>
+
+      <MeasurementSummary measurement={measurement} measuring={measuring} />
+
       <p>{item.evidence.evidenceDescription || 'Sem descricao.'}</p>
+    </div>
+  );
+}
+
+function MeasurementSummary({
+  measurement,
+  measuring,
+}: {
+  measurement: MeasurementOutput | null;
+  measuring: boolean;
+}) {
+  return (
+    <div className="image-measurements-panel">
+      <div>
+        <span>Altura calculada</span>
+        <strong>
+          {measurement?.calculatedHeightCm !== undefined
+            ? `${measurement.calculatedHeightCm} cm`
+            : measuring
+              ? 'A medir...'
+              : '-'}
+        </strong>
+      </div>
+      <div>
+        <span>Intervalo</span>
+        <strong>
+          {measurement?.damageMinHeightCm !== undefined && measurement?.damageMaxHeightCm !== undefined
+            ? `${measurement.damageMinHeightCm} - ${measurement.damageMaxHeightCm} cm`
+            : '-'}
+        </strong>
+      </div>
+      <div>
+        <span>Confiança</span>
+        <strong>
+          {measurement?.confidence !== undefined
+            ? `${Math.round(measurement.confidence * 100)}%`
+            : '-'}
+        </strong>
+      </div>
     </div>
   );
 }

@@ -22,6 +22,7 @@ export interface UpdateEvidenceRequest {
 export interface ImageEvidenceOutput {
 	imageEvidenceId?: number;
 	evidenceId?: number;
+	vehicleId?: number;
 	filePath?: string;
 	width?: number;
 	height?: number;
@@ -71,9 +72,15 @@ export const evidenceService = {
 	},
 
 	// Uploads the actual image bytes as multipart/form-data; stored in object storage (MinIO).
-	async uploadEvidenceImage(evidenceId: number, file: File, metadata?: string): Promise<ImageEvidenceOutput> {
+	async uploadEvidenceImage(
+		evidenceId: number,
+		file: File,
+		vehicleId: number,
+		metadata?: string,
+	): Promise<ImageEvidenceOutput> {
 		const form = new FormData();
 		form.append('file', file);
+		form.append('vehicleId', String(vehicleId));
 		if (metadata) form.append('metadata', metadata);
 		return uploadApi<ImageEvidenceOutput>(`/evidence/${evidenceId}/image`, form, 'PUT');
 	},

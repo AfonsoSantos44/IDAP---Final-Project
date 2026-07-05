@@ -1,6 +1,10 @@
 package pt.isel.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.minio.GetPresignedObjectUrlArgs
+import io.minio.MinioClient
+import io.minio.http.Method
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import pt.isel.domain.ComputedMeasurement
@@ -12,11 +16,11 @@ import java.util.concurrent.TimeUnit
 import kotlin.io.path.absolute
 
 private data class MeasurementEngineRequest(
-    val primaryImagePath: String,
-    val comparisonImagePath: String?,
-    val outputDirectory: String,
+    val primaryImageUrl: String,
+    val comparisonImageUrl: String?,
+    val outputImageKey: String,
+    val outputImageUrl: String,
     val knownTickDistanceCm: Double?,
-    val outputBaseName: String,
     val primarySelection: DamageSelectionInput,
     val primaryCalibration: RulerCalibrationInput?,
     val comparisonSelection: DamageSelectionInput?,
@@ -36,10 +40,26 @@ class MeasurementEngine(
     private val timeoutSeconds: Long,
     @Value("\${idap.measurement.tesseract-executable:}")
     private val tesseractExecutable: String,
+    @Value("\${idap.storage.endpoint:http://localhost:9000}")
+    private val storageEndpoint: String,
+    @Value("\${idap.storage.access-key:minioadmin}")
+    private val storageAccessKey: String,
+    @Value("\${idap.storage.secret-key:minioadmin}")
+    private val storageSecretKey: String,
+    @Value("\${idap.storage.bucket:idap-images}")
+    private val storageBucket: String,
 ) {
+    private val logger = LoggerFactory.getLogger(MeasurementEngine::class.java)
+
+    private val storageClient: MinioClient =
+        MinioClient.builder()
+            .endpoint(storageEndpoint)
+            .credentials(storageAccessKey, storageSecretKey)
+            .build()
+
     fun measure(
-        primaryImagePath: String,
-        comparisonImagePath: String?,
+        primaryImageKey: String,
+        comparisonImageKey: String?,
         knownTickDistanceCm: Double?,
         primarySelection: DamageSelectionInput,
         primaryCalibration: RulerCalibrationInput?,
@@ -50,25 +70,22 @@ class MeasurementEngine(
             resolveRegularFile(scriptPath)
                 ?: return failure(MeasurementEngineError.ScriptNotFound("Script not found: $scriptPath"))
 
-        val primaryImage =
-            resolveRegularFile(primaryImagePath)
-                ?: return failure(MeasurementEngineError.InputImageNotFound("Primary image not found: $primaryImagePath"))
-        val comparisonImage =
-            comparisonImagePath?.let { path ->
-                resolveRegularFile(path)
-                    ?: return failure(MeasurementEngineError.InputImageNotFound("Comparison image not found: $path"))
-            }
+        val outputImageKey = "measurements/${UUID.randomUUID()}.jpg"
 
-        val outputDir = Path.of(outputDirectory).absolute()
-        Files.createDirectories(outputDir)
+        logger.info(
+            "Measurement engine object keys: primary={}, comparison={}, output={}",
+            primaryImageKey,
+            comparisonImageKey,
+            outputImageKey,
+        )
 
         val request =
             MeasurementEngineRequest(
-                primaryImagePath = primaryImage.toString(),
-                comparisonImagePath = comparisonImage?.toString(),
-                outputDirectory = outputDir.toString(),
+                primaryImageUrl = presignedUrl(Method.GET, primaryImageKey),
+                comparisonImageUrl = comparisonImageKey?.let { presignedUrl(Method.GET, it) },
+                outputImageKey = outputImageKey,
+                outputImageUrl = presignedUrl(Method.PUT, outputImageKey),
                 knownTickDistanceCm = knownTickDistanceCm,
-                outputBaseName = "measurement-${UUID.randomUUID()}",
                 primarySelection = primarySelection,
                 primaryCalibration = primaryCalibration,
                 comparisonSelection = comparisonSelection,
@@ -124,6 +141,19 @@ class MeasurementEngine(
             .map { it.resolve(candidate).normalize() }
             .firstOrNull { Files.isRegularFile(it) }
     }
+
+    private fun presignedUrl(
+        method: Method,
+        key: String,
+    ): String =
+        storageClient.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(method)
+                .bucket(storageBucket)
+                .`object`(key)
+                .expiry(timeoutSeconds.coerceAtLeast(60).coerceAtMost(604800).toInt())
+                .build(),
+        )
 }
 
 sealed class MeasurementEngineError {

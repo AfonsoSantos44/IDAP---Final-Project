@@ -6,9 +6,6 @@ import pt.isel.domain.Measurement
 import pt.isel.repository.TransactionManager
 import pt.isel.services.storage.ObjectStorage
 import pt.isel.services.storage.StoredImage
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.UUID
 
 @Service
 class AccidentMeasurementService(
@@ -95,47 +92,30 @@ class AccidentMeasurementService(
                 is Failure -> return result
             }
 
-        // The Python engine works on local files. Download the stored objects to temporary
-        // files, run the engine, then push the generated annotated image back to storage.
-        val primaryTempImage = downloadToTemp(input.primaryImageKey)
-        val comparisonTempImage = input.comparisonImageKey?.let { downloadToTemp(it) }
-
         val engineResult =
-            try {
-                when (
-                    val result =
-                        measurementEngine.measure(
-                            primaryImagePath = primaryTempImage.toString(),
-                            comparisonImagePath = comparisonTempImage?.toString(),
-                            knownTickDistanceCm = knownTickDistanceCm,
-                            primarySelection = primarySelection,
-                            primaryCalibration = primaryCalibration,
-                            comparisonSelection = comparisonSelection,
-                            comparisonCalibration = comparisonCalibration,
-                        )
-                ) {
-                    is Success -> result.value
-                    is Failure -> {
-                        logger.warn(
-                            "Measurement engine failed for analysis {}, evidence {}, damage {}: {}",
-                            analysisId,
-                            evidenceId,
-                            damageId,
-                            result.value.message(),
-                        )
-                        return failure(AccidentDataError.MeasurementProcessingFailed)
-                    }
+            when (
+                val result =
+                    measurementEngine.measure(
+                        primaryImageKey = input.primaryImageKey,
+                        comparisonImageKey = input.comparisonImageKey,
+                        knownTickDistanceCm = knownTickDistanceCm,
+                        primarySelection = primarySelection,
+                        primaryCalibration = primaryCalibration,
+                        comparisonSelection = comparisonSelection,
+                        comparisonCalibration = comparisonCalibration,
+                    )
+            ) {
+                is Success -> result.value
+                is Failure -> {
+                    logger.warn(
+                        "Measurement engine failed for analysis {}, evidence {}, damage {}: {}",
+                        analysisId,
+                        evidenceId,
+                        damageId,
+                        result.value.message(),
+                    )
+                    return failure(AccidentDataError.MeasurementProcessingFailed(result.value.message()))
                 }
-            } finally {
-                runCatching { Files.deleteIfExists(primaryTempImage) }
-                comparisonTempImage?.let { runCatching { Files.deleteIfExists(it) } }
-            }
-
-        // Upload the annotated comparison image (a local file produced by the engine) to
-        // storage and keep only its object key in the database.
-        val comparisonImageKey =
-            engineResult.comparisonImagePath?.let { localPath ->
-                uploadGeneratedImage(analysisId, localPath)
             }
 
         return transactionManager.run {
@@ -167,7 +147,7 @@ class AccidentMeasurementService(
                     scaleCmPerPixel = engineResult.scaleCmPerPixel,
                     confidence = engineResult.confidence,
                     calibrationMethod = engineResult.calibrationMethod,
-                    comparisonImagePath = comparisonImageKey,
+                    comparisonImagePath = engineResult.comparisonImagePath,
                 ).also {
                     repoAccidentVehicleDamage.updateDamageHeight(damageId, engineResult.calculatedHeightCm)
                 },
@@ -206,26 +186,6 @@ class AccidentMeasurementService(
             measurement.comparisonImagePath
                 ?: return failure(AccidentDataError.ImageEvidenceNotFound)
         return success(StoredImage(objectStorage.get(key), contentTypeForKey(key)))
-    }
-
-    private fun downloadToTemp(key: String): Path {
-        val extension = key.substringAfterLast('.', "img")
-        val tempFile = Files.createTempFile("idap-measure-", ".$extension")
-        Files.write(tempFile, objectStorage.get(key))
-        return tempFile
-    }
-
-    private fun uploadGeneratedImage(
-        analysisId: Int,
-        localPath: String,
-    ): String? {
-        val source = Path.of(localPath)
-        if (!Files.isRegularFile(source)) return null
-        val extension = localPath.substringAfterLast('.', "png")
-        val key = "measurements/$analysisId/${UUID.randomUUID()}.$extension"
-        objectStorage.put(key, Files.readAllBytes(source), contentTypeForKey(key))
-        runCatching { Files.deleteIfExists(source) }
-        return key
     }
 
     private fun MeasurementEngineError.message(): String =

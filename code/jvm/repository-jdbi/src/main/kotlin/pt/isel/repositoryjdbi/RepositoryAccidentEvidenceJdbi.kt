@@ -78,6 +78,7 @@ class RepositoryAccidentEvidenceJdbi(
 
     override fun createImageEvidence(
         evidenceId: Int,
+        vehicleId: Int,
         filePath: String,
         width: Int,
         height: Int,
@@ -85,11 +86,12 @@ class RepositoryAccidentEvidenceJdbi(
     ): ImageEvidence =
         handle.createUpdate(
             """
-            INSERT INTO image_evidence (evidence_id, file_path, width, height, metadata)
-            VALUES (:evidence_id, :file_path, :width, :height, :metadata)
+            INSERT INTO image_evidence (evidence_id, vehicle_id, file_path, width, height, metadata)
+            VALUES (:evidence_id, :vehicle_id, :file_path, :width, :height, :metadata)
             """,
         )
             .bind("evidence_id", evidenceId)
+            .bind("vehicle_id", vehicleId)
             .bind("file_path", filePath)
             .bind("width", width)
             .bind("height", height)
@@ -97,6 +99,7 @@ class RepositoryAccidentEvidenceJdbi(
             .executeAndReturnGeneratedKeys(
                 "image_evidence_id",
                 "evidence_id",
+                "vehicle_id",
                 "file_path",
                 "width",
                 "height",
@@ -113,6 +116,7 @@ class RepositoryAccidentEvidenceJdbi(
 
     override fun updateImageEvidence(
         imageEvidenceId: Int,
+        vehicleId: Int,
         filePath: String,
         width: Int,
         height: Int,
@@ -122,7 +126,8 @@ class RepositoryAccidentEvidenceJdbi(
             handle.createUpdate(
                 """
                 UPDATE image_evidence
-                SET file_path = :file_path,
+                SET vehicle_id = :vehicle_id,
+                    file_path = :file_path,
                     width = :width,
                     height = :height,
                     metadata = :metadata
@@ -130,6 +135,7 @@ class RepositoryAccidentEvidenceJdbi(
                 """,
             )
                 .bind("image_evidence_id", imageEvidenceId)
+                .bind("vehicle_id", vehicleId)
                 .bind("file_path", filePath)
                 .bind("width", width)
                 .bind("height", height)

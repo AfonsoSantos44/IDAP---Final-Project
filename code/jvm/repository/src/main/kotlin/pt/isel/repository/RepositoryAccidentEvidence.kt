@@ -25,6 +25,7 @@ interface RepositoryAccidentEvidence {
 
     fun createImageEvidence(
         evidenceId: Int,
+        vehicleId: Int,
         filePath: String,
         width: Int,
         height: Int,
@@ -35,6 +36,7 @@ interface RepositoryAccidentEvidence {
 
     fun updateImageEvidence(
         imageEvidenceId: Int,
+        vehicleId: Int,
         filePath: String,
         width: Int,
         height: Int,

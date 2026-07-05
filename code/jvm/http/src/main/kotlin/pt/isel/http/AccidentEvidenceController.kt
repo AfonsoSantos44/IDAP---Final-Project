@@ -143,6 +143,7 @@ class AccidentEvidenceController(
         @AuthenticationPrincipal currentUser: SecurityPrincipal?,
         @PathVariable evidenceId: Int,
         @RequestParam("file") file: MultipartFile,
+        @RequestParam("vehicleId") vehicleId: Int,
         @RequestParam("metadata", required = false) metadata: String?,
     ): ResponseEntity<*> {
         when (val access = accessControl.authorizeEvidence(currentUser, evidenceId)) {
@@ -154,6 +155,7 @@ class AccidentEvidenceController(
             val result =
                 evidenceService.uploadImageEvidence(
                     evidenceId = evidenceId,
+                    vehicleId = vehicleId,
                     bytes = file.bytes,
                     contentType = file.contentType,
                     metadata = metadata,

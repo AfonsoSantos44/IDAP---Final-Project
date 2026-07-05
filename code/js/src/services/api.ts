@@ -24,7 +24,11 @@ export async function fetchApi<T>(
     const error = await response
       .json()
       .catch(() => ({ title: "Unknown error" }));
-    const errorMessage = response.statusText;
+    const errorMessage =
+      error.detail ||
+      error.title ||
+      error.message ||
+      response.statusText;
     throw new ApiError(response.status, errorMessage);
   }
 
@@ -51,8 +55,13 @@ export async function uploadApi<T>(
   });
 
   if (!response.ok) {
-    await response.json().catch(() => ({ title: "Unknown error" }));
-    throw new ApiError(response.status, response.statusText);
+    const error = await response.json().catch(() => ({ title: "Unknown error" }));
+    const errorMessage =
+      error.detail ||
+      error.title ||
+      error.message ||
+      response.statusText;
+    throw new ApiError(response.status, errorMessage);
   }
 
   if (response.status === 204 || response.headers.get("content-length") === "0") {

@@ -103,6 +103,7 @@ data class UpdateEvidenceRequestDto(
 data class ImageEvidenceOutputDto(
     val imageEvidenceId: Int,
     val evidenceId: Int,
+    val vehicleId: Int,
     val filePath: String,
     val width: Int,
     val height: Int,

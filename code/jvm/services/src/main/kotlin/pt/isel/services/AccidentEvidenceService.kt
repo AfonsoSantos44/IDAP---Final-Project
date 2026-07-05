@@ -92,6 +92,7 @@ class AccidentEvidenceService(
      */
     fun uploadImageEvidence(
         evidenceId: Int,
+        vehicleId: Int,
         bytes: ByteArray,
         contentType: String?,
         metadata: String?,
@@ -105,7 +106,15 @@ class AccidentEvidenceService(
         val extension = imageExtension(contentType, dimensions.formatName)
 
         return transactionManager.run {
-            repoAccidentEvidence.findEvidenceById(evidenceId) ?: return@run failure(AccidentDataError.EvidenceNotFound)
+            val evidence =
+                repoAccidentEvidence.findEvidenceById(evidenceId)
+                    ?: return@run failure(AccidentDataError.EvidenceNotFound)
+            val vehicle =
+                repoAccidentVehicleDamage.findVehicleById(vehicleId)
+                    ?: return@run failure(AccidentDataError.VehicleNotFound)
+            if (vehicle.caseId != evidence.caseId) {
+                return@run failure(AccidentDataError.RelatedResourceMismatch)
+            }
 
             val currentImage = repoAccidentEvidence.findImageEvidenceByEvidenceId(evidenceId)
             val key = "evidence/$evidenceId/${UUID.randomUUID()}.$extension"
@@ -116,6 +125,7 @@ class AccidentEvidenceService(
                 if (currentImage == null) {
                     repoAccidentEvidence.createImageEvidence(
                         evidenceId = evidenceId,
+                        vehicleId = vehicleId,
                         filePath = key,
                         width = dimensions.width,
                         height = dimensions.height,
@@ -124,6 +134,7 @@ class AccidentEvidenceService(
                 } else {
                     repoAccidentEvidence.updateImageEvidence(
                         imageEvidenceId = currentImage.imageEvidenceId,
+                        vehicleId = vehicleId,
                         filePath = key,
                         width = dimensions.width,
                         height = dimensions.height,

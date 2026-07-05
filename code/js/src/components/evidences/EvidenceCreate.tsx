@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../../styles/EvidenceCreate.css';
 import { evidenceService } from '../../services/evidenceService';
+import { vehicleService, type VehicleOutput } from '../../services/vehicleService';
 
 const SUGGESTED_TYPES = ['Foto', 'Documento', 'Medida', 'Outro'];
 
@@ -14,6 +15,8 @@ export default function EvidenceCreate() {
   const [description, setDescription] = useState<string>('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [vehicles, setVehicles] = useState<VehicleOutput[]>([]);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<string | null>(null);
@@ -24,6 +27,24 @@ export default function EvidenceCreate() {
   const isDocumentEvidence = selectedType === 'Documento';
 
   const goBack = () => navigate(caseId ? `/cases/${caseId}` : '/cases');
+
+  useEffect(() => {
+    const loadVehicles = async () => {
+      if (!caseId) return;
+
+      try {
+        const caseVehicles = await vehicleService.getCaseVehicles(Number(caseId));
+        setVehicles(caseVehicles);
+        if (caseVehicles.length > 0 && caseVehicles[0].vehicleId !== undefined) {
+          setSelectedVehicleId(String(caseVehicles[0].vehicleId));
+        }
+      } catch (err: any) {
+        setErrors(err?.message || 'Erro ao carregar veiculos do caso.');
+      }
+    };
+
+    loadVehicles();
+  }, [caseId]);
 
   useEffect(() => {
     if (!imageFile) {
@@ -48,6 +69,10 @@ export default function EvidenceCreate() {
 
     if (isPhotoEvidence && !imageFile) {
       return 'A imagem e obrigatoria para evidencias do tipo Foto.';
+    }
+
+    if (isPhotoEvidence && !selectedVehicleId) {
+      return 'Selecione o veiculo associado a foto.';
     }
 
     if (isDocumentEvidence && !documentFile) {
@@ -79,7 +104,11 @@ export default function EvidenceCreate() {
       });
 
       if (isPhotoEvidence && imageFile && createdEvidence.evidenceId !== undefined) {
-        await evidenceService.uploadEvidenceImage(createdEvidence.evidenceId, imageFile);
+        await evidenceService.uploadEvidenceImage(
+          createdEvidence.evidenceId,
+          imageFile,
+          Number(selectedVehicleId),
+        );
       }
 
       navigate(`/cases/${caseId}/evidences`);
@@ -146,6 +175,24 @@ export default function EvidenceCreate() {
               <section className="type-fields">
                 <h2>Imagem da foto</h2>
 
+                <label className="form-label">Veiculo associado</label>
+                <select
+                  value={selectedVehicleId}
+                  onChange={(e) => setSelectedVehicleId(e.target.value)}
+                  className="form-control"
+                  disabled={vehicles.length === 0}
+                >
+                  {vehicles.length === 0 ? (
+                    <option value="">Nenhum veiculo associado ao caso</option>
+                  ) : (
+                    vehicles.map((vehicle) => (
+                      <option key={vehicle.vehicleId} value={vehicle.vehicleId}>
+                        {vehicleLabel(vehicle)}
+                      </option>
+                    ))
+                  )}
+                </select>
+
                 {imagePreview && (
                   <div className="image-upload-preview">
                     <img src={imagePreview} alt="Preview da imagem selecionada" />
@@ -203,4 +250,10 @@ export default function EvidenceCreate() {
       </div>
     </div>
   );
+}
+
+function vehicleLabel(vehicle: VehicleOutput) {
+  const brandModel = [vehicle.brand, vehicle.model].filter(Boolean).join(' ');
+  const plate = vehicle.licensePlate ? ` - ${vehicle.licensePlate}` : '';
+  return `${brandModel || `Veiculo #${vehicle.vehicleId ?? '-'}`}${plate}`;
 }

@@ -35,7 +35,9 @@ sealed class AccidentDataError { // Verificar
 
     data object RelatedResourceMismatch : AccidentDataError()
 
-    data object MeasurementProcessingFailed : AccidentDataError()
+    data class MeasurementProcessingFailed(
+        val detail: String,
+    ) : AccidentDataError()
 
     data object ReportGenerationFailed : AccidentDataError()
 
