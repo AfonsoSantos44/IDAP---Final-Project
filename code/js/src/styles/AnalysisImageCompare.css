@@ -1,24 +1,46 @@
 @import './AnalysisCreate.css';
 
 .analysis-image-page {
+  position: relative;
+  display: flex;
+  justify-content: center;
   height: 100vh;
   min-height: 0;
-  padding: 0;
+  padding: 0.25rem 0 0;
   overflow: hidden;
 }
 
+.logout-container {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 20;
+}
+
+.logout-container .logout-btn {
+  max-width: 1px;
+  
+}
+
 .analysis-image-overlay {
-  align-items: stretch;
-  height: calc(100vh - 1.5rem);
-  width: min(1660px, calc(100% - 1.5rem));
-  padding: 2.25rem 3.25rem;
+  display: flex;
+  height: calc(100vh - 0.5rem);
+  min-width: 1500px;
+  max-width: 100%;
+  max-height: 90%;
+  padding: 0.8rem 1rem;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .analysis-image-content {
   display: flex;
+  align-items: center;
   flex-direction: column;
-  max-width: 1480px;
+  width: 100%;
+  max-width: 100%;
+  flex: 1;
+  min-height: 0;
   text-align: left;
 }
 
@@ -80,6 +102,19 @@
   gap: 0.5rem;
   color: #232b5d;
   font-weight: 700;
+  min-width: 400px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .image-select-label select {
@@ -94,22 +129,23 @@
 
 .image-compare-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(400px, 1fr));
   gap: 1rem;
   flex: 1;
   min-height: 0;
+  min-width: 1200px;
   margin-top: 1rem;
 }
 
 .image-compare-column {
   display: grid;
-  grid-template-columns: minmax(205px, 0.36fr) minmax(0, 1fr);
+  grid-template-columns: minmax(180px, 0.28fr) minmax(0, 1fr);
   gap: 0.8rem;
   min-height: 0;
 }
 
 .image-compare-column.right-column {
-  grid-template-columns: minmax(0, 1fr) minmax(205px, 0.36fr);
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.28fr);
 }
 
 .vehicle-damage-info-card {
@@ -240,7 +276,7 @@
 
 .image-preview-card {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   gap: 0.65rem;
   align-content: start;
   min-height: 0;
@@ -259,13 +295,14 @@
 
 .image-reference-stage {
   position: relative;
-  min-height: 0;
+  min-height: 420px;
+  overflow: hidden;
 }
 
 .image-reference-stage img {
   width: 100%;
   height: 100%;
-  max-height: 50vh;
+  max-height: 70vh;
   object-fit: contain;
   border-radius: 6px;
   background: #f4f5fb;
@@ -340,7 +377,8 @@
 .image-measurements-panel {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
+  gap: 0.75rem;
+  margin-top: 1rem;
 }
 
 .image-measurements-panel div {
@@ -409,6 +447,33 @@
 }
 
 .analysis-measurement-actions .report-btn {
+  background: #eef2ff;
+  color: #4338ca;
+  box-shadow: none;
+}
+
+.analysis-footer-actions {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+.analysis-footer-actions .logout-btn {
+  justify-self: start;
+  background: #f4f5fb;
+  color: #232b5d;
+  border: 1px solid rgba(78, 75, 250, 0.18);
+}
+
+.analysis-footer-actions .login-btn {
+  justify-self: center;
+  min-width: 180px;
+}
+
+.analysis-footer-actions .report-btn {
+  justify-self: end;
   background: #eef2ff;
   color: #4338ca;
   box-shadow: none;

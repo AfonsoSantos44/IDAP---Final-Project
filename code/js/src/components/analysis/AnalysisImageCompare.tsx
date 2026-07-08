@@ -1,6 +1,7 @@
 ﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../../styles/AnalysisImageCompare.css';
+import { useAuth } from '../../context/AuthContext';
 import { evidenceService } from '../../services/evidenceService';
 import type {
   EvidenceOutput,
@@ -80,8 +81,18 @@ export default function AnalysisImageCompare() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const measurementRunRef = useRef(0);
+  const { logout } = useAuth();
 
   const goBack = () => navigate(-1);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/initial');
+    } catch (err) {
+      console.error('Logout failed', err);
+    }
+  };
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -338,15 +349,14 @@ export default function AnalysisImageCompare() {
           Voltar
         </button>
       </div>
+      <div className="logout-container">
+        <button className="homepage-btn logout-btn" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
 
       <div className="homepage-overlay analysis-image-overlay">
         <div className="homepage-content analysis-image-content">
-          <h1 className="homepage-title">IDAP</h1>
-
-          <p className="homepage-subtitle">
-            Comparar imagens do caso {caseId}
-          </p>
-
           {loading && <p>A carregar imagens...</p>}
 
           {error && <p className="analysis-error">{error}</p>}
@@ -361,8 +371,9 @@ export default function AnalysisImageCompare() {
             <>
               <div className="image-selector-grid">
                 <label className="image-select-label">
-                  Imagem esquerda
+                  <span className="sr-only">Imagem esquerda</span>
                   <select
+                    aria-label="Imagem esquerda"
                     value={firstImageId}
                     onChange={(event) => setFirstImageId(event.target.value)}
                   >
@@ -378,8 +389,9 @@ export default function AnalysisImageCompare() {
                 </label>
 
                 <label className="image-select-label">
-                  Imagem direita
+                  <span className="sr-only">Imagem direita</span>
                   <select
+                    aria-label="Imagem direita"
                     value={secondImageId}
                     onChange={(event) => setSecondImageId(event.target.value)}
                   >
@@ -400,28 +412,6 @@ export default function AnalysisImageCompare() {
                   Selecione duas imagens diferentes para comparar lado a lado.
                 </p>
               )}
-
-              <div className="analysis-measurement-actions">
-                <button
-                  type="button"
-                  className="homepage-btn login-btn"
-                  disabled={measuring || sameImageSelected}
-                  onClick={runMeasurements}
-                >
-                  {measuring ? 'A medir...' : 'Correr medições'}
-                </button>
-                <button
-                  type="button"
-                  className="homepage-btn report-btn"
-                  disabled={!analysisId}
-                  onClick={() =>
-                    analysisId &&
-                    navigate(`/cases/${caseId}/analysis/${analysisId}/report`)
-                  }
-                >
-                  Criar report
-                </button>
-              </div>
 
               {measurementStatus && (
                 <p className={`analysis-measurement-status ${measurementStatusType}`}>
@@ -465,6 +455,28 @@ export default function AnalysisImageCompare() {
                     damages={secondVehicleDamages}
                   />
                 </div>
+              </div>
+
+              <div className="analysis-footer-actions">
+                <button
+                  type="button"
+                  className="homepage-btn login-btn"
+                  disabled={measuring || sameImageSelected}
+                  onClick={runMeasurements}
+                >
+                  {measuring ? 'A medir...' : 'Correr medições'}
+                </button>
+                <button
+                  type="button"
+                  className="homepage-btn report-btn"
+                  disabled={!analysisId}
+                  onClick={() =>
+                    analysisId &&
+                    navigate(`/cases/${caseId}/analysis/${analysisId}/report`)
+                  }
+                >
+                  Criar report
+                </button>
               </div>
             </>
           )}
@@ -552,10 +564,7 @@ function ImagePreview({
 
   return (
     <div className="image-preview-card">
-      <div className="image-preview-header">
-        <h2>{title}</h2>
-        <span>{imageLabel(item)}</span>
-      </div>
+      <MeasurementSummary measurement={measurement} measuring={measuring} />
 
       <div className="image-reference-stage">
         <img
@@ -603,10 +612,6 @@ function ImagePreview({
           );
         })}
       </div>
-
-      <MeasurementSummary measurement={measurement} measuring={measuring} />
-
-      <p>{item.evidence.evidenceDescription || 'Sem descricao.'}</p>
     </div>
   );
 }

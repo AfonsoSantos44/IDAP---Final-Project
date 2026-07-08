@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import '../../styles/EvidenceCreate.css';
+import '../../styles/EvidenceUpdate.css';
 import { evidenceService } from '../../services/evidenceService';
 import { vehicleService, type VehicleOutput } from '../../services/vehicleService';
 
@@ -31,7 +31,7 @@ export default function EvidenceEdit() {
   const isDocumentEvidence = selectedType === 'Documento';
 
   const goBack = () =>
-    navigate(caseId ? `/cases/${caseId}/evidences` : '/cases');
+    navigate(-1);
 
   useEffect(() => {
     const loadEvidence = async () => {
@@ -216,7 +216,7 @@ export default function EvidenceEdit() {
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              rows={6}
+              rows={1}
               maxLength={MAX_DESC}
               className="form-control textarea"
             />
@@ -243,31 +243,24 @@ export default function EvidenceEdit() {
                   )}
                 </select>
 
-                {(localPreview || hasImage) && (
-                  <img
-                    src={
-                      localPreview ||
-                      evidenceService.evidenceImageContentUrl(Number(evidenceId), imageVersion)
-                    }
-                    alt="Imagem da evidencia"
-                    style={{
-                      maxWidth: '100%',
-                      maxHeight: 320,
-                      borderRadius: 8,
-                      display: 'block',
-                      marginBottom: 12,
-                    }}
-                    onError={() => setHasImage(false)}
-                  />
-                )}
-
                 <label className="file-upload-box">
+                  {(localPreview || hasImage) && (
+                    <img
+                      src={
+                        localPreview ||
+                        evidenceService.evidenceImageContentUrl(Number(evidenceId), imageVersion)
+                      }
+                      alt="Imagem da evidencia"
+                      className="upload-preview-image"
+                      onError={() => setHasImage(false)}
+                    />
+                  )}
                   <span>Selecionar imagem</span>
                   <small>
                     {imageFile
                       ? `${imageFile.name} (${Math.ceil(imageFile.size / 1024)} KB)`
                       : hasImage
-                        ? 'Imagem atual carregada'
+                        ? 'Clica para alterar'
                         : 'Nenhuma imagem selecionada'}
                   </small>
                   <input

@@ -26,7 +26,7 @@ export default function EvidenceCreate() {
   const isPhotoEvidence = selectedType === 'Foto';
   const isDocumentEvidence = selectedType === 'Documento';
 
-  const goBack = () => navigate(caseId ? `/cases/${caseId}` : '/cases');
+  const goBack = () => navigate(-1);
 
   useEffect(() => {
     const loadVehicles = async () => {
@@ -193,13 +193,14 @@ export default function EvidenceCreate() {
                   )}
                 </select>
 
-                {imagePreview && (
-                  <div className="image-upload-preview">
-                    <img src={imagePreview} alt="Preview da imagem selecionada" />
-                  </div>
-                )}
-
                 <label className="file-upload-box">
+                  {imagePreview && (
+                    <img
+                      src={imagePreview}
+                      alt="Preview da imagem selecionada"
+                      className="upload-preview-image"
+                    />
+                  )}
                   <span>Selecionar imagem</span>
                   <small>
                     {imageFile

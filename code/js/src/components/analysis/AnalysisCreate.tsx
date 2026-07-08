@@ -57,7 +57,7 @@ export default function AnalysisCreate() {
   const [error, setError] = useState<string | null>(null);
 
   const goBack = () =>
-    navigate(caseId ? `/cases/${caseId}` : '/cases');
+    navigate(-1);
 
   const getStatusClass = (status?: string) => {
     if (!status) return 'Pendente';

@@ -23,3 +23,9 @@
   background: #fee2e2;
   color: #b42318;
 }
+
+.evidence-delete-btn:hover {
+  box-shadow: none;
+  background: #fee2e2;
+  color: #b42318;
+}
