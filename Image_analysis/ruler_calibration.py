@@ -68,30 +68,73 @@ def read_ruler_labels_with_rapidocr(rectified):
         except Exception:
             return []
 
+    # The rectified ruler is a long, thin strip: its width (the physical ruler
+    # width) is often only 15-60 px. RapidOCR internally downscales large images,
+    # so feeding the whole strip shrinks the digits back to a few pixels and the
+    # detector reads nothing. To avoid this we rotate the strip so the digits are
+    # upright, upscale it until the digits are large enough, and OCR it in
+    # overlapping tiles kept small enough that RapidOCR does not downscale them.
+    # OCR box coordinates are mapped back (tile -> upscaled -> rotated) so the
+    # rectified-y of each label is preserved.
+    target_height = 96.0
+    max_dimension = 6000     # nao processar tiras absurdamente grandes (evita OOM/crash)
+    max_tiles = 60           # limite de blocos por rotacao
     samples = []
     for rotation in (90, -90):
         rotated = rotate_image(rectified, rotation)
-        try:
-            output = _RAPID_OCR(rotated)
-        except Exception:
+        height, width = rotated.shape[:2]
+        if height < 3 or width < 3:
             continue
 
-        texts = output.txts or ()
-        boxes = output.boxes if output.boxes is not None else ()
-        scores = output.scores or ()
-        for text, box, confidence in zip(texts, boxes, scores):
-            confidence = float(confidence)
-            if confidence < 0.5:
-                continue
-            samples.extend(
-                rapidocr_box_samples(
-                    text=str(text),
-                    box=np.asarray(box, dtype=np.float64),
-                    confidence=confidence,
-                    original_shape=rectified.shape[:2],
-                    rotation=rotation,
-                )
+        scale = max(1.0, target_height / max(1, height))
+        if width * scale > max_dimension:
+            scale = max(1.0, max_dimension / max(1, width))
+        if scale > 1.0:
+            enlarged = cv2.resize(
+                rotated,
+                (max(1, int(round(width * scale))), max(1, int(round(height * scale)))),
+                interpolation=cv2.INTER_CUBIC,
             )
+        else:
+            enlarged = rotated
+        enlarged = np.ascontiguousarray(enlarged)
+
+        big_h, big_w = enlarged.shape[:2]
+        tile_w = max(int(big_h * 6), 320)
+        step = max(1, tile_w - tile_w // 5)
+        offset = 0
+        tiles_done = 0
+        while offset < big_w and tiles_done < max_tiles:
+            tile_offset = offset
+            offset += step
+            tiles_done += 1
+            tile = enlarged[:, tile_offset:min(big_w, tile_offset + tile_w)]
+            if tile.shape[0] < 8 or tile.shape[1] < 8:
+                continue
+            try:
+                output = _RAPID_OCR(np.ascontiguousarray(tile))
+            except Exception:
+                continue
+
+            texts = output.txts or ()
+            boxes = output.boxes if output.boxes is not None else ()
+            scores = output.scores or ()
+            for text, box, confidence in zip(texts, boxes, scores):
+                confidence = float(confidence)
+                if confidence < 0.5:
+                    continue
+                mapped = np.asarray(box, dtype=np.float64)
+                mapped[:, 0] += tile_offset   # tile -> imagem ampliada
+                mapped /= scale               # ampliada -> rodada (escala original)
+                samples.extend(
+                    rapidocr_box_samples(
+                        text=str(text),
+                        box=mapped,
+                        confidence=confidence,
+                        original_shape=rectified.shape[:2],
+                        rotation=rotation,
+                    )
+                )
 
     return samples
 

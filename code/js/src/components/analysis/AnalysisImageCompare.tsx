@@ -30,17 +30,42 @@ function imageLabel(item: SelectableImage) {
   return `${item.evidence.evidenceType || 'Imagem'} #${id ?? '-'}`;
 }
 
-function fullImageSelection(image: ImageEvidenceOutput): DamageSelectionRequest | null {
-  if (!image.width || !image.height || image.width < 2 || image.height < 2) return null;
-  const width = image.width - 1;
-  const height = image.height - 1;
+// Área do dano marcada pelo utilizador (arrastando uma caixa sobre a imagem).
+// Guarda as coordenadas na imagem (para a medição) e a caixa em % (para o overlay).
+type DamageArea = {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
 
-  return {
-    x1: 0,
-    y1: 0,
-    x2: width,
-    y2: height,
-  };
+// Converte a área marcada numa seleção válida para o motor: garante ordem e uma
+// dimensão mínima (para que um simples clique também produza uma caixa medível).
+function selectionFromDamageArea(
+  area: DamageArea,
+  image: ImageEvidenceOutput
+): DamageSelectionRequest | null {
+  if (!image.width || !image.height || image.width < 2 || image.height < 2) return null;
+  const minSize = 10;
+  let x1 = Math.max(0, Math.min(image.width - 2, Math.round(Math.min(area.x1, area.x2))));
+  let y1 = Math.max(0, Math.min(image.height - 2, Math.round(Math.min(area.y1, area.y2))));
+  let x2 = Math.min(image.width - 1, Math.round(Math.max(area.x1, area.x2)));
+  let y2 = Math.min(image.height - 1, Math.round(Math.max(area.y1, area.y2)));
+  if (x2 - x1 < minSize) {
+    const cx = Math.round((x1 + x2) / 2);
+    x1 = Math.max(0, cx - minSize);
+    x2 = Math.min(image.width - 1, cx + minSize);
+  }
+  if (y2 - y1 < minSize) {
+    const cy = Math.round((y1 + y2) / 2);
+    y1 = Math.max(0, cy - minSize);
+    y2 = Math.min(image.height - 1, cy + minSize);
+  }
+  return { x1, y1, x2, y2 };
 }
 
 function calibrationFromPoints(points: ReferencePoint[]) {
@@ -74,6 +99,12 @@ export default function AnalysisImageCompare() {
   const [secondMeasurement, setSecondMeasurement] = useState<MeasurementOutput | null>(null);
   const [firstReferencePoints, setFirstReferencePoints] = useState<ReferencePoint[]>([]);
   const [secondReferencePoints, setSecondReferencePoints] = useState<ReferencePoint[]>([]);
+  const [firstDamageArea, setFirstDamageArea] = useState<DamageArea | null>(null);
+  const [secondDamageArea, setSecondDamageArea] = useState<DamageArea | null>(null);
+  const [manualCalibration, setManualCalibration] = useState(false);
+  // No modo manual, qual dos dois se está a marcar na imagem: a área do dano ou os
+  // pontos de referência na régua. No modo automático marca-se sempre o dano.
+  const [manualTarget, setManualTarget] = useState<'damage' | 'ruler'>('damage');
   const [measurementStatus, setMeasurementStatus] = useState('');
   const [measurementStatusType, setMeasurementStatusType] =
     useState<'running' | 'success' | 'error' | ''>('');
@@ -244,11 +275,13 @@ export default function AnalysisImageCompare() {
 
   useEffect(() => {
     setFirstReferencePoints([]);
+    setFirstDamageArea(null);
     setFirstMeasurement(null);
   }, [firstImageId]);
 
   useEffect(() => {
     setSecondReferencePoints([]);
+    setSecondDamageArea(null);
     setSecondMeasurement(null);
   }, [secondImageId]);
 
@@ -276,29 +309,42 @@ export default function AnalysisImageCompare() {
       return;
     }
 
-    if (!hasTwoValidReferencePoints(firstReferencePoints) || !hasTwoValidReferencePoints(secondReferencePoints)) {
-      setMeasurementStatus('Selecione 2 pontos de referência em cada imagem e preencha os respetivos valores em cm.');
+    // É necessário indicar a ÁREA do dano (arrastar uma caixa em cada imagem). A
+    // escala é calibrada automaticamente por OCR; os pontos de referência só são
+    // usados no modo de calibração manual, como fallback.
+    if (!firstDamageArea || !secondDamageArea) {
+      setMeasurementStatus('Marque a área do dano (arraste uma caixa) em cada imagem antes de correr a medição.');
       setMeasurementStatusType('error');
       return;
     }
 
-    const primarySelection = fullImageSelection(firstImage.image);
-    const comparisonSelection = fullImageSelection(secondImage.image);
+    const primarySelection = selectionFromDamageArea(firstDamageArea, firstImage.image);
+    const comparisonSelection = selectionFromDamageArea(secondDamageArea, secondImage.image);
     if (!primarySelection || !comparisonSelection) {
       setMeasurementStatus('Não foi possível obter as dimensões das imagens para a medição.');
       setMeasurementStatusType('error');
       return;
     }
 
+    const firstHasPoints = manualCalibration && hasTwoValidReferencePoints(firstReferencePoints);
+    const secondHasPoints = manualCalibration && hasTwoValidReferencePoints(secondReferencePoints);
+    const automatic = !firstHasPoints || !secondHasPoints;
+
     const runId = measurementRunRef.current + 1;
     measurementRunRef.current = runId;
     setMeasuring(true);
-    setMeasurementStatus('A correr medições...');
+    setMeasurementStatus(
+      automatic ? 'A correr medições (calibração automática)...' : 'A correr medições...'
+    );
     setMeasurementStatusType('running');
 
     try {
-      const firstCalibration = calibrationFromPoints(firstReferencePoints);
-      const secondCalibration = calibrationFromPoints(secondReferencePoints);
+      const firstCalibration = firstHasPoints
+        ? calibrationFromPoints(firstReferencePoints)
+        : undefined;
+      const secondCalibration = secondHasPoints
+        ? calibrationFromPoints(secondReferencePoints)
+        : undefined;
       const [firstResult, secondResult] = await Promise.all([
         accidentAnalysisService.createMeasurement(analysisId, {
           evidenceId: firstEvidenceId,
@@ -332,7 +378,12 @@ export default function AnalysisImageCompare() {
       if (measurementRunRef.current === runId) {
         setFirstMeasurement(null);
         setSecondMeasurement(null);
-        setMeasurementStatus(err?.message || 'A medição falhou.');
+        const base = err?.message || 'A medição falhou.';
+        setMeasurementStatus(
+          automatic
+            ? `${base} Não foi possível calibrar automaticamente — marque 2 pontos de referência na régua e tente novamente.`
+            : base
+        );
         setMeasurementStatusType('error');
       }
     } finally {
@@ -435,6 +486,10 @@ export default function AnalysisImageCompare() {
                     item={firstImage}
                     measurement={firstMeasurement}
                     measuring={measuring}
+                    damageArea={firstDamageArea}
+                    onDamageAreaChange={setFirstDamageArea}
+                    manualCalibration={manualCalibration}
+                    markTarget={manualCalibration ? manualTarget : 'damage'}
                     referencePoints={firstReferencePoints}
                     onReferencePointsChange={setFirstReferencePoints}
                   />
@@ -446,6 +501,10 @@ export default function AnalysisImageCompare() {
                     item={secondImage}
                     measurement={secondMeasurement}
                     measuring={measuring}
+                    damageArea={secondDamageArea}
+                    onDamageAreaChange={setSecondDamageArea}
+                    manualCalibration={manualCalibration}
+                    markTarget={manualCalibration ? manualTarget : 'damage'}
                     referencePoints={secondReferencePoints}
                     onReferencePointsChange={setSecondReferencePoints}
                   />
@@ -458,6 +517,33 @@ export default function AnalysisImageCompare() {
               </div>
 
               <div className="analysis-footer-actions">
+                <label className="manual-calibration-toggle">
+                  <input
+                    type="checkbox"
+                    checked={manualCalibration}
+                    onChange={(event) => setManualCalibration(event.target.checked)}
+                  />
+                  Calibração manual (marcar pontos de referência)
+                </label>
+                {manualCalibration && (
+                  <div className="mark-target-switch" role="group" aria-label="A marcar">
+                    <span>A marcar:</span>
+                    <button
+                      type="button"
+                      className={manualTarget === 'damage' ? 'active' : ''}
+                      onClick={() => setManualTarget('damage')}
+                    >
+                      Dano
+                    </button>
+                    <button
+                      type="button"
+                      className={manualTarget === 'ruler' ? 'active' : ''}
+                      onClick={() => setManualTarget('ruler')}
+                    >
+                      Régua
+                    </button>
+                  </div>
+                )}
                 <button
                   type="button"
                   className="homepage-btn login-btn"
@@ -491,6 +577,10 @@ function ImagePreview({
   item,
   measurement,
   measuring,
+  damageArea,
+  onDamageAreaChange,
+  manualCalibration,
+  markTarget,
   referencePoints,
   onReferencePointsChange,
 }: {
@@ -498,6 +588,10 @@ function ImagePreview({
   item?: SelectableImage;
   measurement: MeasurementOutput | null;
   measuring: boolean;
+  damageArea: DamageArea | null;
+  onDamageAreaChange: React.Dispatch<React.SetStateAction<DamageArea | null>>;
+  manualCalibration: boolean;
+  markTarget: 'damage' | 'ruler';
   referencePoints: ReferencePoint[];
   onReferencePointsChange: React.Dispatch<React.SetStateAction<ReferencePoint[]>>;
 }) {
@@ -508,10 +602,14 @@ function ImagePreview({
       ? evidenceService.evidenceImageContentUrl(evidenceId)
       : '';
 
-  const handleImageClick = (event: React.MouseEvent<HTMLImageElement>) => {
-    const image = event.currentTarget;
-    if (!image.naturalWidth || !image.naturalHeight) return;
+  const [dragStart, setDragStart] = useState<
+    { natX: number; natY: number; pctX: number; pctY: number } | null
+  >(null);
 
+  // Converte a posição do rato numa posição na imagem (coordenadas naturais) e em
+  // percentagem do elemento, tendo em conta o letterbox do object-fit.
+  const mapEvent = (image: HTMLImageElement, clientX: number, clientY: number) => {
+    if (!image.naturalWidth || !image.naturalHeight) return null;
     const bounds = image.getBoundingClientRect();
     const naturalRatio = image.naturalWidth / image.naturalHeight;
     const boundsRatio = bounds.width / bounds.height;
@@ -519,27 +617,66 @@ function ImagePreview({
     const renderedHeight = boundsRatio > naturalRatio ? bounds.height : bounds.width / naturalRatio;
     const offsetX = (bounds.width - renderedWidth) / 2;
     const offsetY = (bounds.height - renderedHeight) / 2;
-    const clickX = event.clientX - bounds.left - offsetX;
-    const clickY = event.clientY - bounds.top - offsetY;
+    const localX = Math.max(0, Math.min(renderedWidth, clientX - bounds.left - offsetX));
+    const localY = Math.max(0, Math.min(renderedHeight, clientY - bounds.top - offsetY));
+    return {
+      natX: Math.round((localX / renderedWidth) * image.naturalWidth),
+      natY: Math.round((localY / renderedHeight) * image.naturalHeight),
+      pctX: ((localX + offsetX) / bounds.width) * 100,
+      pctY: ((localY + offsetY) / bounds.height) * 100,
+    };
+  };
 
-    if (clickX < 0 || clickY < 0 || clickX > renderedWidth || clickY > renderedHeight) return;
+  type Pt = { natX: number; natY: number; pctX: number; pctY: number };
+  const buildArea = (a: Pt, b: Pt): DamageArea => ({
+    x1: Math.min(a.natX, b.natX),
+    y1: Math.min(a.natY, b.natY),
+    x2: Math.max(a.natX, b.natX),
+    y2: Math.max(a.natY, b.natY),
+    left: Math.min(a.pctX, b.pctX),
+    top: Math.min(a.pctY, b.pctY),
+    width: Math.abs(a.pctX - b.pctX),
+    height: Math.abs(a.pctY - b.pctY),
+  });
 
-    const x = Math.round((clickX / renderedWidth) * image.naturalWidth);
-    const y = Math.round((clickY / renderedHeight) * image.naturalHeight);
-    const markerLeft = ((event.clientX - bounds.left) / bounds.width) * 100;
-    const markerTop = ((event.clientY - bounds.top) / bounds.height) * 100;
-
+  const handleImageClick = (event: React.MouseEvent<HTMLImageElement>) => {
+    // O clique só adiciona pontos de referência quando se está a marcar a régua.
+    if (markTarget !== 'ruler') return;
+    const point = mapEvent(event.currentTarget, event.clientX, event.clientY);
+    if (!point) return;
     onReferencePointsChange((current) => {
       const nextPoint: ReferencePoint = {
-        x,
-        y,
+        x: point.natX,
+        y: point.natY,
         valueCm: 0,
         valueText: '',
-        markerLeft,
-        markerTop,
+        markerLeft: point.pctX,
+        markerTop: point.pctY,
       };
       return current.length >= 2 ? [current[1], nextPoint] : [...current, nextPoint];
     });
+  };
+
+  const handleMouseDown = (event: React.MouseEvent<HTMLImageElement>) => {
+    if (markTarget !== 'damage') return;
+    const point = mapEvent(event.currentTarget, event.clientX, event.clientY);
+    if (!point) return;
+    event.preventDefault();
+    setDragStart(point);
+    onDamageAreaChange(buildArea(point, point));
+  };
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLImageElement>) => {
+    if (markTarget !== 'damage' || !dragStart) return;
+    const point = mapEvent(event.currentTarget, event.clientX, event.clientY);
+    if (point) onDamageAreaChange(buildArea(dragStart, point));
+  };
+
+  const handleMouseUp = (event: React.MouseEvent<HTMLImageElement>) => {
+    if (markTarget !== 'damage' || !dragStart) return;
+    const point = mapEvent(event.currentTarget, event.clientX, event.clientY);
+    setDragStart(null);
+    if (point) onDamageAreaChange(buildArea(dragStart, point));
   };
 
   const updateReferenceValue = (index: number, valueText: string) => {
@@ -573,19 +710,44 @@ function ImagePreview({
           src={imageSrc}
           alt={item.evidence.evidenceDescription || imageLabel(item)}
           onClick={handleImageClick}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
           draggable={false}
         />
-        {referencePoints.map((point, index) => (
-          <span
-            key={`${point.x}-${point.y}-${index}`}
-            className="reference-marker"
-            style={{ left: `${point.markerLeft}%`, top: `${point.markerTop}%` }}
-          >
-            {index + 1}
-          </span>
-        ))}
+        {damageArea && (
+          <div
+            className="damage-area"
+            style={{
+              left: `${damageArea.left}%`,
+              top: `${damageArea.top}%`,
+              width: `${damageArea.width}%`,
+              height: `${damageArea.height}%`,
+            }}
+          />
+        )}
+        {manualCalibration &&
+          referencePoints.map((point, index) => (
+            <span
+              key={`${point.x}-${point.y}-${index}`}
+              className="reference-marker"
+              style={{ left: `${point.markerLeft}%`, top: `${point.markerTop}%` }}
+            >
+              {index + 1}
+            </span>
+          ))}
       </div>
 
+      <p className="reference-controls-hint">
+        {markTarget === 'ruler'
+          ? 'A marcar a régua: clique em 2 marcas da fita e escreva o valor em cm de cada.'
+          : damageArea
+            ? `Área do dano marcada (${damageArea.x2 - damageArea.x1}×${damageArea.y2 - damageArea.y1} px). Arraste novamente para ajustar.`
+            : 'Arraste uma caixa sobre o dano na imagem.'}
+      </p>
+
+      {manualCalibration && (
       <div className="reference-controls">
         <div className="reference-controls-header">
           <span>Pontos de referência</span>
@@ -593,12 +755,15 @@ function ImagePreview({
             Limpar
           </button>
         </div>
+        <p className="reference-controls-hint">
+          Calibração manual: clique em 2 marcas da régua e escreva o valor em cm de cada.
+        </p>
         {[0, 1].map((index) => {
           const point = referencePoints[index];
           return (
             <label key={index} className="reference-point-row">
               <span>
-                P{index + 1}: {point ? `${point.x}, ${point.y}` : 'clique na imagem'}
+                P{index + 1}: {point ? `${point.x}, ${point.y}` : 'clique na régua'}
               </span>
               <input
                 type="number"
@@ -612,6 +777,7 @@ function ImagePreview({
           );
         })}
       </div>
+      )}
     </div>
   );
 }
