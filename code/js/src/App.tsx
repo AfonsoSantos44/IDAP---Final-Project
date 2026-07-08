@@ -17,6 +17,7 @@ import EvidenceCreate from "./components/evidences/EvidenceCreate";
 import EvidenceUpdate from "./components/evidences/EvidenceUpdate";
 import AnalysisCreate from "./components/analysis/AnalysisCreate";
 import AnalysisImageCompare from "./components/analysis/AnalysisImageCompare";
+import ReportCreate from "./components/analysis/ReportCreate";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const protect = (element: React.ReactNode) => (
@@ -80,6 +81,10 @@ const router = createBrowserRouter([
     {
         path: "/cases/:caseId/analysis/image",
         element: protect(<AnalysisImageCompare/>),
+    },
+    {
+        path: "/cases/:caseId/analysis/:analysisId/report",
+        element: protect(<ReportCreate/>),
     },
     {
         path: "/cases/:caseId/analysis/:analysisId",

@@ -398,12 +398,20 @@
   margin-top: 0.85rem;
   display: flex;
   justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .analysis-measurement-actions .homepage-btn {
   width: auto;
   min-width: 180px;
   padding-inline: 1.4rem;
+}
+
+.analysis-measurement-actions .report-btn {
+  background: #eef2ff;
+  color: #4338ca;
+  box-shadow: none;
 }
 
 @media (max-width: 780px) {

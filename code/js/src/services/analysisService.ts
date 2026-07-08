@@ -61,6 +61,21 @@ export interface MeasurementOutput {
 	processedAt?: string;
 }
 
+export interface ReportOutput {
+	reportId?: number;
+	analysisId?: number;
+	generatedAt?: string;
+	filePath?: string;
+}
+
+export interface CreateReportRequest {
+	filePath?: string;
+}
+
+export interface UpdateReportRequest {
+	filePath?: string;
+}
+
 export const accidentAnalysisService = {
 	// Analyses under a case
 
@@ -127,6 +142,44 @@ export const accidentAnalysisService = {
 		return fetchApi<MeasurementOutput>(`/analyses/${analysisId}/measurements`, {
 			method: 'POST',
 			body: JSON.stringify(input),
+		});
+	},
+
+	async listAnalysisReports(analysisId: number): Promise<ReportOutput[]> {
+		return fetchApi<ReportOutput[]>(`/analyses/${analysisId}/reports`, {
+			method: 'GET',
+		});
+	},
+
+	async createAnalysisReport(
+		analysisId: number,
+		input: CreateReportRequest = {}
+	): Promise<ReportOutput> {
+		return fetchApi<ReportOutput>(`/analyses/${analysisId}/reports`, {
+			method: 'POST',
+			body: JSON.stringify(input),
+		});
+	},
+
+	async getReportById(reportId: number): Promise<ReportOutput> {
+		return fetchApi<ReportOutput>(`/reports/${reportId}`, {
+			method: 'GET',
+		});
+	},
+
+	async updateReport(
+		reportId: number,
+		input: UpdateReportRequest
+	): Promise<ReportOutput> {
+		return fetchApi<ReportOutput>(`/reports/${reportId}`, {
+			method: 'PUT',
+			body: JSON.stringify(input),
+		});
+	},
+
+	async deleteReport(reportId: number): Promise<void> {
+		return fetchApi<void>(`/reports/${reportId}`, {
+			method: 'DELETE',
 		});
 	},
 

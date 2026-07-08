@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../../styles/AnalysisImageCompare.css';
 import { evidenceService } from '../../services/evidenceService';
@@ -409,6 +409,17 @@ export default function AnalysisImageCompare() {
                   onClick={runMeasurements}
                 >
                   {measuring ? 'A medir...' : 'Correr medições'}
+                </button>
+                <button
+                  type="button"
+                  className="homepage-btn report-btn"
+                  disabled={!analysisId}
+                  onClick={() =>
+                    analysisId &&
+                    navigate(`/cases/${caseId}/analysis/${analysisId}/report`)
+                  }
+                >
+                  Criar report
                 </button>
               </div>
 
