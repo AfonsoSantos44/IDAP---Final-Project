@@ -21,7 +21,7 @@ function NotFoundPage() {
 
           <button
             className="not-found-btn"
-            onClick={() => navigate('/home')}
+            onClick={() => navigate(-1)}
           >
             Voltar ao Início
           </button>

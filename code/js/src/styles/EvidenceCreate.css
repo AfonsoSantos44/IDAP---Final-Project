@@ -21,6 +21,16 @@
   overflow-y: auto;
 }
 
+.evidence-edit-page {
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.evidence-edit-overlay {
+  overflow: hidden;
+}
+
 .evidence-create-content {
   max-width: 860px;
   text-align: left;

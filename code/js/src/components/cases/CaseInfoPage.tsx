@@ -4,7 +4,6 @@ import { useAuth } from '../../context/AuthContext';
 import '../../styles/CaseInfoPage.css';
 import { caseService } from '../../services/caseService';
 import { userService } from '../../services/userService';
-import analysisService from '../../services/analysisService';
 import { vehicleService, type CreateDamageRequest, type CreateVehicleRequest, type DamageOutput, type VehicleOutput } from '../../services/vehicleService';
 
 type VehicleFormInput = {
@@ -322,25 +321,6 @@ function CaseInfoPage() {
 		}
 	};
 
-	const handleAnalyze = async () => {
-		try {
-			const targetCaseId = caseData?.id ?? currentCaseId;
-			if (!targetCaseId) return;
-
-			const analyses = await analysisService.listCaseAnalyses(Number(targetCaseId));
-
-			if (analyses.length > 0) {
-				navigate(`/cases/${targetCaseId}/analysis/${analyses[0].analysisId}`);
-				return;
-			}
-
-			const analysis = await analysisService.createCaseAnalysis(Number(targetCaseId));
-			navigate(`/cases/${targetCaseId}/analysis/${analysis.analysisId}`);
-		} catch (err: any) {
-			alert(err?.message || 'Erro ao criar anÃ¡lise');
-		}
-	};
-
 	return (
 		<div className="case-info-page">
 			<div className="logout-wrapper">
@@ -457,13 +437,6 @@ function CaseInfoPage() {
 					Gerir evidências
 				</button>
 
-				<button
-					className="case-menu-btn"
-					type="button"
-					onClick={handleAnalyze}
-				>
-				Analisar
-				</button>
 			</div>
 
 			{selectedDetailsVehicle && (

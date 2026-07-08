@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { evidenceService } from '../../services/evidenceService';
 import { caseService } from '../../services/caseService';
+import analysisService from '../../services/analysisService';
 import '../../styles/CaseListPage.css';
 import '../../styles/EvidenceList.css';
 
@@ -77,6 +78,24 @@ export default function EvidenceList() {
     }
   };
 
+  const handleAnalyze = async () => {
+    if (!caseId) return;
+
+    try {
+      const analyses = await analysisService.listCaseAnalyses(caseId);
+
+      if (analyses.length > 0 && analyses[0].analysisId) {
+        navigate(`/cases/${caseId}/analysis/${analyses[0].analysisId}`);
+        return;
+      }
+
+      const analysis = await analysisService.createCaseAnalysis(caseId);
+      navigate(`/cases/${caseId}/analysis/${analysis.analysisId}`);
+    } catch (err: any) {
+      alert(err?.message || 'Erro ao criar análise');
+    }
+  };
+
   return (
     <div className="case-list-page" style={{ position: 'relative' }}>
       <div className="back-container back-outside">
@@ -120,13 +139,18 @@ export default function EvidenceList() {
             <div className="case-footer">
               <div />
               <div>
-                <button className="btn-link" onClick={() => navigate(`/evidences/${ev.evidenceId}`)}>Ver</button>
-                <button style={{ marginLeft: 8 }} className="btn-link" onClick={() => navigate(`/cases/${caseId}/evidences/${ev.evidenceId}/edit`)}>Editar</button>
-                <button style={{ marginLeft: 8 }} className="btn-link" onClick={() => handleDelete(ev.evidenceId)}>Apagar</button>
+                <button className="btn-link" onClick={() => navigate(`/cases/${caseId}/evidences/${ev.evidenceId}/edit`)}>Editar</button>
+                <button style={{ marginLeft: 8 }} className="btn-link evidence-delete-btn" onClick={() => handleDelete(ev.evidenceId)}>Apagar</button>
               </div>
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="evidence-bottom-actions">
+        <button onClick={handleAnalyze} disabled={!caseId} className="btn-link evidence-analyze-btn">
+          Analisar
+        </button>
       </div>
 
     </div>
