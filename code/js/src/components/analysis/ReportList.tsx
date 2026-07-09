@@ -67,19 +67,21 @@ export default function ReportList() {
               <div className="report-list">
                 {reports.map((report) => (
                   <article className="report-card" key={report.reportId}>
-                    <div>
-                      <strong>Relatório {report.reportId ?? '-'}</strong>
-                    </div>
+                    <div className="report-card-info">
+                      <div>
+                        <strong>Relatório {report.reportId ?? '-'}</strong>
+                      </div>
 
-                    <p>Nº do Caso: {report.caseId ?? '-'}</p>
+                      <p>Nº do Caso: {report.caseId ?? '-'}</p>
 
-                    <div className="report-detail-block">
-                      <strong>Conclusão da análise</strong>
-                      <p>{report.conclusion || 'Sem conclusão inserida.'}</p>
+                      <div className="report-detail-block">
+                        <strong>Conclusão da análise</strong>
+                        <p>{report.conclusion || 'Sem conclusão inserida.'}</p>
+                      </div>
                     </div>
 
                     <button
-                      className="homepage-btn login-btn"
+                      className="homepage-btn login-btn report-card-action"
                       onClick={() => goToDetails(report.reportId)}
                     >
                       Ver Mais

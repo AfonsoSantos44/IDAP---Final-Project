@@ -257,12 +257,30 @@
 
 .report-card {
   display: grid;
-  gap: 0.55rem;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem;
   padding: 1rem;
   border: 1px solid rgba(35,43,93,0.08);
   border-radius: 10px;
   background: #fff;
   box-shadow: 0 10px 24px rgba(0,0,0,0.05);
+}
+
+.report-card-info {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.report-card-action {
+  width: auto;
+  min-width: 65px;
+  padding: 0.7rem 1.1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  justify-self: end;
+  align-self: center;
 }
 
 .report-card > div {
@@ -304,6 +322,7 @@
   text-align: center;
 }
 
+
 @media (max-width: 700px) {
   .report-create-overlay {
     overflow-y: auto;
@@ -318,9 +337,12 @@
     width: 100%;
   }
 
-  .report-card > div {
-    flex-direction: column;
-    gap: 0.35rem;
+  .report-card {
+    grid-template-columns: 1fr;
+  }
+
+  .report-card-action {
+    justify-self: end;
   }
 
   .report-image-columns {
