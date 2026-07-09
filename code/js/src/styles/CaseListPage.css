@@ -221,18 +221,23 @@
 
 .case-list-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-	gap: 16px;
+	grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+	grid-auto-rows: 34vh;
+	gap: 24px;
+	max-height: calc(2 * 34vh + 24px);
+	overflow-y: auto;
+	padding-right: 4px;
 }
 
 .case-card {
 	background: #fff;
 	border: 1px solid #e6edf3;
-	border-radius: 10px;
-	padding: 16px;
+	border-radius: 14px;
+	padding: 26px;
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
+	gap: 14px;
+	overflow: hidden;
 	transition: transform .12s ease, box-shadow .12s ease;
 }
 
@@ -243,13 +248,13 @@
 }
 
 .case-card .case-title {
-	font-size: 1.05rem;
+	font-size: 1.4rem;
 	font-weight: 600;
 	color: #0f172a;
 }
 
 .case-card .case-meta {
-	font-size: 0.9rem;
+	font-size: 1.05rem;
 	color: #475569;
 }
 
@@ -271,7 +276,8 @@
 	align-items: center;
 	justify-content: space-between;
 	gap: 8px;
-	margin-top: 6px;
+	margin-top: auto;
+	padding-top: 6px;
 }
 
 .btn-link,

@@ -59,7 +59,9 @@ function CasesListPage() {
         setIsAdmin(admin);
 
         const data = await caseService.getAllCases();
-        const mapped = data.sort((a, b) => a.id - b.id).map((c: any) => {
+        const mapped = [...data]
+          .sort((a: any, b: any) => Number(a.id ?? a.caseId ?? 0) - Number(b.id ?? b.caseId ?? 0))
+          .map((c: any) => {
           const idStr = String(c.id ?? c.caseId ?? '');
 
           return {
