@@ -10,6 +10,7 @@ interface RepositoryAccidentVehicleDamage {
         model: String,
         yearOfFabrication: Int,
         licensePlate: String,
+        color: String?,
         role: String?,
     ): Vehicle
 
@@ -28,6 +29,7 @@ interface RepositoryAccidentVehicleDamage {
         model: String,
         yearOfFabrication: Int,
         licensePlate: String,
+        color: String?,
         role: String?,
     ): Vehicle?
 

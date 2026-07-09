@@ -15,6 +15,7 @@ class AccidentVehicleDamageService(
         model: String,
         yearOfFabrication: Int,
         licensePlate: String,
+        color: String?,
         role: String?,
     ): Either<AccidentDataError, Vehicle> {
         val normalizedBrand =
@@ -28,6 +29,7 @@ class AccidentVehicleDamageService(
                 ?: return failure(AccidentDataError.InvalidAccidentData)
 
         if (!isValidVehicleYear(yearOfFabrication)) return failure(AccidentDataError.InvalidAccidentData)
+        if (!isValidOptionalText(color, MAX_SHORT_TEXT)) return failure(AccidentDataError.InvalidAccidentData)
         if (!isValidOptionalText(role, MAX_SHORT_TEXT)) return failure(AccidentDataError.InvalidAccidentData)
 
         return transactionManager.run {
@@ -43,6 +45,7 @@ class AccidentVehicleDamageService(
                     model = normalizedModel,
                     yearOfFabrication = yearOfFabrication,
                     licensePlate = normalizedLicensePlate,
+                    color = normalizeOptionalText(color),
                     role = normalizeOptionalText(role),
                 ),
             )
@@ -67,11 +70,13 @@ class AccidentVehicleDamageService(
         model: String?,
         yearOfFabrication: Int?,
         licensePlate: String?,
+        color: String?,
         role: String?,
     ): Either<AccidentDataError, Vehicle> {
         if (!isValidOptionalText(brand, MAX_SHORT_TEXT)) return failure(AccidentDataError.InvalidAccidentData)
         if (!isValidOptionalText(model, MAX_SHORT_TEXT)) return failure(AccidentDataError.InvalidAccidentData)
         if (!isValidOptionalText(licensePlate, MAX_LICENSE_PLATE)) return failure(AccidentDataError.InvalidAccidentData)
+        if (!isValidOptionalText(color, MAX_SHORT_TEXT)) return failure(AccidentDataError.InvalidAccidentData)
         if (!isValidOptionalText(role, MAX_SHORT_TEXT)) return failure(AccidentDataError.InvalidAccidentData)
         if (yearOfFabrication != null && !isValidVehicleYear(yearOfFabrication)) {
             return failure(AccidentDataError.InvalidAccidentData)
@@ -95,6 +100,7 @@ class AccidentVehicleDamageService(
                     model = normalizeOptionalText(model) ?: currentVehicle.model,
                     yearOfFabrication = yearOfFabrication ?: currentVehicle.yearOfFabrication,
                     licensePlate = normalizedLicensePlate,
+                    color = if (color == null) currentVehicle.color else normalizeOptionalText(color),
                     role = if (role == null) currentVehicle.role else normalizeOptionalText(role),
                 ) ?: currentVehicle,
             )

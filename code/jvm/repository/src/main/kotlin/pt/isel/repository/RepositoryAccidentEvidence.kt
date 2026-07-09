@@ -34,6 +34,8 @@ interface RepositoryAccidentEvidence {
 
     fun findImageEvidenceByEvidenceId(evidenceId: Int): ImageEvidence?
 
+    fun findImageEvidenceById(imageEvidenceId: Int): ImageEvidence?
+
     fun updateImageEvidence(
         imageEvidenceId: Int,
         vehicleId: Int,

@@ -3,11 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import '../../styles/EvidenceUpdate.css';
 import { evidenceService } from '../../services/evidenceService';
 import { vehicleService, type VehicleOutput } from '../../services/vehicleService';
+import { useAuth } from '../../context/AuthContext';
 
 const SUGGESTED_TYPES = ['Foto', 'Documento', 'Medida', 'Outro'];
 
 export default function EvidenceEdit() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const { caseId, evidenceId } = useParams();
 
   const [loading, setLoading] = useState(true);
@@ -32,6 +34,11 @@ export default function EvidenceEdit() {
 
   const goBack = () =>
     navigate(-1);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/initial');
+  };
 
   useEffect(() => {
     const loadEvidence = async () => {
@@ -171,6 +178,9 @@ export default function EvidenceEdit() {
 
   return (
     <div className="homepage-wrapper">
+      <div className="logout-wrapper">
+        <button className="logout-btn" onClick={handleLogout}>Logout</button>
+      </div>
       <div className="back-container back-outside">
         <button className="page-btn secondary back-btn" onClick={goBack}>
           Voltar

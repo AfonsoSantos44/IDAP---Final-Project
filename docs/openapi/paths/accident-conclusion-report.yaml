@@ -69,6 +69,26 @@ analysisConclusion:
         $ref: "../../IDAP.yaml#/components/responses/CaseAccessDeniedProblem"
       "404":
         $ref: "../../IDAP.yaml#/components/responses/NotFoundProblem"
+reports:
+  get:
+    tags:
+      - Accident Conclusions and Reports
+    summary: List all reports visible to the current user
+    description: Admins receive every report; other users receive only the reports for cases they own.
+    operationId: listReports
+    security:
+      - cookieAuth: []
+    responses:
+      "200":
+        description: Reports returned successfully.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../IDAP.yaml#/components/schemas/ReportOutput"
+      "401":
+        $ref: "../../IDAP.yaml#/components/responses/UnauthorizedProblem"
 analysisReports:
   get:
     tags:
@@ -98,7 +118,7 @@ analysisReports:
     tags:
       - Accident Conclusions and Reports
     summary: Generate a report for an analysis
-    description: Generates a structured JSON report from the case, environment, vehicle, evidence, measurement, comparison, and conclusion data connected to the analysis, then stores the generated report path.
+    description: Creates a report for the analysis, linking the case's vehicles automatically and attaching the given image_evidence entries as supporting images.
     operationId: createAnalysisReport
     security:
       - cookieAuth: []

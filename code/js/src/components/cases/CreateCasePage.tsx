@@ -14,6 +14,7 @@ type VehicleFormInput = {
     model: string;
     yearOfFabrication: string;
     licensePlate: string;
+    color: string;
     role: string;
 };
 
@@ -22,6 +23,7 @@ const emptyVehicleForm: VehicleFormInput = {
     model: '',
     yearOfFabrication: '',
     licensePlate: '',
+    color: '',
     role: '',
 };
 
@@ -247,6 +249,7 @@ function CreateCasePage() {
                 model: vehicleInput.model.trim(),
                 yearOfFabrication: Number(vehicleInput.yearOfFabrication),
                 licensePlate: vehicleInput.licensePlate.trim(),
+                color: vehicleInput.color.trim() || null,
                 role: vehicleInput.role.trim() || null,
             },
         ]);
@@ -310,7 +313,7 @@ function CreateCasePage() {
             <div className="logout-wrapper">
                 <button className="logout-btn" onClick={handleLogout}>Logout</button>
             </div>
-            <button onClick={() => { window.location.href = '/cases'; }}>Voltar</button>
+            <button onClick={() => { navigate('/cases'); }}>Voltar</button>
             <h1>Criar um novo caso</h1>
             {error && <div className="error-message">{error}</div>}
             <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
@@ -376,7 +379,7 @@ function CreateCasePage() {
                                 <div className="vehicle-list-item" key={vehicle.localId}>
                                     <div>
                                         <strong>{vehicle.brand} {vehicle.model}</strong>
-                                        <span>{vehicle.licensePlate} - {vehicle.yearOfFabrication}</span>
+                                        <span>{vehicle.licensePlate} - {vehicle.yearOfFabrication}{vehicle.color ? ` - ${vehicle.color}` : ''}</span>
                                         {vehicle.role && <small>{vehicle.role}</small>}
                                     </div>
                                     <button type="button" onClick={() => removeVehicle(vehicle.localId)}>
@@ -443,6 +446,16 @@ function CreateCasePage() {
                                         value={vehicleInput.licensePlate}
                                         onChange={(e) => handleVehicleInputChange('licensePlate', e.target.value)}
                                         placeholder="Ex.: AA-00-BB"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="vehicle-color">Cor:</label>
+                                    <input
+                                        id="vehicle-color"
+                                        value={vehicleInput.color}
+                                        onChange={(e) => handleVehicleInputChange('color', e.target.value)}
+                                        placeholder="Ex.: Vermelho"
                                     />
                                 </div>
 

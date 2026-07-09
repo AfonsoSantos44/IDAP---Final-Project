@@ -22,17 +22,28 @@ interface RepositoryAccidentConclusionReport {
 
     fun createReport(
         analysisId: Int,
-        filePath: String,
+        caseId: Int,
+        imageEvidenceIds: List<Int>,
+        conclusion: String?,
+        description: String?,
     ): Report
 
     fun findReportById(reportId: Int): Report?
 
     fun findReportsByAnalysisId(analysisId: Int): List<Report>
 
+    fun findAllReports(): List<Report>
+
+    fun findReportsByUserId(userId: Int): List<Report>
+
     fun updateReport(
         reportId: Int,
-        filePath: String,
+        imageEvidenceIds: List<Int>?,
+        conclusion: String?,
+        description: String?,
     ): Report?
 
     fun deleteReportById(reportId: Int): Int
+
+    fun findReportImageEvidenceIds(reportId: Int): List<Int>
 }

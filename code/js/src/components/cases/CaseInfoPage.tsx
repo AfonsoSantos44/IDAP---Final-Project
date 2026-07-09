@@ -11,6 +11,7 @@ type VehicleFormInput = {
 	model: string;
 	yearOfFabrication: string;
 	licensePlate: string;
+	color: string;
 	role: string;
 };
 
@@ -26,6 +27,7 @@ const emptyVehicleForm: VehicleFormInput = {
 	model: '',
 	yearOfFabrication: '',
 	licensePlate: '',
+	color: '',
 	role: '',
 };
 
@@ -36,7 +38,7 @@ const emptyDamageForm: DamageFormInput = {
 	damageDescription: '',
 };
 
-function CaseInfoPage() {
+export default function CaseInfoPage() {
 	const navigate = useNavigate();
 	const { logout } = useAuth();
 
@@ -194,6 +196,7 @@ function CaseInfoPage() {
 			model: vehicleInput.model.trim(),
 			yearOfFabrication: Number(vehicleInput.yearOfFabrication),
 			licensePlate: vehicleInput.licensePlate.trim(),
+			color: vehicleInput.color.trim() || null,
 			role: vehicleInput.role.trim() || null,
 		};
 
@@ -330,7 +333,7 @@ function CaseInfoPage() {
 				<button
 					className="page-btn secondary back-btn"
 					onClick={() => {
-						window.location.href = '/cases';
+						navigate('/cases');
 					}}
 				>
 					Voltar
@@ -389,7 +392,7 @@ function CaseInfoPage() {
 									<div className="case-vehicle-card" key={vehicle.vehicleId ?? `${vehicle.licensePlate}-${vehicle.model}`}>
 										<div className="case-vehicle-details">
 											<strong>{formatVehicleLabel(vehicle)}</strong>
-											<span>{vehicle.licensePlate ?? 'Sem matrícula'} - {vehicle.yearOfFabrication ?? 'Ano desconhecido'}</span>
+											<span>{vehicle.licensePlate ?? 'Sem matrícula'} - {vehicle.yearOfFabrication ?? 'Ano desconhecido'}{vehicle.color ? ` - ${vehicle.color}` : ''}</span>
 											{vehicle.role && <small>{vehicle.role}</small>}
 										</div>
 										<div className="case-vehicle-actions">
@@ -468,6 +471,10 @@ function CaseInfoPage() {
 							<div>
 								<strong>Modelo</strong>
 								<span>{selectedDetailsVehicle.model ?? '-'}</span>
+							</div>
+							<div>
+								<strong>Cor</strong>
+								<span>{selectedDetailsVehicle.color || '-'}</span>
 							</div>
 							<div className="wide">
 								<strong>Papel no acidente</strong>
@@ -638,6 +645,16 @@ function CaseInfoPage() {
 									/>
 								</div>
 
+								<div className="vehicle-form-group">
+									<label htmlFor="case-vehicle-color">Cor:</label>
+									<input
+										id="case-vehicle-color"
+										value={vehicleInput.color}
+										onChange={(e) => handleVehicleInputChange('color', e.target.value)}
+										placeholder="Ex.: Vermelho"
+									/>
+								</div>
+
 								<div className="vehicle-form-group wide">
 									<label htmlFor="case-vehicle-role">Papel no acidente:</label>
 									<input
@@ -663,6 +680,4 @@ function CaseInfoPage() {
 			)}
 		</div>
 	);
-}
-
-export default CaseInfoPage;
+}	

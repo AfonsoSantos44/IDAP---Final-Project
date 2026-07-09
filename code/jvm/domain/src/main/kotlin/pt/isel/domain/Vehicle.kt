@@ -7,5 +7,6 @@ data class Vehicle(
     val model: String,
     val yearOfFabrication: Int,
     val licensePlate: String,
+    val color: String?,
     val role: String?,
 )

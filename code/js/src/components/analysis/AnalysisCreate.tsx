@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import '../../styles/AnalysisCreate.css';
 import type { CaseDetailsOutput } from '../../types/caseTypes';
 import { evidenceService, EvidenceOutput } from '../../services/evidenceService';
+import { useAuth } from '../../context/AuthContext';
 
 import { caseService } from '../../services/caseService';
 
@@ -50,14 +51,25 @@ function EvidenceVisual({ evidence }: { evidence: EvidenceOutput }) {
 export default function AnalysisCreate() {
   const navigate = useNavigate();
   const { caseId } = useParams();
+  const { logout } = useAuth();
 
   const [caseData, setCaseData] = useState<CaseDetailsOutput | null>(null);
   const [evidences, setEvidences] = useState<EvidenceOutput[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const goBack = () =>
-    navigate(-1);
+  const goBack = () => {
+    if (caseId) {
+      navigate(`/cases/${caseId}/evidences`);
+    } else {
+      navigate(-1);
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/initial');
+  };
 
   const getStatusClass = (status?: string) => {
     if (!status) return 'Pendente';
@@ -108,6 +120,9 @@ export default function AnalysisCreate() {
 
   return (
     <div className="homepage-wrapper">
+      <div className="logout-wrapper">
+        <button className="logout-btn" onClick={handleLogout}>Logout</button>
+      </div>
       <div className="back-container back-outside">
         <button className="back-btn" onClick={goBack}>
           Voltar

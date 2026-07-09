@@ -61,6 +61,7 @@ class VehicleMapper : RowMapper<Vehicle> {
             model = rs.getString("model"),
             yearOfFabrication = rs.getInt("year_of_fabrication"),
             licensePlate = rs.getString("license_plate"),
+            color = rs.getString("color"),
             role = rs.getString("role"),
         )
 }
@@ -203,8 +204,10 @@ class ReportMapper : RowMapper<Report> {
         Report(
             reportId = rs.getInt("report_id"),
             analysisId = rs.getInt("analysis_id"),
+            caseId = rs.getInt("case_id"),
             generatedAt = rs.getTimestamp("generated_at").toInstant(),
-            filePath = rs.getString("file_path"),
+            conclusion = rs.getString("conclusion"),
+            description = rs.getString("report_description"),
         )
 }
 

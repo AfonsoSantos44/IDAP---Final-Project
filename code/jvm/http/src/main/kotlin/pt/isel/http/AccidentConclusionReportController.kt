@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.domain.SecurityPrincipal
 import pt.isel.http.dto.CreateReportRequestDto
+import pt.isel.http.dto.Problem
 import pt.isel.http.dto.UpdateReportRequestDto
 import pt.isel.http.dto.UpsertAnalysisConclusionRequestDto
 import pt.isel.services.AccidentConclusionReportService
@@ -79,6 +80,25 @@ class AccidentConclusionReportController(
         }
     }
 
+    @GetMapping(Uris.Reports.LIST)
+    fun listReports(
+        @AuthenticationPrincipal currentUser: SecurityPrincipal?,
+    ): ResponseEntity<*> {
+        val authenticatedUser = currentUser ?: return Problem.NoUserLoggedIn.response(HttpStatus.UNAUTHORIZED)
+
+        val reports =
+            if (authenticatedUser.isAdmin()) {
+                conclusionReportService.getAllReports()
+            } else {
+                when (val result = conclusionReportService.getReportsByUserId(authenticatedUser.userId)) {
+                    is Success -> result.value
+                    is Failure -> return result.value.toProblemResponse()
+                }
+            }
+
+        return ResponseEntity.ok(reports.map { it.toOutputDto() })
+    }
+
     @GetMapping(Uris.Analyses.REPORTS)
     fun getReports(
         @AuthenticationPrincipal currentUser: SecurityPrincipal?,
@@ -106,11 +126,19 @@ class AccidentConclusionReportController(
             is AnalysisAccessResult.Rejected -> return access.response
         }
 
-        return when (val result = conclusionReportService.createReport(analysisId, request?.filePath)) {
+        return when (
+            val result =
+                conclusionReportService.createReport(
+                    analysisId = analysisId,
+                    imageEvidenceIds = request?.imageEvidenceIds ?: emptyList(),
+                    conclusion = request?.conclusion,
+                    description = request?.description,
+                )
+        ) {
             is Success ->
                 ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .header("Location", "/api/reports/${result.value.reportId}")
+                    .header("Location", "/api/reports/${result.value.report.reportId}")
                     .body(result.value.toOutputDto())
 
             is Failure -> result.value.toProblemResponse()
@@ -121,11 +149,17 @@ class AccidentConclusionReportController(
     fun getReport(
         @AuthenticationPrincipal currentUser: SecurityPrincipal?,
         @PathVariable reportId: Int,
-    ): ResponseEntity<*> =
+    ): ResponseEntity<*> {
         when (val access = accessControl.authorizeReport(currentUser, reportId)) {
-            is ReportAccessResult.Authorized -> ResponseEntity.ok(access.report.toOutputDto())
-            is ReportAccessResult.Rejected -> access.response
+            is ReportAccessResult.Authorized -> Unit
+            is ReportAccessResult.Rejected -> return access.response
         }
+
+        return when (val result = conclusionReportService.getReportDetailsById(reportId)) {
+            is Success -> ResponseEntity.ok(result.value.toOutputDto())
+            is Failure -> result.value.toProblemResponse()
+        }
+    }
 
     @PutMapping(Uris.Reports.UPDATE_BY_ID)
     fun updateReport(
@@ -138,7 +172,15 @@ class AccidentConclusionReportController(
             is ReportAccessResult.Rejected -> return access.response
         }
 
-        return when (val result = conclusionReportService.updateReport(reportId, request.filePath)) {
+        return when (
+            val result =
+                conclusionReportService.updateReport(
+                    reportId = reportId,
+                    imageEvidenceIds = request.imageEvidenceIds,
+                    conclusion = request.conclusion,
+                    description = request.description,
+                )
+        ) {
             is Success -> ResponseEntity.ok(result.value.toOutputDto())
             is Failure -> result.value.toProblemResponse()
         }

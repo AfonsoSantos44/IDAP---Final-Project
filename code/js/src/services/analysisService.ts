@@ -61,19 +61,48 @@ export interface MeasurementOutput {
 	processedAt?: string;
 }
 
+export interface ReportVehicleOutput {
+	vehicleId?: number;
+	caseId?: number;
+	brand?: string;
+	model?: string;
+	yearOfFabrication?: number;
+	licensePlate?: string;
+	color?: string | null;
+	role?: string | null;
+}
+
+export interface ReportImageOutput {
+	imageEvidenceId?: number;
+	evidenceId?: number;
+	vehicleId?: number;
+	filePath?: string;
+	width?: number;
+	height?: number;
+	metadata?: string | null;
+}
+
 export interface ReportOutput {
 	reportId?: number;
 	analysisId?: number;
+	caseId?: number;
 	generatedAt?: string;
-	filePath?: string;
+	conclusion?: string | null;
+	description?: string | null;
+	vehicles?: ReportVehicleOutput[];
+	images?: ReportImageOutput[];
 }
 
 export interface CreateReportRequest {
-	filePath?: string;
+	imageEvidenceIds?: number[];
+	conclusion?: string;
+	description?: string;
 }
 
 export interface UpdateReportRequest {
-	filePath?: string;
+	imageEvidenceIds?: number[];
+	conclusion?: string;
+	description?: string;
 }
 
 export const accidentAnalysisService = {
@@ -142,6 +171,12 @@ export const accidentAnalysisService = {
 		return fetchApi<MeasurementOutput>(`/analyses/${analysisId}/measurements`, {
 			method: 'POST',
 			body: JSON.stringify(input),
+		});
+	},
+
+	async listReports(): Promise<ReportOutput[]> {
+		return fetchApi<ReportOutput[]>(`/reports`, {
+			method: 'GET',
 		});
 	},
 

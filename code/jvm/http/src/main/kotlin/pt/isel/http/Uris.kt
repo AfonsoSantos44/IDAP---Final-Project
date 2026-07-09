@@ -73,6 +73,7 @@ object Uris {
     }
 
     object Reports {
+        const val LIST = "$PREFIX/reports"
         const val GET_BY_ID = "$PREFIX/reports/{reportId}"
         const val UPDATE_BY_ID = "$PREFIX/reports/{reportId}"
         const val DELETE_BY_ID = "$PREFIX/reports/{reportId}"

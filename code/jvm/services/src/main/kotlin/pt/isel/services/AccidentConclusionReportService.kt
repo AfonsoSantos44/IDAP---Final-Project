@@ -2,13 +2,21 @@ package pt.isel.services
 
 import org.springframework.stereotype.Service
 import pt.isel.domain.AnalysisConclusion
+import pt.isel.domain.ImageEvidence
 import pt.isel.domain.Report
+import pt.isel.domain.Vehicle
+import pt.isel.repository.Transaction
 import pt.isel.repository.TransactionManager
+
+data class ReportDetails(
+    val report: Report,
+    val vehicles: List<Vehicle>,
+    val images: List<ImageEvidence>,
+)
 
 @Service
 class AccidentConclusionReportService(
     private val transactionManager: TransactionManager,
-    private val reportGenerator: AnalysisReportGenerator,
 ) {
     fun upsertAnalysisConclusion(
         analysisId: Int,
@@ -62,37 +70,54 @@ class AccidentConclusionReportService(
 
     fun createReport(
         analysisId: Int,
-        filePath: String?,
-    ): Either<AccidentDataError, Report> {
-        if (!isValidOptionalText(filePath, MAX_FILE_PATH)) return failure(AccidentDataError.InvalidAccidentData)
-        val normalizedRequestedFilePath = normalizeOptionalText(filePath)
-
-        val snapshot =
-            when (val result = loadReportSnapshot(analysisId)) {
-                is Success -> result.value
-                is Failure -> return result
-            }
-
-        val generatedFilePath =
-            when (val result = reportGenerator.generate(snapshot, normalizedRequestedFilePath)) {
-                is Success -> result.value
-                is Failure -> return failure(AccidentDataError.ReportGenerationFailed)
-            }
-
-        if (!isValidOptionalText(generatedFilePath, MAX_FILE_PATH)) {
-            return failure(AccidentDataError.ReportGenerationFailed)
-        }
+        imageEvidenceIds: List<Int> = emptyList(),
+        conclusion: String?,
+        description: String?,
+    ): Either<AccidentDataError, ReportDetails> {
+        if (!isValidOptionalText(conclusion, MAX_LONG_TEXT)) return failure(AccidentDataError.InvalidAccidentData)
+        if (!isValidOptionalText(description, MAX_LONG_TEXT)) return failure(AccidentDataError.InvalidAccidentData)
 
         return transactionManager.run {
-            repoAccidentAnalysis.findAnalysisById(analysisId) ?: return@run failure(AccidentDataError.AnalysisNotFound)
-            success(repoAccidentConclusionReport.createReport(analysisId, generatedFilePath))
+            val analysis =
+                repoAccidentAnalysis.findAnalysisById(analysisId)
+                    ?: return@run failure(AccidentDataError.AnalysisNotFound)
+
+            when (val validation = validateImageEvidenceIds(imageEvidenceIds, analysis.caseId)) {
+                is Failure -> return@run validation
+                is Success -> Unit
+            }
+
+            val report =
+                repoAccidentConclusionReport.createReport(
+                    analysisId = analysisId,
+                    caseId = analysis.caseId,
+                    imageEvidenceIds = imageEvidenceIds.distinct(),
+                    conclusion = normalizeOptionalText(conclusion),
+                    description = normalizeOptionalText(description),
+                )
+            success(buildReportDetails(report))
         }
     }
 
-    fun getReportsByAnalysisId(analysisId: Int): Either<AccidentDataError, List<Report>> =
+    fun getReportsByAnalysisId(analysisId: Int): Either<AccidentDataError, List<ReportDetails>> =
         transactionManager.run {
             repoAccidentAnalysis.findAnalysisById(analysisId) ?: return@run failure(AccidentDataError.AnalysisNotFound)
-            success(repoAccidentConclusionReport.findReportsByAnalysisId(analysisId))
+            success(
+                repoAccidentConclusionReport.findReportsByAnalysisId(analysisId).map { buildReportDetails(it) },
+            )
+        }
+
+    fun getAllReports(): List<ReportDetails> =
+        transactionManager.run {
+            repoAccidentConclusionReport.findAllReports().map { buildReportDetails(it) }
+        }
+
+    fun getReportsByUserId(userId: Int): Either<AccidentDataError, List<ReportDetails>> =
+        transactionManager.run {
+            repoUsers.findById(userId) ?: return@run failure(AccidentDataError.UserNotFound)
+            success(
+                repoAccidentConclusionReport.findReportsByUserId(userId).map { buildReportDetails(it) },
+            )
         }
 
     fun getReportById(reportId: Int): Either<AccidentDataError, Report> =
@@ -101,22 +126,43 @@ class AccidentConclusionReportService(
                 ?: failure(AccidentDataError.ReportNotFound)
         }
 
+    fun getReportDetailsById(reportId: Int): Either<AccidentDataError, ReportDetails> =
+        transactionManager.run {
+            val report =
+                repoAccidentConclusionReport.findReportById(reportId)
+                    ?: return@run failure(AccidentDataError.ReportNotFound)
+            success(buildReportDetails(report))
+        }
+
     fun updateReport(
         reportId: Int,
-        filePath: String?,
-    ): Either<AccidentDataError, Report> {
-        if (!isValidOptionalText(filePath, MAX_FILE_PATH)) return failure(AccidentDataError.InvalidAccidentData)
+        imageEvidenceIds: List<Int>?,
+        conclusion: String?,
+        description: String?,
+    ): Either<AccidentDataError, ReportDetails> {
+        if (!isValidOptionalText(conclusion, MAX_LONG_TEXT)) return failure(AccidentDataError.InvalidAccidentData)
+        if (!isValidOptionalText(description, MAX_LONG_TEXT)) return failure(AccidentDataError.InvalidAccidentData)
 
         return transactionManager.run {
             val currentReport =
                 repoAccidentConclusionReport.findReportById(reportId) ?: return@run failure(AccidentDataError.ReportNotFound)
 
-            success(
+            if (imageEvidenceIds != null) {
+                when (val validation = validateImageEvidenceIds(imageEvidenceIds, currentReport.caseId)) {
+                    is Failure -> return@run validation
+                    is Success -> Unit
+                }
+            }
+
+            val updatedReport =
                 repoAccidentConclusionReport.updateReport(
                     reportId = reportId,
-                    filePath = normalizeOptionalText(filePath) ?: currentReport.filePath,
-                ) ?: currentReport,
-            )
+                    imageEvidenceIds = imageEvidenceIds?.distinct(),
+                    conclusion = if (conclusion == null) currentReport.conclusion else normalizeOptionalText(conclusion),
+                    description = if (description == null) currentReport.description else normalizeOptionalText(description),
+                ) ?: currentReport
+
+            success(buildReportDetails(updatedReport))
         }
     }
 
@@ -127,54 +173,28 @@ class AccidentConclusionReportService(
             success(Unit)
         }
 
-    private fun loadReportSnapshot(analysisId: Int): Either<AccidentDataError, AnalysisReportSnapshot> =
-        transactionManager.run {
-            val analysis =
-                repoAccidentAnalysis.findAnalysisById(analysisId)
-                    ?: return@run failure(AccidentDataError.AnalysisNotFound)
-            val accidentCase =
-                repoCases.findById(analysis.caseId)
-                    ?: return@run failure(AccidentDataError.CaseNotFound)
-            val vehicles =
-                repoAccidentVehicleDamage.findVehiclesByCaseId(accidentCase.caseId)
-                    .map { vehicle ->
-                        VehicleReportData(
-                            vehicle = vehicle,
-                            damages = repoAccidentVehicleDamage.findDamagesByVehicleId(vehicle.vehicleId),
-                        )
-                    }
-            val evidence =
-                repoAccidentEvidence.findEvidenceByCaseId(accidentCase.caseId)
-                    .map { item ->
-                        EvidenceReportData(
-                            evidence = item,
-                            image = repoAccidentEvidence.findImageEvidenceByEvidenceId(item.evidenceId),
-                        )
-                    }
-            val evidenceById = evidence.associateBy { it.evidence.evidenceId }
+    private fun Transaction.buildReportDetails(report: Report): ReportDetails =
+        ReportDetails(
+            report = report,
+            vehicles = repoAccidentVehicleDamage.findVehiclesByCaseId(report.caseId),
+            images =
+                repoAccidentConclusionReport.findReportImageEvidenceIds(report.reportId)
+                    .mapNotNull { repoAccidentEvidence.findImageEvidenceById(it) },
+        )
 
-            success(
-                AnalysisReportSnapshot(
-                    case = accidentCase,
-                    weather = repoAccidentEnvironment.findWeatherByCaseId(accidentCase.caseId),
-                    scene = repoAccidentEnvironment.findSceneByCaseId(accidentCase.caseId),
-                    analysis = analysis,
-                    vehicles = vehicles,
-                    evidence = evidence,
-                    analysisImages =
-                        repoAccidentAnalysis.findAnalysisImagesByAnalysisId(analysisId)
-                            .map { analysisImage ->
-                                val evidenceItem = evidenceById[analysisImage.evidenceId]
-                                AnalysisImageReportData(
-                                    analysisImage = analysisImage,
-                                    evidence = evidenceItem?.evidence,
-                                    image = evidenceItem?.image,
-                                )
-                            },
-                    measurements = repoAccidentMeasurement.findMeasurementsByAnalysisId(analysisId),
-                    damageComparisons = repoAccidentDamageComparison.findDamageComparisonsByAnalysisId(analysisId),
-                    conclusion = repoAccidentConclusionReport.findAnalysisConclusionByAnalysisId(analysisId),
-                ),
-            )
+    private fun Transaction.validateImageEvidenceIds(
+        imageEvidenceIds: List<Int>,
+        caseId: Int,
+    ): Either<AccidentDataError, Unit> {
+        imageEvidenceIds.forEach { imageEvidenceId ->
+            val image =
+                repoAccidentEvidence.findImageEvidenceById(imageEvidenceId)
+                    ?: return failure(AccidentDataError.ImageEvidenceNotFound)
+            val vehicle =
+                repoAccidentVehicleDamage.findVehicleById(image.vehicleId)
+                    ?: return failure(AccidentDataError.ImageEvidenceNotFound)
+            if (vehicle.caseId != caseId) return failure(AccidentDataError.RelatedResourceMismatch)
         }
+        return success(Unit)
+    }
 }

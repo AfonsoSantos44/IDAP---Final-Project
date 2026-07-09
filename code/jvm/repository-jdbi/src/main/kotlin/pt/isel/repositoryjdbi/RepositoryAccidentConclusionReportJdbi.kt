@@ -68,24 +68,36 @@ class RepositoryAccidentConclusionReportJdbi(
 
     override fun createReport(
         analysisId: Int,
-        filePath: String,
-    ): Report =
-        handle.createUpdate(
-            """
-            INSERT INTO report (analysis_id, file_path)
-            VALUES (:analysis_id, :file_path)
-            """,
-        )
-            .bind("analysis_id", analysisId)
-            .bind("file_path", filePath)
-            .executeAndReturnGeneratedKeys(
-                "report_id",
-                "analysis_id",
-                "generated_at",
-                "file_path",
+        caseId: Int,
+        imageEvidenceIds: List<Int>,
+        conclusion: String?,
+        description: String?,
+    ): Report {
+        val report =
+            handle.createUpdate(
+                """
+                INSERT INTO report (analysis_id, case_id, conclusion, report_description)
+                VALUES (:analysis_id, :case_id, :conclusion, :report_description)
+                """,
             )
-            .map(ReportMapper())
-            .one()
+                .bind("analysis_id", analysisId)
+                .bind("case_id", caseId)
+                .bind("conclusion", conclusion)
+                .bind("report_description", description)
+                .executeAndReturnGeneratedKeys(
+                    "report_id",
+                    "analysis_id",
+                    "case_id",
+                    "generated_at",
+                    "conclusion",
+                    "report_description",
+                )
+                .map(ReportMapper())
+                .one()
+
+        insertReportImages(report.reportId, imageEvidenceIds)
+        return report
+    }
 
     override fun findReportById(reportId: Int): Report? =
         handle.createQuery("SELECT * FROM report WHERE report_id = :report_id")
@@ -99,29 +111,83 @@ class RepositoryAccidentConclusionReportJdbi(
             .map(ReportMapper())
             .list()
 
+    override fun findAllReports(): List<Report> =
+        handle.createQuery("SELECT * FROM report ORDER BY generated_at DESC, report_id DESC")
+            .map(ReportMapper())
+            .list()
+
+    override fun findReportsByUserId(userId: Int): List<Report> =
+        handle.createQuery(
+            """
+            SELECT r.* FROM report r
+            JOIN accident_case c ON r.case_id = c.case_id
+            WHERE c.user_id = :user_id
+            ORDER BY r.generated_at DESC, r.report_id DESC
+            """,
+        )
+            .bind("user_id", userId)
+            .map(ReportMapper())
+            .list()
+
     override fun updateReport(
         reportId: Int,
-        filePath: String,
+        imageEvidenceIds: List<Int>?,
+        conclusion: String?,
+        description: String?,
     ): Report? {
         val rowsUpdated =
             handle.createUpdate(
                 """
                 UPDATE report
-                SET file_path = :file_path
+                SET conclusion = :conclusion,
+                    report_description = :report_description
                 WHERE report_id = :report_id
                 """,
             )
                 .bind("report_id", reportId)
-                .bind("file_path", filePath)
+                .bind("conclusion", conclusion)
+                .bind("report_description", description)
                 .execute()
 
-        return if (rowsUpdated == 0) null else findReportById(reportId)
+        if (rowsUpdated == 0) return null
+
+        if (imageEvidenceIds != null) {
+            handle.createUpdate("DELETE FROM report_image WHERE report_id = :report_id")
+                .bind("report_id", reportId)
+                .execute()
+            insertReportImages(reportId, imageEvidenceIds)
+        }
+
+        return findReportById(reportId)
     }
 
     override fun deleteReportById(reportId: Int): Int =
         handle.createUpdate("DELETE FROM report WHERE report_id = :report_id")
             .bind("report_id", reportId)
             .execute()
+
+    override fun findReportImageEvidenceIds(reportId: Int): List<Int> =
+        handle.createQuery("SELECT image_evidence_id FROM report_image WHERE report_id = :report_id")
+            .bind("report_id", reportId)
+            .mapTo(Int::class.java)
+            .list()
+
+    private fun insertReportImages(
+        reportId: Int,
+        imageEvidenceIds: List<Int>,
+    ) {
+        imageEvidenceIds.distinct().forEach { imageEvidenceId ->
+            handle.createUpdate(
+                """
+                INSERT INTO report_image (report_id, image_evidence_id)
+                VALUES (:report_id, :image_evidence_id)
+                """,
+            )
+                .bind("report_id", reportId)
+                .bind("image_evidence_id", imageEvidenceId)
+                .execute()
+        }
+    }
 
     private fun findAnalysisConclusionById(conclusionId: Int): AnalysisConclusion? =
         handle.createQuery("SELECT * FROM analysis_conclusion WHERE conclusion_id = :conclusion_id")

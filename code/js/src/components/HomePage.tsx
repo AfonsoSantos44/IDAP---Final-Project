@@ -31,6 +31,10 @@ export default function HomePage() {
                             <button className="homepage-btn login-btn">Meu Perfil</button>
                         </Link>
 
+                        <Link to="/reports">
+                            <button className="homepage-btn login-btn">Relatórios</button>
+                        </Link>
+
                         <Link to="/about">
                             <button className="homepage-btn login-btn">Sobre o projeto</button>
                         </Link>

@@ -14,5 +14,6 @@ DROP TABLE analysis_image CASCADE;
 DROP TABLE measurement CASCADE;
 DROP TABLE damage_comparison CASCADE;
 DROP TABLE analysis_conclusion CASCADE;
-DROP TABLE report CASCADE; 
+DROP TABLE report CASCADE;
+DROP TABLE report_image CASCADE;
 

@@ -4,6 +4,8 @@ import java.time.Instant
 data class Report(
     val reportId: Int,
     val analysisId: Int,
+    val caseId: Int,
     val generatedAt: Instant,
-    val filePath: String,
+    val conclusion: String?,
+    val description: String?,
 )

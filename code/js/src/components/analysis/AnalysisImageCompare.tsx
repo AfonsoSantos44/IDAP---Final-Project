@@ -114,7 +114,15 @@ export default function AnalysisImageCompare() {
   const measurementRunRef = useRef(0);
   const { logout } = useAuth();
 
-  const goBack = () => navigate(-1);
+  const goBack = () => {
+    if (caseId && analysisId) {
+      navigate(`/cases/${caseId}/analysis/${analysisId}`);
+    } else if (caseId) {
+      navigate(`/cases/${caseId}`);
+    } else {
+      navigate(-1);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -517,52 +525,56 @@ export default function AnalysisImageCompare() {
               </div>
 
               <div className="analysis-footer-actions">
-                <label className="manual-calibration-toggle">
-                  <input
-                    type="checkbox"
-                    checked={manualCalibration}
-                    onChange={(event) => setManualCalibration(event.target.checked)}
-                  />
-                  Calibração manual (marcar pontos de referência)
-                </label>
-                {manualCalibration && (
-                  <div className="mark-target-switch" role="group" aria-label="A marcar">
-                    <span>A marcar:</span>
-                    <button
-                      type="button"
-                      className={manualTarget === 'damage' ? 'active' : ''}
-                      onClick={() => setManualTarget('damage')}
-                    >
-                      Dano
-                    </button>
-                    <button
-                      type="button"
-                      className={manualTarget === 'ruler' ? 'active' : ''}
-                      onClick={() => setManualTarget('ruler')}
-                    >
-                      Régua
-                    </button>
-                  </div>
-                )}
-                <button
-                  type="button"
-                  className="homepage-btn login-btn"
-                  disabled={measuring || sameImageSelected}
-                  onClick={runMeasurements}
-                >
-                  {measuring ? 'A medir...' : 'Correr medições'}
-                </button>
-                <button
-                  type="button"
-                  className="homepage-btn report-btn"
-                  disabled={!analysisId}
-                  onClick={() =>
-                    analysisId &&
-                    navigate(`/cases/${caseId}/analysis/${analysisId}/report`)
-                  }
-                >
-                  Criar report
-                </button>
+                <div className="footer-calibration-group">
+                  <label className="manual-calibration-toggle">
+                    <input
+                      type="checkbox"
+                      checked={manualCalibration}
+                      onChange={(event) => setManualCalibration(event.target.checked)}
+                    />
+                    Calibração manual (marcar pontos de referência)
+                  </label>
+                  {manualCalibration && (
+                    <div className="mark-target-switch" role="group" aria-label="A marcar">
+                      <span>A marcar:</span>
+                      <button
+                        type="button"
+                        className={manualTarget === 'damage' ? 'active' : ''}
+                        onClick={() => setManualTarget('damage')}
+                      >
+                        Dano
+                      </button>
+                      <button
+                        type="button"
+                        className={manualTarget === 'ruler' ? 'active' : ''}
+                        onClick={() => setManualTarget('ruler')}
+                      >
+                        Régua
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div className="footer-action-buttons">
+                  <button
+                    type="button"
+                    className="homepage-btn login-btn"
+                    disabled={measuring || sameImageSelected}
+                    onClick={runMeasurements}
+                  >
+                    {measuring ? 'A medir...' : 'Correr medições'}
+                  </button>
+                  <button
+                    type="button"
+                    className="homepage-btn report-btn"
+                    disabled={!analysisId}
+                    onClick={() =>
+                      analysisId &&
+                      navigate(`/cases/${caseId}/analysis/${analysisId}/report`)
+                    }
+                  >
+                    Criar report
+                  </button>
+                </div>
               </div>
             </>
           )}
@@ -605,6 +617,12 @@ function ImagePreview({
   const [dragStart, setDragStart] = useState<
     { natX: number; natY: number; pctX: number; pctY: number } | null
   >(null);
+
+  const [zoom, setZoom] = useState(1);
+  const clampZoom = (value: number) => Math.min(3, Math.max(1, Math.round(value * 100) / 100));
+  const zoomIn = () => setZoom((current) => clampZoom(current + 0.25));
+  const zoomOut = () => setZoom((current) => clampZoom(current - 0.25));
+  const resetZoom = () => setZoom(1);
 
   // Converte a posição do rato numa posição na imagem (coordenadas naturais) e em
   // percentagem do elemento, tendo em conta o letterbox do object-fit.
@@ -703,40 +721,60 @@ function ImagePreview({
     <div className="image-preview-card">
       <MeasurementSummary measurement={measurement} measuring={measuring} />
 
-      <div className="image-reference-stage">
-        <img
-          key={imageSrc}
-          ref={imageRef}
-          src={imageSrc}
-          alt={item.evidence.evidenceDescription || imageLabel(item)}
-          onClick={handleImageClick}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          draggable={false}
-        />
-        {damageArea && (
-          <div
-            className="damage-area"
-            style={{
-              left: `${damageArea.left}%`,
-              top: `${damageArea.top}%`,
-              width: `${damageArea.width}%`,
-              height: `${damageArea.height}%`,
-            }}
-          />
+      <div className="image-zoom-controls">
+        {zoom !== 1 && (
+          <button type="button" className="zoom-reset" onClick={resetZoom}>
+            Repor
+          </button>
         )}
-        {manualCalibration &&
-          referencePoints.map((point, index) => (
-            <span
-              key={`${point.x}-${point.y}-${index}`}
-              className="reference-marker"
-              style={{ left: `${point.markerLeft}%`, top: `${point.markerTop}%` }}
-            >
-              {index + 1}
-            </span>
-          ))}
+        <button type="button" onClick={zoomOut} disabled={zoom <= 1} aria-label="Reduzir zoom">
+          −
+        </button>
+        <span>{Math.round(zoom * 100)}%</span>
+        <button type="button" onClick={zoomIn} disabled={zoom >= 3} aria-label="Aumentar zoom">
+          +
+        </button>
+      </div>
+
+      <div className="image-reference-stage">
+        <div
+          className="image-frame"
+          style={{ width: `${zoom * 100}%` }}
+        >
+          <img
+            key={imageSrc}
+            ref={imageRef}
+            src={imageSrc}
+            alt={item.evidence.evidenceDescription || imageLabel(item)}
+            onClick={handleImageClick}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            draggable={false}
+          />
+          {damageArea && (
+            <div
+              className="damage-area"
+              style={{
+                left: `${damageArea.left}%`,
+                top: `${damageArea.top}%`,
+                width: `${damageArea.width}%`,
+                height: `${damageArea.height}%`,
+              }}
+            />
+          )}
+          {manualCalibration &&
+            referencePoints.map((point, index) => (
+              <span
+                key={`${point.x}-${point.y}-${index}`}
+                className="reference-marker"
+                style={{ left: `${point.markerLeft}%`, top: `${point.markerTop}%` }}
+              >
+                {index + 1}
+              </span>
+            ))}
+        </div>
       </div>
 
       <p className="reference-controls-hint">

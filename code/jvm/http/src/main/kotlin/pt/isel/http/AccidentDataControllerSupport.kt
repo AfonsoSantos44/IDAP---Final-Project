@@ -40,6 +40,7 @@ import pt.isel.services.AccidentVehicleDamageService
 import pt.isel.services.CaseError
 import pt.isel.services.CaseService
 import pt.isel.services.Failure
+import pt.isel.services.ReportDetails
 import pt.isel.services.Success
 import java.time.Instant
 import java.time.ZoneId
@@ -296,6 +297,7 @@ internal fun Vehicle.toOutputDto() =
         model = model,
         yearOfFabrication = yearOfFabrication,
         licensePlate = licensePlate,
+        color = color,
         role = role,
     )
 
@@ -389,12 +391,16 @@ internal fun AnalysisConclusion.toOutputDto() =
         justification = justification,
     )
 
-internal fun Report.toOutputDto() =
+internal fun ReportDetails.toOutputDto() =
     ReportOutputDto(
-        reportId = reportId,
-        analysisId = analysisId,
-        generatedAt = formatTimestamp(generatedAt),
-        filePath = filePath,
+        reportId = report.reportId,
+        analysisId = report.analysisId,
+        caseId = report.caseId,
+        generatedAt = formatTimestamp(report.generatedAt),
+        conclusion = report.conclusion,
+        description = report.description,
+        vehicles = vehicles.map { it.toOutputDto() },
+        images = images.map { it.toOutputDto() },
     )
 
 private fun SecurityPrincipal.canAccess(accidentCase: AccidentCase): Boolean = isAdmin() || userId == accidentCase.userId

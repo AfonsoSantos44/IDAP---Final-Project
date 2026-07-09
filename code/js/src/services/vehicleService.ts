@@ -7,6 +7,7 @@ export interface VehicleOutput {
   model?: string;
   yearOfFabrication?: number;
   licensePlate?: string;
+  color?: string | null;
   role?: string | null;
 }
 
@@ -15,6 +16,7 @@ export interface CreateVehicleRequest {
   model: string;
   yearOfFabrication: number;
   licensePlate: string;
+  color?: string | null;
   role?: string | null;
 }
 

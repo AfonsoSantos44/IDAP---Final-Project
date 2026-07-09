@@ -16,12 +16,13 @@ class RepositoryAccidentVehicleDamageJdbi(
         model: String,
         yearOfFabrication: Int,
         licensePlate: String,
+        color: String?,
         role: String?,
     ): Vehicle =
         handle.createUpdate(
             """
-            INSERT INTO vehicle (case_id, brand, model, year_of_fabrication, license_plate, role)
-            VALUES (:case_id, :brand, :model, :year_of_fabrication, :license_plate, :role)
+            INSERT INTO vehicle (case_id, brand, model, year_of_fabrication, license_plate, color, role)
+            VALUES (:case_id, :brand, :model, :year_of_fabrication, :license_plate, :color, :role)
             """,
         )
             .bind("case_id", caseId)
@@ -29,6 +30,7 @@ class RepositoryAccidentVehicleDamageJdbi(
             .bind("model", model)
             .bind("year_of_fabrication", yearOfFabrication)
             .bind("license_plate", licensePlate)
+            .bind("color", color)
             .bind("role", role)
             .executeAndReturnGeneratedKeys(
                 "vehicle_id",
@@ -37,6 +39,7 @@ class RepositoryAccidentVehicleDamageJdbi(
                 "model",
                 "year_of_fabrication",
                 "license_plate",
+                "color",
                 "role",
             )
             .map(VehicleMapper())
@@ -76,6 +79,7 @@ class RepositoryAccidentVehicleDamageJdbi(
         model: String,
         yearOfFabrication: Int,
         licensePlate: String,
+        color: String?,
         role: String?,
     ): Vehicle? {
         val rowsUpdated =
@@ -86,6 +90,7 @@ class RepositoryAccidentVehicleDamageJdbi(
                     model = :model,
                     year_of_fabrication = :year_of_fabrication,
                     license_plate = :license_plate,
+                    color = :color,
                     role = :role
                 WHERE vehicle_id = :vehicle_id
                 """,
@@ -95,6 +100,7 @@ class RepositoryAccidentVehicleDamageJdbi(
                 .bind("model", model)
                 .bind("year_of_fabrication", yearOfFabrication)
                 .bind("license_plate", licensePlate)
+                .bind("color", color)
                 .bind("role", role)
                 .execute()
 

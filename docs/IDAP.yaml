@@ -818,23 +818,55 @@ components:
         analysisId:
           type: integer
           format: int32
+        caseId:
+          type: integer
+          format: int32
         generatedAt:
           type: string
-        filePath:
+        conclusion:
           type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        vehicles:
+          type: array
+          items:
+            $ref: "#/components/schemas/VehicleOutput"
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImageEvidenceOutput"
 
     CreateReportRequest:
       type: object
-      description: Optional report file path. If omitted, the backend generates a structured JSON report in the configured report output directory.
+      description: image_evidence ids attached to the report as supporting images. report_id, analysis_id, case_id and generated_at are filled in automatically.
       properties:
-        filePath:
+        imageEvidenceIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+        conclusion:
+          type: string
+          nullable: true
+        description:
           type: string
           nullable: true
 
     UpdateReportRequest:
       type: object
       properties:
-        filePath:
+        imageEvidenceIds:
+          type: array
+          nullable: true
+          items:
+            type: integer
+            format: int32
+        conclusion:
+          type: string
+          nullable: true
+        description:
           type: string
           nullable: true
 
@@ -980,6 +1012,8 @@ paths:
     $ref: "./openapi/paths/accident-damage-comparison.yaml#/damageComparisonById"
   /api/analyses/{analysisId}/conclusion:
     $ref: "./openapi/paths/accident-conclusion-report.yaml#/analysisConclusion"
+  /api/reports:
+    $ref: "./openapi/paths/accident-conclusion-report.yaml#/reports"
   /api/analyses/{analysisId}/reports:
     $ref: "./openapi/paths/accident-conclusion-report.yaml#/analysisReports"
   /api/reports/{reportId}:

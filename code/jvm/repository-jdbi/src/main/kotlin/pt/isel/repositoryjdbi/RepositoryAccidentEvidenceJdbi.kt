@@ -150,7 +150,7 @@ class RepositoryAccidentEvidenceJdbi(
             .bind("evidence_id", evidenceId)
             .execute()
 
-    private fun findImageEvidenceById(imageEvidenceId: Int): ImageEvidence? =
+    override fun findImageEvidenceById(imageEvidenceId: Int): ImageEvidence? =
         handle.createQuery("SELECT * FROM image_evidence WHERE image_evidence_id = :image_evidence_id")
             .bind("image_evidence_id", imageEvidenceId)
             .map(ImageEvidenceMapper())

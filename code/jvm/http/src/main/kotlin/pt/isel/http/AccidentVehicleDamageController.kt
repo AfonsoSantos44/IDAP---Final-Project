@@ -59,6 +59,7 @@ class AccidentVehicleDamageController(
                     model = request.model,
                     yearOfFabrication = request.yearOfFabrication,
                     licensePlate = request.licensePlate,
+                    color = request.color,
                     role = request.role,
                 )
         ) {
@@ -101,6 +102,7 @@ class AccidentVehicleDamageController(
                     model = request.model,
                     yearOfFabrication = request.yearOfFabrication,
                     licensePlate = request.licensePlate,
+                    color = request.color,
                     role = request.role,
                 )
         ) {

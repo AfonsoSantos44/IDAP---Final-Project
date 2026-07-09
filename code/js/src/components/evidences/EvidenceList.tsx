@@ -5,6 +5,7 @@ import { caseService } from '../../services/caseService';
 import analysisService from '../../services/analysisService';
 import '../../styles/CaseListPage.css';
 import '../../styles/EvidenceList.css';
+import { useAuth } from '../../context/AuthContext';
 
 interface Evidence {
   evidenceId?: number;
@@ -17,6 +18,7 @@ interface Evidence {
 
 export default function EvidenceList() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const { search } = useLocation();
   const params = new URLSearchParams(search);
   const queryCaseId = params.get('caseId');
@@ -96,8 +98,16 @@ export default function EvidenceList() {
     }
   };
 
+  const handleLogout = async () => {
+    await logout();
+    navigate('/initial');
+  };
+
   return (
     <div className="case-list-page" style={{ position: 'relative' }}>
+      <div className="logout-wrapper">
+        <button className="logout-btn" onClick={handleLogout}>Logout</button>
+      </div>
       <div className="back-container back-outside">
         <button className="page-btn secondary back-btn" onClick={() => navigate(caseId ? `/cases/${caseId}` : '/cases')}>Voltar</button>
       </div>

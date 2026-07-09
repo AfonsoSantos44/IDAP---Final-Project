@@ -38,6 +38,7 @@ data class VehicleOutputDto(
     val model: String,
     val yearOfFabrication: Int,
     val licensePlate: String,
+    val color: String?,
     val role: String?,
 )
 
@@ -46,6 +47,7 @@ data class CreateVehicleRequestDto(
     val model: String,
     val yearOfFabrication: Int,
     val licensePlate: String,
+    val color: String? = null,
     val role: String? = null,
 )
 
@@ -54,6 +56,7 @@ data class UpdateVehicleRequestDto(
     val model: String? = null,
     val yearOfFabrication: Int? = null,
     val licensePlate: String? = null,
+    val color: String? = null,
     val role: String? = null,
 )
 
@@ -219,14 +222,22 @@ data class UpsertAnalysisConclusionRequestDto(
 data class ReportOutputDto(
     val reportId: Int,
     val analysisId: Int,
+    val caseId: Int,
     val generatedAt: String,
-    val filePath: String,
+    val conclusion: String?,
+    val description: String?,
+    val vehicles: List<VehicleOutputDto>,
+    val images: List<ImageEvidenceOutputDto>,
 )
 
 data class CreateReportRequestDto(
-    val filePath: String? = null,
+    val imageEvidenceIds: List<Int> = emptyList(),
+    val conclusion: String? = null,
+    val description: String? = null,
 )
 
 data class UpdateReportRequestDto(
-    val filePath: String? = null,
+    val imageEvidenceIds: List<Int>? = null,
+    val conclusion: String? = null,
+    val description: String? = null,
 )

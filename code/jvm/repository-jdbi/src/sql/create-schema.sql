@@ -61,6 +61,7 @@ CREATE TABLE vehicle (
                          model VARCHAR(255) NOT NULL,
                          year_of_fabrication INT NOT NULL,
                          license_plate VARCHAR(50) NOT NULL,
+                         color VARCHAR(50),
                          role VARCHAR(50),
                          UNIQUE (case_id, license_plate),
                          FOREIGN KEY (case_id) REFERENCES accident_case(case_id) ON DELETE CASCADE
@@ -180,12 +181,28 @@ CREATE TABLE analysis_conclusion (
 );
 
 -- REPORT
+-- case_id is filled automatically from the analysis when the report is created.
+-- Vehicle information is derived from case_id at read time. Associated images are the
+-- explicit set of image_evidence rows attached to the report via report_image.
 CREATE TABLE report (
                         report_id SERIAL PRIMARY KEY,
                         analysis_id INT NOT NULL,
+                        case_id INT NOT NULL,
                         generated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-                        file_path VARCHAR(255) NOT NULL,
-                        FOREIGN KEY (analysis_id) REFERENCES analysis(analysis_id) ON DELETE CASCADE
+                        conclusion TEXT,
+                        report_description TEXT,
+                        FOREIGN KEY (analysis_id) REFERENCES analysis(analysis_id) ON DELETE CASCADE,
+                        FOREIGN KEY (case_id) REFERENCES accident_case(case_id) ON DELETE CASCADE
+);
+
+-- REPORT IMAGE
+-- Junction table listing which image_evidence rows are attached as evidence to a report.
+CREATE TABLE report_image (
+                              report_id INT NOT NULL,
+                              image_evidence_id INT NOT NULL,
+                              PRIMARY KEY (report_id, image_evidence_id),
+                              FOREIGN KEY (report_id) REFERENCES report(report_id) ON DELETE CASCADE,
+                              FOREIGN KEY (image_evidence_id) REFERENCES image_evidence(image_evidence_id) ON DELETE CASCADE
 );
 -- Create indexes for better query performance
 CREATE INDEX idx_token_user ON tokens(user_id);
@@ -202,3 +219,6 @@ CREATE INDEX idx_measurement_evidence ON measurement(evidence_id);
 CREATE INDEX idx_measurement_damage ON measurement(damage_id);
 CREATE INDEX idx_comparison_analysis ON damage_comparison(analysis_id);
 CREATE INDEX idx_report_analysis ON report(analysis_id);
+CREATE INDEX idx_report_case ON report(case_id);
+CREATE INDEX idx_report_image_report ON report_image(report_id);
+CREATE INDEX idx_report_image_image ON report_image(image_evidence_id);

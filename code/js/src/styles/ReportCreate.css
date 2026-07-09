@@ -61,6 +61,141 @@
   min-height: 46px;
 }
 
+.report-form-stacked {
+  grid-template-columns: 1fr;
+}
+
+.report-form-stacked .homepage-btn {
+  justify-self: end;
+}
+
+.report-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(78,75,250,0.18);
+  border-radius: 10px;
+  background: #fff;
+  color: #232b5d;
+  font: inherit;
+  padding: 0.7rem 0.9rem;
+  resize: vertical;
+}
+
+.report-detail-block {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(35,43,93,0.08);
+  border-radius: 8px;
+  background: #f7f8ff;
+}
+
+.report-detail-block > strong {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.report-detail-block ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #5e6689;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.report-detail-block p {
+  margin: 0;
+  color: #5e6689;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.report-image-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.report-image-column {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.report-image-column h4 {
+  margin: 0;
+  color: #232b5d;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.report-vehicle-damages {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  background: #fff;
+  border: 1px solid rgba(35,43,93,0.08);
+}
+
+.report-vehicle-damages > strong {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #232b5d;
+}
+
+.report-vehicle-damages ul {
+  margin: 0;
+  padding-left: 1rem;
+  color: #5e6689;
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.report-vehicle-damages p {
+  margin: 0;
+  color: #5e6689;
+  font-size: 0.85rem;
+}
+
+.report-image-picker {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.report-image-picker li label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: #5e6689;
+  font-size: 0.9rem;
+}
+
+.report-image-picker li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #5e6689;
+  font-size: 0.9rem;
+}
+
+.report-image-thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(35,43,93,0.12);
+  background: #eef2ff;
+}
+
 .report-message {
   margin: 0.9rem 0 0;
   padding: 0.75rem 0.9rem;
@@ -186,5 +321,9 @@
   .report-card > div {
     flex-direction: column;
     gap: 0.35rem;
+  }
+
+  .report-image-columns {
+    grid-template-columns: 1fr;
   }
 }
