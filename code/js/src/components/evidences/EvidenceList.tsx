@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { evidenceService } from '../../services/evidenceService';
 import { caseService } from '../../services/caseService';
+import { userService } from '../../services/userService';
 import analysisService from '../../services/analysisService';
 import '../../styles/CaseListPage.css';
 import '../../styles/EvidenceList.css';
@@ -33,6 +34,7 @@ export default function EvidenceList() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>('');
+  const [uploaderNames, setUploaderNames] = useState<Record<string, string>>({});
 
   const evidenceTypes = useMemo(() => {
     const s = new Set<string>();
@@ -59,7 +61,37 @@ export default function EvidenceList() {
       setError(null);
       try {
         const list = await evidenceService.listCaseEvidence(caseId);
-        setEvidences(list || []);
+        const sorted = [...(list || [])].sort(
+          (a, b) => Number(a.evidenceId ?? 0) - Number(b.evidenceId ?? 0)
+        );
+        setEvidences(sorted);
+
+        const uploaderIds = Array.from(
+          new Set(
+            sorted
+              .map((ev) => ev.uploadedBy)
+              .filter((id): id is number => id !== undefined && id !== null)
+          )
+        );
+
+        if (uploaderIds.length > 0) {
+          const results = await Promise.allSettled(
+            uploaderIds.map((id) => userService.getUserById(id))
+          );
+          const namesMap: Record<string, string> = {};
+
+          results.forEach((result, index) => {
+            if (result.status === 'fulfilled' && result.value) {
+              const u = result.value as any;
+              namesMap[String(uploaderIds[index])] =
+                u.name || u.username || u.email || String(uploaderIds[index]);
+            }
+          });
+
+          setUploaderNames(namesMap);
+        } else {
+          setUploaderNames({});
+        }
       } catch (err: any) {
         setError(err?.message || 'Erro ao carregar evidências');
       } finally {
@@ -144,7 +176,9 @@ export default function EvidenceList() {
             </div>
             <div className="case-meta">Tipo: {ev.evidenceType || '—'}</div>
             <div className="case-meta">Descrição: {ev.evidenceDescription || '—'}</div>
-            <div className="case-meta">Criado por: {ev.uploadedBy ?? '—'}</div>
+            <div className="case-meta">
+              Criado por: {ev.uploadedBy !== undefined ? (uploaderNames[String(ev.uploadedBy)] ?? ev.uploadedBy) : '—'}
+            </div>
             <div className="case-meta">Criado em: {ev.uploadedAt ?? '—'}</div>
             <div className="case-footer">
               <div />
