@@ -21,7 +21,7 @@ function InitialPage() {
                             className="homepage-btn login-btn"
                             onClick={() => navigate('/login')}
                         >
-                            Login
+                            Entrar
                         </button>
                         <button 
                             className="homepage-btn register-btn"

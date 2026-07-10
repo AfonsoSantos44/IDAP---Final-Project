@@ -119,7 +119,7 @@ export default function ReportDetail() {
                 <div className="report-detail-block">
                   <strong>Imagens associadas</strong>
                   {columns.length > 0 ? (
-                    <div className="report-image-columns">
+                    <div className="report-image-columns report-image-columns--detail">
                       {columns.map((column) => (
                         <div className="report-image-column" key={column.vehicleId}>
                           <h4>

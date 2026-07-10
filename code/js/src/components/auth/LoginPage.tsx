@@ -67,7 +67,7 @@ return (
             className="auth-submit-btn"
             onClick={handleSubmit}
           >
-            Login
+            Entrar
           </button>
         </form>
         
